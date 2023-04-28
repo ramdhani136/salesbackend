@@ -14,6 +14,28 @@ import sharp from "sharp";
 import path from "path";
 
 class UserController implements IController {
+  protected prosesUpload = (req: Request | any, name: string) => {
+    const compressedImage = path.join(__dirname, "../public/users", `${name}`);
+    sharp(req.file.path)
+      .resize(640, 480, {
+        fit: sharp.fit.inside,
+        withoutEnlargement: true,
+      })
+      .jpeg({
+        quality: 100,
+        progressive: true,
+        chromaSubsampling: "4:4:4",
+      })
+      .withMetadata()
+      .toFile(compressedImage, (err, info) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(info);
+        }
+      });
+  };
+
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -122,32 +144,6 @@ class UserController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    const prosesUpload = (name: string) => {
-      const compressedImage = path.join(
-        __dirname,
-        "../public/users",
-        `${name}`
-      );
-      sharp(req.file.path)
-        .resize(640, 480, {
-          fit: sharp.fit.inside,
-          withoutEnlargement: true,
-        })
-        .jpeg({
-          quality: 100,
-          progressive: true,
-          chromaSubsampling: "4:4:4",
-        })
-        .withMetadata()
-        .toFile(compressedImage, (err, info) => {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log(info);
-          }
-        });
-    };
-
     if (!req.body.password) {
       return res.status(400).json({ status: 400, msg: "Password Required!" });
     }
@@ -166,7 +162,7 @@ class UserController implements IController {
       if (req.file != undefined) {
         let istitik = req.file.originalname.indexOf(".");
         let typeimage = req.file.originalname.slice(istitik, 200);
-        prosesUpload(`${req.body.name}${typeimage}`);
+        this.prosesUpload(req, `${req.body.name}${typeimage}`);
         req.body.img = `${req.body.name}${typeimage}`;
       }
 
@@ -238,7 +234,14 @@ class UserController implements IController {
         req.body
       );
       if (result) {
-        const users = await User.findOne({ _id: req.params.id });
+        console.log(result)
+        const users: any = await User.findOne({ _id: req.params.id });
+        // if (req.file != undefined) {
+        //   let istitik = req.file.originalname.indexOf(".");
+        //   let typeimage = req.file.originalname.slice(istitik, 200);
+        //   this.prosesUpload(req, `${users.name}${typeimage}`);
+        //   req.body.img = `${users.name}${typeimage}`;
+        // }
         await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(

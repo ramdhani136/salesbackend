@@ -35,8 +35,9 @@ const User = new mongoose.Schema(
       required: true,
     },
     status: {
-      enum: Object.values(status),
-      default: 0,
+      type: String,
+      enum: ["0", "1"],
+      default: "0",
     },
   },
   {

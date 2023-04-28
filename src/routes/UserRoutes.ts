@@ -19,11 +19,13 @@ const upload = multer({ storage: storage });
 
 class UserRoutes extends RouteBase {
   routes(): void {
-    this.router.get("/", AuthMiddleware, UserController.index);
+    this.router.get("/",
+     AuthMiddleware,
+      UserController.index);
     this.router.post(
       "/",
       upload.single("img"),
-      // AuthMiddleware,
+      AuthMiddleware,
       UserController.create
     );
     this.router.post("/login", UserController.login);

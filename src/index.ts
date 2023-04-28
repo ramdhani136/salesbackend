@@ -7,6 +7,7 @@ import cors from "cors";
 import compression from "compression";
 import DataConnect from "./config/db";
 import http from "http";
+import path from "path";
 import {
   ChatRoutes,
   HistoryRoutes,
@@ -65,6 +66,14 @@ class App {
     this.app.use(cors(corsOptions));
     Redis.getConnect();
     this.getSocket();
+    this.app.use(
+      "/public",
+      express.static(path.join(__dirname, "public/images"))
+    );
+    this.app.use(
+      "/images/users",
+      express.static(path.join(__dirname, "public/users"))
+    );
   }
 
   protected Cron(): void {
@@ -111,7 +120,6 @@ class App {
         io.emit("activeUsers", Object.values(users));
       });
 
-
       socket.on("join chat", (room: String) => {
         socket.join(room);
         console.log("User Joined Room: " + room);
@@ -152,32 +160,32 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
-    this.app.use("/schedule", AuthMiddleware, RoleValidation, ScheduleRoutes);
-    this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);
-    this.app.use("/schedulepacking", AuthMiddleware, ScheduleItemPackingRoutes);
-    this.app.use(
-      "/roleprofile",
-      AuthMiddleware,
-      RoleValidation,
-      RoleProfileRoutes
-    );
-    this.app.use("/rolelist", AuthMiddleware, RoleValidation, RoleListRoutes);
-    this.app.use("/roleuser", AuthMiddleware, RoleValidation, RoleUserRoutes);
-    this.app.use("/history", AuthMiddleware, HistoryRoutes);
-    this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
-    this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);
-    this.app.use("/workflow", AuthMiddleware, WorkflowRoutes);
-    this.app.use("/chat", AuthMiddleware, ChatRoutes);
-    this.app.use("/message", AuthMiddleware, MessageRoutes);
-    this.app.use("/warehouse", WarehouseRoutes);
-    this.app.use("/packingid", PackingIdRoutes);
+    // this.app.use("/schedule", AuthMiddleware, RoleValidation, ScheduleRoutes);
+    // this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);
+    // this.app.use("/schedulepacking", AuthMiddleware, ScheduleItemPackingRoutes);
+    // this.app.use(
+    //   "/roleprofile",
+    //   AuthMiddleware,
+    //   RoleValidation,
+    //   RoleProfileRoutes
+    // );
+    // this.app.use("/rolelist", AuthMiddleware, RoleValidation, RoleListRoutes);
+    // this.app.use("/roleuser", AuthMiddleware, RoleValidation, RoleUserRoutes);
+    // this.app.use("/history", AuthMiddleware, HistoryRoutes);
+    // this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
+    // this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);
+    // this.app.use("/workflow", AuthMiddleware, WorkflowRoutes);
+    // this.app.use("/chat", AuthMiddleware, ChatRoutes);
+    // this.app.use("/message", AuthMiddleware, MessageRoutes);
+    // this.app.use("/warehouse", WarehouseRoutes);
+    // this.app.use("/packingid", PackingIdRoutes);
 
-    this.app.use(
-      "/workflowtransition",
-      AuthMiddleware,
-      WorkflowTransitionRoutes
-    );
-    this.app.use("/workflowchanger", AuthMiddleware, WorkflowCangerRoutes);
+    // this.app.use(
+    //   "/workflowtransition",
+    //   AuthMiddleware,
+    //   WorkflowTransitionRoutes
+    // );
+    // this.app.use("/workflowchanger", AuthMiddleware, WorkflowCangerRoutes);
   }
 }
 

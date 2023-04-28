@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
 
+const status = Object.freeze({
+  0: 0,
+  1: 1,
+});
+
 const User = new mongoose.Schema(
   {
     name: {
@@ -11,11 +16,18 @@ const User = new mongoose.Schema(
     username: {
       type: String,
       required: true,
+      unique: true,
     },
     email: {
       type: String,
     },
-    pic: {
+    phone: {
+      type: Number,
+    },
+    img: {
+      type: String,
+    },
+    erpToken: {
       type: String,
     },
     password: {
@@ -23,9 +35,8 @@ const User = new mongoose.Schema(
       required: true,
     },
     status: {
-      type: Boolean,
-      required: true,
-      default: 1,
+      enum: Object.values(status),
+      default: 0,
     },
   },
   {

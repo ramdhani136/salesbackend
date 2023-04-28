@@ -10,6 +10,8 @@ import jwt from "jsonwebtoken";
 import { History } from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
+import sharp from "sharp";
+import path from "path";
 
 class UserController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
@@ -31,6 +33,11 @@ class UserController implements IController {
       },
       {
         name: "email",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "phone",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -64,7 +71,6 @@ class UserController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
 
-
       let search: ISearch = {
         filter: ["name", "username"],
         value: req.query.search || "",
@@ -75,7 +81,7 @@ class UserController implements IController {
       // End
 
       // Mengambil hasil filter
-      let isFilter = FilterQuery.getFilter(filters, stateFilter,search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
       // End
 
       // Validasi apakah filter valid

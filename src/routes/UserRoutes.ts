@@ -23,7 +23,7 @@ class UserRoutes extends RouteBase {
     this.router.post(
       "/",
       upload.single("img"),
-      AuthMiddleware,
+      // AuthMiddleware,
       UserController.create
     );
     this.router.post("/login", UserController.login);

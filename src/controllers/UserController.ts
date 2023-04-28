@@ -122,41 +122,70 @@ class UserController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.password) {
-      return res.status(400).json({ status: 400, msg: "Password Required!" });
-    }
-    if (!req.body.name) {
-      return res.status(400).json({ status: 400, msg: "Name Required!" });
-    }
-    if (!req.body.username) {
-      return res.status(400).json({ status: 400, msg: "Username Required!" });
+    if (req.file != undefined) {
+      let istitik = req.file.originalname.indexOf(".");
+      let typeimage = req.file.originalname.slice(istitik, 200);
+      const compressedImage = path.join(
+        __dirname,
+        "../public/users",
+        `${`ilham`}${typeimage}`
+      );
+      sharp(req.file.path)
+        .resize(640, 480, {
+          fit: sharp.fit.inside,
+          withoutEnlargement: true,
+        })
+        .jpeg({
+          quality: 100,
+          progressive: true,
+          chromaSubsampling: "4:4:4",
+        })
+        .withMetadata()
+        .toFile(compressedImage, (err, info) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log(info);
+          }
+        });
     }
 
-    const salt = await bcrypt.genSalt();
-    req.body.username = req.body.username.toLowerCase();
-    req.body.password = await bcrypt.hash(req.body.password, salt);
-    try {
-      const user = new User(req.body);
-      const users = await user.save();
-      await Redis.client.set(`user-${users._id}`, JSON.stringify(users), {
-        EX: 10,
-      });
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: users._id,
-          name: users.name,
-          type: "user",
-        },
-        message: `${req.user} membuat user baru ${users.name}`,
-        user: req.userId,
-      });
-      // End
+    return res.send("tes");
+    // if (!req.body.password) {
+    //   return res.status(400).json({ status: 400, msg: "Password Required!" });
+    // }
+    // if (!req.body.name) {
+    //   return res.status(400).json({ status: 400, msg: "Name Required!" });
+    // }
+    // if (!req.body.username) {
+    //   return res.status(400).json({ status: 400, msg: "Username Required!" });
+    // }
 
-      return res.status(200).json({ status: 200, data: users });
-    } catch (error) {
-      return res.status(400).json({ status: 400, data: error });
-    }
+    // const salt = await bcrypt.genSalt();
+    // req.body.username = req.body.username.toLowerCase();
+    // req.body.password = await bcrypt.hash(req.body.password, salt);
+    // try {
+    //   const user = new User(req.body);
+    //   const users = await user.save();
+    //   await Redis.client.set(`user-${users._id}`, JSON.stringify(users), {
+    //     EX: 10,
+    //   });
+    //   // push history
+    //   await HistoryController.pushHistory({
+    //     document: {
+    //       _id: users._id,
+    //       name: users.name,
+    //       type: "user",
+    //     },
+    //     message: `${req.user} membuat user baru ${users.name}`,
+    //     user: req.userId,
+    //   });
+    //   // End
+
+    //   return res.status(200).json({ status: 200, data: users });
+    // } catch (error) {
+    //   return res.status(400).json({ status: 400, data: error });
+    // }
   };
 
   show = async (req: Request, res: Response): Promise<Response> => {

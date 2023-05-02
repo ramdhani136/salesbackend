@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import Schedule from "../models/Schedule";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { BranchModel, History } from "../models";
@@ -128,8 +127,8 @@ class BranchController implements IController {
           filters: stateFilter,
         });
       }
-      return res.status(200).json({
-        status: 200,
+      return res.status(400).json({
+        status: 404,
         msg: "Data Not found!",
       });
     } catch (error: any) {
@@ -179,6 +178,7 @@ class BranchController implements IController {
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+
       if (cache) {
         const isCache = JSON.parse(cache);
         const getHistory = await History.find(
@@ -194,7 +194,7 @@ class BranchController implements IController {
           .populate("user", "name")
           .sort({ createdAt: -1 });
         const buttonActions = await WorkflowController.getButtonAction(
-          "schedule",
+          redisName,
           req.userId,
           isCache.workflowState
         );
@@ -206,8 +206,8 @@ class BranchController implements IController {
         });
       }
       const result: any = await Db.findOne({
-        name: req.params.id,
-      }).populate("user", "name");
+        _id: req.params.id,
+      });
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -243,7 +243,7 @@ class BranchController implements IController {
         workflow: buttonActions,
       });
     } catch (error) {
-      return res.status(404).json({ status: 404, data: error });
+      return res.status(404).json({ status: 404, msg: error });
     }
   };
 
@@ -264,7 +264,7 @@ class BranchController implements IController {
             );
 
           if (checkedWorkflow.status) {
-            await Schedule.updateOne(
+            await Db.updateOne(
               { name: req.params.id },
               checkedWorkflow.data
             ).populate("user", "name");
@@ -274,17 +274,17 @@ class BranchController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          await Schedule.updateOne({ name: req.params.id }, req.body).populate(
+          await Db.updateOne({ name: req.params.id }, req.body).populate(
             "user",
             "name"
           );
         }
 
-        const getData: any = await Schedule.findOne({
+        const getData: any = await Db.findOne({
           name: req.params.id,
         }).populate("user", "name");
         await Redis.client.set(
-          `schedule-${req.params.id}`,
+          `${redisName}-${req.params.id}`,
           JSON.stringify(getData),
           {
             EX: 30,
@@ -297,7 +297,7 @@ class BranchController implements IController {
           getData,
           req.user,
           req.userId,
-          "schedule"
+          redisName
         );
 
         return res.status(200).json({ status: 200, data: getData });

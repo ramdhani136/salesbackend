@@ -112,35 +112,10 @@ class BranchController implements IController {
       }
       // End
       const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.aggregate([
-        {
-          $sort: order_by,
-        },
-        {
-          $match: isFilter.data,
-        },
-        {
-          $skip: limit > 0 ? page * limit - limit : 0,
-        },
-        {
-          $limit: limit > 0 ? limit : getAll,
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "user",
-            foreignField: "_id",
-            as: "user",
-          },
-        },
-        {
-          $unwind: "$user",
-        },
-
-        {
-          $project: setField,
-        },
-      ]);
+      const result = await Db.find(isFilter.data, setField)
+        .skip(limit > 0 ? page * limit - limit : 0)
+        .limit(limit > 0 ? limit : getAll)
+        .sort(order_by);
 
       if (result.length > 0) {
         return res.status(200).json({

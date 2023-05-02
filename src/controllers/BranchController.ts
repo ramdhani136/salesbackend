@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import Schedule from "../models/Schedule";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { BranchModel, History, ScheduleItem } from "../models";
+import { BranchModel, History } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";

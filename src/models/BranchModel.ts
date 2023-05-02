@@ -6,6 +6,7 @@ const Branch = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     lat: {
       type: String,
@@ -26,11 +27,13 @@ const Branch = new mongoose.Schema(
       type: String,
       enum: ["0", "1", "2"],
       default: "0",
+      index: true,
     },
     workflowState: {
       type: String,
       required:true,
-      default:"Draft"
+      default:"Draft",
+      index: true,
     },
   },
   {

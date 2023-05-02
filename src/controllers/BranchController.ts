@@ -25,6 +25,11 @@ class BranchController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "createdBy.name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "lat",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
@@ -44,17 +49,10 @@ class BranchController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-
       {
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
-      },
-
-      {
-        name: "createdBy",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.Date,
       },
       {
         name: "updatedAt",
@@ -80,7 +78,7 @@ class BranchController implements IController {
             "lng",
             "desc",
             "workflowState",
-            "createdBy",
+            "createdBy.name",
             "status",
             "createdAt",
             "updatedAt",
@@ -104,18 +102,52 @@ class BranchController implements IController {
       // End
 
       // Validasi apakah filter valid
+
       if (!isFilter.status) {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
+
       // End
+
       const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.find(isFilter.data, setField)
-        .skip(limit > 0 ? page * limit - limit : 0)
-        .limit(limit > 0 ? limit : getAll)
-        .sort(order_by)
-        .populate("createdBy", "name");
+
+      console.log(getAll)
+
+      
+
+      const result = await Db.aggregate([
+        {
+          $sort: order_by,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $limit: limit > 0 ? limit : getAll,
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+
+        {
+          $project: setField,
+        },
+        {
+          $match: isFilter.data,
+        },
+      ]);
+
+     
 
       if (result.length > 0) {
         return res.status(200).json({

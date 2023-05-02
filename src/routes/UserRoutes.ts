@@ -38,7 +38,7 @@ class UserRoutes extends RouteBase {
       DeleteValid,
       UserController.delete
     );
-    this.router.put("/:id", upload.single("img"), UserController.update);
+    this.router.put("/:id",AuthMiddleware, upload.single("img"), UserController.update);
   }
 }
 

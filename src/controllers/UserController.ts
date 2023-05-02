@@ -234,14 +234,16 @@ class UserController implements IController {
         req.body
       );
       if (result) {
-        console.log(result)
+      
         const users: any = await User.findOne({ _id: req.params.id });
-        // if (req.file != undefined) {
-        //   let istitik = req.file.originalname.indexOf(".");
-        //   let typeimage = req.file.originalname.slice(istitik, 200);
-        //   this.prosesUpload(req, `${users.name}${typeimage}`);
-        //   req.body.img = `${users.name}${typeimage}`;
-        // }
+
+        if (req.file != undefined) {
+          let istitik = req.file.originalname.indexOf(".");
+          let typeimage = req.file.originalname.slice(istitik, 200);
+          this.prosesUpload(req, `${users.name}${typeimage}`);
+          req.body.img = `${users.name}${typeimage}`;
+        }
+  
         await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(

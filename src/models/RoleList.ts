@@ -67,6 +67,12 @@ const RoleList = new mongoose.Schema(
       default: 0,
       index: true,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

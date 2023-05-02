@@ -26,6 +26,7 @@ import {
   WorkflowRoutes,
   WorkflowStateRoutes,
   WorkflowTransitionRoutes,
+  BranchRoutes,
 } from "./routes";
 import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -160,6 +161,7 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
+    this.app.use("/branch", AuthMiddleware, BranchRoutes);
     // this.app.use("/schedule", AuthMiddleware, RoleValidation, ScheduleRoutes);
     // this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);
     // this.app.use("/schedulepacking", AuthMiddleware, ScheduleItemPackingRoutes);

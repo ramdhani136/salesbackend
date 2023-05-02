@@ -144,12 +144,7 @@ class BranchController implements IController {
     if (!req.body.name) {
       return res.status(400).json({ status: 400, msg: "name Required!" });
     }
-    if (!req.body.workflowState) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "workflowState Required!" });
-    }
-    req.body.user = req.userId;
+    req.body.createdBy = req.userId;
 
     try {
       const result = new Db(req.body);

@@ -29,7 +29,8 @@ const Branch = new mongoose.Schema(
     },
     workflowState: {
       type: String,
-      required:true
+      required:true,
+      default:"Draft"
     },
   },
   {

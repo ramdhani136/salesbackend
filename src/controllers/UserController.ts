@@ -234,7 +234,6 @@ class UserController implements IController {
         req.body
       );
       if (result) {
-      
         const users: any = await User.findOne({ _id: req.params.id });
 
         if (req.file != undefined) {
@@ -243,7 +242,7 @@ class UserController implements IController {
           this.prosesUpload(req, `${users.name}${typeimage}`);
           req.body.img = `${users.name}${typeimage}`;
         }
-  
+
         await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -298,7 +297,7 @@ class UserController implements IController {
     }
     try {
       const result: any = await User.findOne({
-        $and: [{ username: req.body.username.toLowerCase() }],
+        $and: [{ username: req.body.username.toLowerCase() }, { status: "1" }],
       });
       if (!result) {
         return res.status(400).json({ status: 400, msg: "User not found" });

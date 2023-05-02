@@ -1,4 +1,4 @@
-import User from "./User";
+import User from "./UserModel";
 import Schedule from "./Schedule";
 import ScheduleItem from "./ScheduleItem";
 import ScheduleItemPacking from "./ScheduleItemPacking";
@@ -13,6 +13,7 @@ import WorkflowTransition from "./WorkflowTransition";
 import WorkflowChanger from "./WorkflowChanger";
 import ChatModel from "./ChatModel";
 import MessageModel from "./MessageModel";
+import BranchModel from "./BranchModel";
 
 export {
   User,
@@ -30,4 +31,5 @@ export {
   WorkflowChanger,
   ChatModel,
   MessageModel,
+  BranchModel,
 };

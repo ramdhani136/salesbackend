@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import User from "../models/User";
+import User from "../models/UserModel";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import bcrypt from "bcrypt";

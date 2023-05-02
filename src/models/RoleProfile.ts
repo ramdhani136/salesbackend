@@ -14,17 +14,21 @@ const RoleProfile = new mongoose.Schema(
       required: true,
       index: true,
     },
-    workflowState: {
-      type: String,
-      require: true,
+    branch: {
+      type: Schema.Types.ObjectId,
+      ref: "branch",
+      required: true,
       index: true,
-      default:"Draft"
     },
     status: {
       type: String,
-      required: true,
-      default: 0,
-      index: true,
+      enum: ["0", "1", "2", "3"],
+      default: "0",
+    },
+    workflowState: {
+      type: String,
+      required:true,
+      default:"Draft"
     },
   },
   {

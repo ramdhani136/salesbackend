@@ -8,15 +8,9 @@ const RoleProfile = new mongoose.Schema(
       index: true,
       unique: true,
     },
-    user: {
+    createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
-      required: true,
-      index: true,
-    },
-    branch: {
-      type: Schema.Types.ObjectId,
-      ref: "branch",
       required: true,
       index: true,
     },

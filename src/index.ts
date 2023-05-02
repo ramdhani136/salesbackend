@@ -165,12 +165,12 @@ class App {
     // this.app.use("/schedule", AuthMiddleware, RoleValidation, ScheduleRoutes);
     // this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);
     // this.app.use("/schedulepacking", AuthMiddleware, ScheduleItemPackingRoutes);
-    // this.app.use(
-    //   "/roleprofile",
-    //   AuthMiddleware,
-    //   RoleValidation,
-    //   RoleProfileRoutes
-    // );
+    this.app.use(
+      "/roleprofile",
+      AuthMiddleware,
+      // RoleValidation,
+      RoleProfileRoutes
+    );
     // this.app.use("/rolelist", AuthMiddleware, RoleValidation, RoleListRoutes);
     // this.app.use("/roleuser", AuthMiddleware, RoleValidation, RoleUserRoutes);
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);

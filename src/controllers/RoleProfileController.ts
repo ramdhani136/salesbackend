@@ -4,8 +4,10 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { RoleProfile } from "../models";
+import { History, RoleProfile } from "../models";
 import { ISearch } from "../utils/FilterQuery";
+import WorkflowController from "./WorkflowController";
+import HistoryController from "./HistoryController";
 
 const Db = RoleProfile;
 const redisName = "roleprofile";
@@ -24,7 +26,7 @@ class RoleProfileController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "user.name",
+        name: "createdBy.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -55,7 +57,7 @@ class RoleProfileController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "user.name", "status", "workflowState"];
+        : ["name", "createdBy.name", "status", "workflowState"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -83,13 +85,13 @@ class RoleProfileController implements IController {
         {
           $lookup: {
             from: "users",
-            localField: "user",
+            localField: "createdBy",
             foreignField: "_id",
-            as: "user",
+            as: "createdBy",
           },
         },
         {
-          $unwind: "$user",
+          $unwind: "$createdBy",
         },
         {
           $match: isFilter.data,
@@ -130,48 +132,165 @@ class RoleProfileController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     if (!req.body.name) {
-      return res.status(400).json({ status: 400, msg: "Name Required!" });
+      return res.status(400).json({ status: 400, msg: "name Required!" });
     }
-    req.body.user = req.userId;
+    req.body.createdBy = req.userId;
     try {
       const result = new Db(req.body);
       const response = await result.save();
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `Membuat ${redisName} baru`,
+        user: req.userId,
+      });
+
+      await Redis.client.set(
+        `${redisName}-${response._id}`,
+        JSON.stringify(response),
+        {
+          EX: 30,
+        }
+      );
+      // End
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
     }
   };
 
-  show = async (req: Request, res: Response): Promise<Response> => {
+  show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+
       if (cache) {
-        console.log("Cache");
-        return res.status(200).json({ status: 200, data: JSON.parse(cache) });
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
       }
-      const result = await Db.findOne({ _id: req.params.id }).populate(
-        "user",
+      const result: any = await Db.findOne({ _id: req.params.id }).populate(
+        "createdBy",
         "name"
       );
+      const buttonActions = await WorkflowController.getButtonAction(
+        redisName,
+        req.userId,
+        result.workflowState
+      );
+
+      // return res.send(buttonActions)
+      const getHistory = await History.find(
+        {
+          $and: [
+            { "document._id": result._id },
+            { "document.type": redisName },
+          ],
+        },
+        ["_id", "message", "createdAt", "updatedAt"]
+      )
+        .populate("user", "name")
+        .sort({ createdAt: -1 });
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
       );
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({
+        status: 200,
+        data: result,
+        history: getHistory,
+        workflow: buttonActions,
+      });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });
     }
   };
 
-  update = async (req: Request, res: Response): Promise<Response> => {
+  update = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.updateOne({ name: req.params.id }, req.body);
-      const getData = await Db.findOne({ name: req.params.id });
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(getData)
-      );
-      return res.status(200).json({ status: 200, data: result });
+      const result: any = await Db.findOne({
+        _id: req.params.id,
+      }).populate("createdBy", "name");
+
+      if (result) {
+        if (req.body.id_workflow && req.body.id_state) {
+          const checkedWorkflow =
+            await WorkflowController.permissionUpdateAction(
+              req.body.id_workflow,
+              req.userId,
+              req.body.id_state,
+              result.user._id
+            );
+
+          if (checkedWorkflow.status) {
+            await Db.updateOne(
+              { _id: req.params.id },
+              checkedWorkflow.data
+            ).populate("createdBy", "name");
+          } else {
+            return res
+              .status(403)
+              .json({ status: 403, msg: checkedWorkflow.msg });
+          }
+        } else {
+          await Db.updateOne({ _id: req.params.id }, req.body).populate(
+            "createdBy",
+            "name"
+          );
+        }
+
+        const getData: any = await Db.findOne({
+          _id: req.params.id,
+        }).populate("createdBy", "name");
+        await Redis.client.set(
+          `${redisName}-${req.params.id}`,
+          JSON.stringify(getData),
+          {
+            EX: 30,
+          }
+        );
+
+        // push history semua field yang di update
+        await HistoryController.pushUpdateMany(
+          result,
+          getData,
+          req.user,
+          req.userId,
+          redisName
+        );
+
+        return res.status(200).json({ status: 200, data: getData });
+        // End
+      } else {
+        return res
+          .status(400)
+          .json({ status: 404, msg: "Error update, data not found" });
+      }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }

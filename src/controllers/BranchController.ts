@@ -251,7 +251,7 @@ class BranchController implements IController {
   update = async (req: Request | any, res: Response): Promise<any> => {
     try {
       const result: any = await Db.findOne({
-        name: req.params.id,
+        _id: req.params.id,
       }).populate("createdBy", "name");
 
       if (result) {
@@ -266,7 +266,7 @@ class BranchController implements IController {
 
           if (checkedWorkflow.status) {
             await Db.updateOne(
-              { name: req.params.id },
+              { _id: req.params.id },
               checkedWorkflow.data
             ).populate("createdBy", "name");
           } else {
@@ -275,14 +275,14 @@ class BranchController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          await Db.updateOne({ name: req.params.id }, req.body).populate(
+          await Db.updateOne({ _id: req.params.id }, req.body).populate(
             "createdBy",
             "name"
           );
         }
 
         const getData: any = await Db.findOne({
-          name: req.params.id,
+          _id: req.params.id,
         }).populate("createdBy", "name");
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
@@ -315,7 +315,7 @@ class BranchController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.findOneAndDelete({ name: req.params.id });
+      const result = await Db.findOneAndDelete({ _id: req.params.id });
       if (result) {
         await Redis.client.del(`${redisName}-${req.params.id}`);
         // push history

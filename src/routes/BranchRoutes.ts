@@ -1,16 +1,15 @@
-import { BranchController } from "../controllers";
+import { BranchController as Controller } from "../controllers";
 import { DeleteValid } from "../middleware";
 import RouteBase from "./RouteBase";
 
-
-class ScheduleRoutes extends RouteBase {
+class BranchRoutes extends RouteBase {
   routes(): void {
-    this.router.get("/",BranchController.index);
-    this.router.post("/", BranchController.create);
-    this.router.get("/:id", BranchController.show);
-    this.router.delete("/:id", DeleteValid, BranchController.delete);
-    this.router.put("/:id",BranchController.update);
+    this.router.get("/", Controller.index);
+    this.router.post("/", Controller.create);
+    this.router.get("/:id", Controller.show);
+    this.router.delete("/:id", DeleteValid, Controller.delete);
+    this.router.put("/:id", Controller.update);
   }
 }
 
-export default new ScheduleRoutes().router;
+export default new BranchRoutes().router;

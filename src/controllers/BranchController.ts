@@ -114,7 +114,8 @@ class BranchController implements IController {
       const result = await Db.find(isFilter.data, setField)
         .skip(limit > 0 ? page * limit - limit : 0)
         .limit(limit > 0 ? limit : getAll)
-        .sort(order_by);
+        .sort(order_by)
+        .populate("createdBy", "name");
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -207,7 +208,7 @@ class BranchController implements IController {
       }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      }).populate("createdBy", "name");
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -251,7 +252,7 @@ class BranchController implements IController {
     try {
       const result: any = await Db.findOne({
         name: req.params.id,
-      }).populate("user", "name");
+      }).populate("createdBy", "name");
 
       if (result) {
         if (req.body.id_workflow && req.body.id_state) {
@@ -267,7 +268,7 @@ class BranchController implements IController {
             await Db.updateOne(
               { name: req.params.id },
               checkedWorkflow.data
-            ).populate("user", "name");
+            ).populate("createdBy", "name");
           } else {
             return res
               .status(403)
@@ -275,14 +276,14 @@ class BranchController implements IController {
           }
         } else {
           await Db.updateOne({ name: req.params.id }, req.body).populate(
-            "user",
+            "createdBy",
             "name"
           );
         }
 
         const getData: any = await Db.findOne({
           name: req.params.id,
-        }).populate("user", "name");
+        }).populate("createdBy", "name");
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
           JSON.stringify(getData),

@@ -112,6 +112,7 @@ class BranchController implements IController {
       // End
 
       const getAll = await Db.find(isFilter.data).count();
+      
 
       console.log(getAll)
 

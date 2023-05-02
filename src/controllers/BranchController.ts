@@ -157,7 +157,7 @@ class BranchController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `membuat ${redisName} baru`,
+        message: `Membuat ${redisName} baru`,
         user: req.userId,
       });
       // End
@@ -325,7 +325,7 @@ class BranchController implements IController {
             name: result.name,
             type: redisName,
           },
-          message: `menghapus ${redisName} nomor ${result.name}`,
+          message: `Menghapus ${redisName} nomor ${result.name}`,
           user: req.userId,
         });
         // End

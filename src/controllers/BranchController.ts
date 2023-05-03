@@ -111,12 +111,30 @@ class BranchController implements IController {
 
       // End
 
-      const getAll = await Db.find(isFilter.data).count();
-      
+      const totalData = await Db.aggregate([
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $project: setField,
+        },
+        {
+          $match: isFilter.data,
+        },
+        {
+          $count: "total_orders",
+        },
+      ]);
 
-      console.log(getAll)
-
-      
+      const getAll = totalData[0].total_orders ?? 0;
 
       const result = await Db.aggregate([
         {
@@ -147,8 +165,6 @@ class BranchController implements IController {
           $match: isFilter.data,
         },
       ]);
-
-     
 
       if (result.length > 0) {
         return res.status(200).json({

@@ -247,33 +247,28 @@ class PermissionController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save();
 
-      for (let index = 0; index < 10000; index++) {
-        const result = new Db(req.body);
-        await result.save();
-      }
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name ?? "Other",
+          type: redisName,
+        },
+        message: `Membuat ${redisName} baru`,
+        user: req.userId,
+      });
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name ?? "Other",
-      //     type: redisName,
-      //   },
-      //   message: `Membuat ${redisName} baru`,
-      //   user: req.userId,
-      // });
+      // End
 
-      // // End
+      await Redis.client.set(
+        `${redisName}-${response._id}`,
+        JSON.stringify(response),
+        {
+          EX: 30,
+        }
+      );
 
-      // await Redis.client.set(
-      //   `${redisName}-${response._id}`,
-      //   JSON.stringify(response),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
-
-      return res.status(200).json({ status: 200, data: "d" });
+      return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
     }

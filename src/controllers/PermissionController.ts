@@ -242,7 +242,20 @@ class PermissionController implements IController {
 
     try {
       // Cek apakah terdapat duplikasi data
-      const cekDuplicate = await Db.findOne({});
+      const cekDuplicate = await Db.findOne({
+        $and: [
+          { doc: req.body.doc },
+          { allow: req.body.allow },
+          { user: req.body.user },
+          { value: req.body.value },
+          { allDoc: req.body.allDoc ?? 0 },
+        ],
+      });
+
+      console.log(cekDuplicate);
+      if(cekDuplicate){
+        return res.status(400).json({ status: 400, msg: "Duplicate Data!" });
+      }
       // End
       const result = new Db(req.body);
       const response: any = await result.save();
@@ -270,7 +283,7 @@ class PermissionController implements IController {
 
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
-      return res.status(400).json({ status: 400, data: error });
+      return res.status(400).json({ status: 400, msg: error });
     }
   };
 

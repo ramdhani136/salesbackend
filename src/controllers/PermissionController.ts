@@ -231,6 +231,7 @@ class PermissionController implements IController {
     req.body.createdBy = req.userId;
 
     try {
+      // const cekDuplicate = await Db.findOne({})
       const result = new Db(req.body);
       const response: any = await result.save();
 

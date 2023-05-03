@@ -17,7 +17,7 @@ const Permission = new mongoose.Schema(
     doc: {
       type: String,
       enum: ["branch", "visit", "callsheet", ""],
-      required: false,
+      default:"",
       index: true,
     },
     allDoc: {

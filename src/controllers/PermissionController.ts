@@ -239,12 +239,13 @@ class PermissionController implements IController {
       await HistoryController.pushHistory({
         document: {
           _id: response._id,
-          name: response.name,
+          name: response.name ?? "Other",
           type: redisName,
         },
         message: `Membuat ${redisName} baru`,
         user: req.userId,
       });
+
       // End
 
       await Redis.client.set(

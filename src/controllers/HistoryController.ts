@@ -174,7 +174,7 @@ class HistoryController implements IController {
       "roleuser",
       "roleprofile",
       "rolelist",
-      "permission"
+      "permission",
     ];
 
     const cekDocType = doctype.find((item) => item == req.body.document.type);
@@ -272,7 +272,7 @@ class HistoryController implements IController {
       "roleprofile",
       "rolelist",
       "branch",
-      "permission"
+      "permission",
     ];
 
     const cekDocType = doctype.find((item) => item == data.document.type);
@@ -317,7 +317,7 @@ class HistoryController implements IController {
         await this.pushHistory({
           document: {
             _id: prevData._id,
-            name: prevData.name,
+            name: prevData.name ?? "Other",
             type: `${doc}`,
           },
           message: `Merubah ${item} dari ${prevData[item]} menjadi ${nextData[item]}`,

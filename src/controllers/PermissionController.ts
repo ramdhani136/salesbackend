@@ -241,12 +241,14 @@ class PermissionController implements IController {
     req.body.createdBy = req.userId;
 
     try {
-      
       // Cek User terdaftar
-        const isRegUser = await UserController.checkUserRegistered(req.body.user);
-        if(!isRegUser){
-          return res.status(400).json({ status: 400, msg: "User is not registered!!" });
-        }
+      const isRegUser = await UserController.checkUserRegistered(req.body.user);
+
+      if (!isRegUser) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "User is not registered!!" });
+      }
       // End
 
       // Cek apakah terdapat duplikasi data

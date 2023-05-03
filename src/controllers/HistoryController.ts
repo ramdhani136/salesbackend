@@ -174,6 +174,7 @@ class HistoryController implements IController {
       "roleuser",
       "roleprofile",
       "rolelist",
+      "permission"
     ];
 
     const cekDocType = doctype.find((item) => item == req.body.document.type);
@@ -271,6 +272,7 @@ class HistoryController implements IController {
       "roleprofile",
       "rolelist",
       "branch",
+      "permission"
     ];
 
     const cekDocType = doctype.find((item) => item == data.document.type);

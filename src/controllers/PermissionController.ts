@@ -3,15 +3,15 @@ import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { BranchModel, History } from "../models";
+import { History, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
 
-const Db = BranchModel;
-const redisName = "branch";
+const Db = PermissionModel;
+const redisName = "permission";
 
-class BranchController implements IController {
+class PermissionController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -20,27 +20,32 @@ class BranchController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "name",
+        name: "allow",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "doc",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "allDoc",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "value",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "user.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
         name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "lat",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "lng",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "desc",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -73,10 +78,11 @@ class BranchController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "name",
-            "lat",
-            "lng",
-            "desc",
+            "user.name",
+            "allow",
+            "doc",
+            "allDoc",
+            "value",
             "workflowState",
             "createdBy.name",
             "status",
@@ -89,7 +95,7 @@ class BranchController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let search: ISearch = {
-        filter: ["name", "workflowState"],
+        filter: ["doc", "workflowState"],
         value: req.query.search || "",
       };
 
@@ -134,9 +140,9 @@ class BranchController implements IController {
         },
       ]);
 
-      const getAll = totalData[0].total_orders ?? 0;
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
-      const result = await Db.aggregate([
+      let pipeline: any = [
         {
           $sort: order_by,
         },
@@ -149,22 +155,37 @@ class BranchController implements IController {
           },
         },
         {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        {
           $unwind: "$createdBy",
+        },
+        {
+          $unwind: "$user",
         },
         {
           $match: isFilter.data,
         },
+
         {
           $skip: limit > 0 ? page * limit - limit : 0,
-        },
-        {
-          $limit: limit > 0 ? limit : getAll,
         },
 
         {
           $project: setField,
         },
-      ]);
+      ];
+
+      if (limit > 0) {
+        pipeline.push({ $limit: limit });
+      }
+
+      const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -190,14 +211,28 @@ class BranchController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.name) {
-      return res.status(400).json({ status: 400, msg: "name Required!" });
+    if (!req.body.user) {
+      return res.status(400).json({ status: 400, msg: "user Required!" });
+    }
+    if (!req.body.allow) {
+      return res.status(400).json({ status: 400, msg: "allow Required!" });
+    }
+    if (!req.body.value) {
+      return res.status(400).json({ status: 400, msg: "value Required!" });
+    }
+
+    if (req.body.allDoc) {
+      req.body.doc = "";
+    } else {
+      if (!req.body.doc) {
+        return res.status(400).json({ status: 400, msg: "doc Required!" });
+      }
     }
     req.body.createdBy = req.userId;
 
     try {
       const result = new Db(req.body);
-      const response = await result.save();
+      const response: any = await result.save();
 
       // push history
       await HistoryController.pushHistory({
@@ -364,7 +399,7 @@ class BranchController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.findOneAndDelete({ _id: req.params.id });
+      const result: any = await Db.findOneAndDelete({ _id: req.params.id });
       if (result) {
         await Redis.client.del(`${redisName}-${req.params.id}`);
         // push history
@@ -387,4 +422,4 @@ class BranchController implements IController {
   };
 }
 
-export default new BranchController();
+export default new PermissionController();

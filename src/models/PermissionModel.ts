@@ -31,13 +31,7 @@ const Permission = new mongoose.Schema(
       require: true,
       index: true,
     },
-    uniqId: {
-      type: String,
-      require: true,
-      index: true,
-      unique: true,
-    },
-    cratedBy: {
+    createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
@@ -46,12 +40,12 @@ const Permission = new mongoose.Schema(
     status: {
       type: String,
       enum: ["0", "1", "2"],
-      default: "0",
+      default: "1",
     },
     workflowState: {
       type: String,
       required: true,
-      default: "Draft",
+      default: "Submited",
     },
   },
   {

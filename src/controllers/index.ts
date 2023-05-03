@@ -16,6 +16,7 @@ import PackingIDCOntroller from "./PackingIDCOntroller";
 import ChatController from "./ChatController";
 import MessageController from "./MessageController";
 import BranchController from "./BranchController";
+import PermissionController from "./PermissionController";
 
 export {
   UserController,
@@ -36,4 +37,5 @@ export {
   ChatController,
   MessageController,
   BranchController,
+  PermissionController
 };

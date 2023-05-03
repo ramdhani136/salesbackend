@@ -14,6 +14,7 @@ import WorkflowChanger from "./WorkflowChanger";
 import ChatModel from "./ChatModel";
 import MessageModel from "./MessageModel";
 import BranchModel from "./BranchModel";
+import PermissionModel from "./PermissionModel";
 
 export {
   User,
@@ -32,4 +33,5 @@ export {
   ChatModel,
   MessageModel,
   BranchModel,
+  PermissionModel
 };

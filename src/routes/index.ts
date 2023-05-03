@@ -16,6 +16,7 @@ import PackingIdRoutes from "./PackingIdRoutes";
 import MessageRoutes from "./MessageRoutes";
 import ChatRoutes from "./ChatRoutes";
 import BranchRoutes from "./BranchRoutes";
+import PermissionRoutes from "./PermissionRoutes";
 
 export {
   UserRoutes,
@@ -35,5 +36,6 @@ export {
   PackingIdRoutes,
   MessageRoutes,
   ChatRoutes,
-  BranchRoutes
+  BranchRoutes,
+  PermissionRoutes
 };

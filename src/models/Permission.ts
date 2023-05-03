@@ -10,17 +10,20 @@ const Permission = new mongoose.Schema(
     },
     allow: {
       type: String,
+      enum: ["branch", "user", "customer", "customerGroup", "userGroup"],
       require: true,
       index: true,
     },
     doc: {
       type: String,
-      require: true,
+      enum: ["branch", "visit", "callsheet", ""],
+      required: false,
       index: true,
     },
-    alldoc: {
+    allDoc: {
       type: Boolean,
       index: true,
+      enum: [0, 1],
       default: 0,
     },
     value: {
@@ -32,12 +35,23 @@ const Permission = new mongoose.Schema(
       type: String,
       require: true,
       index: true,
+      unique: true,
     },
     cratedBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
       index: true,
+    },
+    status: {
+      type: String,
+      enum: ["0", "1", "2"],
+      default: "0",
+    },
+    workflowState: {
+      type: String,
+      required: true,
+      default: "Draft",
     },
   },
   {

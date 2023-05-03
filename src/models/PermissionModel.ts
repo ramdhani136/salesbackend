@@ -17,7 +17,7 @@ const Permission = new mongoose.Schema(
     doc: {
       type: String,
       enum: ["branch", "visit", "callsheet", ""],
-      default:"",
+      default: "",
       index: true,
     },
     allDoc: {
@@ -52,5 +52,7 @@ const Permission = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+Permission.index({ user: 1, createdBy: 1 });
 
 export default mongoose.model("Permissions", Permission);

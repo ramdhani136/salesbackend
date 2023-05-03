@@ -146,6 +146,7 @@ class PermissionController implements IController {
         {
           $match: isFilter.data,
         },
+
         {
           $count: "total_orders",
         },
@@ -154,9 +155,6 @@ class PermissionController implements IController {
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipeline: any = [
-        {
-          $sort: order_by,
-        },
         {
           $lookup: {
             from: "users",
@@ -187,6 +185,9 @@ class PermissionController implements IController {
           $project: setField,
         },
         {
+          $sort: order_by,
+        },
+        {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
       ];
@@ -196,7 +197,6 @@ class PermissionController implements IController {
       }
 
       const result = await Db.aggregate(pipeline);
-
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
@@ -242,33 +242,38 @@ class PermissionController implements IController {
 
     try {
       // Cek apakah terdapat duplikasi data
-      const cekDuplicate = await Db.findOne({})
+      const cekDuplicate = await Db.findOne({});
       // End
       const result = new Db(req.body);
       const response: any = await result.save();
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name ?? "Other",
-          type: redisName,
-        },
-        message: `Membuat ${redisName} baru`,
-        user: req.userId,
-      });
+      for (let index = 0; index < 10000; index++) {
+        const result = new Db(req.body);
+        await result.save();
+      }
 
-      // End
+      // // push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: response._id,
+      //     name: response.name ?? "Other",
+      //     type: redisName,
+      //   },
+      //   message: `Membuat ${redisName} baru`,
+      //   user: req.userId,
+      // });
 
-      await Redis.client.set(
-        `${redisName}-${response._id}`,
-        JSON.stringify(response),
-        {
-          EX: 30,
-        }
-      );
+      // // End
 
-      return res.status(200).json({ status: 200, data: response });
+      // await Redis.client.set(
+      //   `${redisName}-${response._id}`,
+      //   JSON.stringify(response),
+      //   {
+      //     EX: 30,
+      //   }
+      // );
+
+      return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
     }

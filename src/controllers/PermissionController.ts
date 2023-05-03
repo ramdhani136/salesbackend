@@ -5,7 +5,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { History, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { HistoryController, WorkflowController } from ".";
+import { HistoryController, UserController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
 
 const Db = PermissionModel;
@@ -241,6 +241,14 @@ class PermissionController implements IController {
     req.body.createdBy = req.userId;
 
     try {
+      
+      // Cek User terdaftar
+        const isRegUser = await UserController.checkUserRegistered(req.body.user);
+        if(!isRegUser){
+          return res.status(400).json({ status: 400, msg: "User is not registered!!" });
+        }
+      // End
+
       // Cek apakah terdapat duplikasi data
       const cekDuplicate = await Db.findOne({
         $and: [

@@ -408,6 +408,18 @@ class UserController implements IController {
         .json({ status: 400, msg: error ?? "Error, Connection" });
     }
   };
+
+  checkUserRegistered = async (id: string): Promise<Boolean> => {
+    try {
+      const user: any = await User.findOne({ _id: id });
+      if (user) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      return false;
+    }
+  };
 }
 
 export default new UserController();

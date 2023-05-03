@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
 
-const status = Object.freeze({
-  0: 0,
-  1: 1,
-});
-
 const User = new mongoose.Schema(
   {
     name: {

@@ -252,8 +252,7 @@ class PermissionController implements IController {
         ],
       });
 
-      console.log(cekDuplicate);
-      if(cekDuplicate){
+      if (cekDuplicate) {
         return res.status(400).json({ status: 400, msg: "Duplicate Data!" });
       }
       // End

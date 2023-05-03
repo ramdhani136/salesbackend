@@ -130,6 +130,17 @@ class PermissionController implements IController {
           $unwind: "$createdBy",
         },
         {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
           $project: setField,
         },
         {
@@ -173,11 +184,10 @@ class PermissionController implements IController {
         },
 
         {
-          $skip: limit > 0 ? page * limit - limit : 0,
-        },
-
-        {
           $project: setField,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
         },
       ];
 

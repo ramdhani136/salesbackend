@@ -33,8 +33,8 @@ import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
 import { Schedule } from "./models";
 import cron from "node-cron";
-import { AuthMiddleware } from "./middleware";
-import { RoleValidation } from "./middleware/RoleValidation";
+import { AuthMiddleware, RoleMiddleware } from "./middleware";
+
 const cookieParser = require("cookie-parser");
 
 const corsOptions = {
@@ -164,7 +164,7 @@ class App {
     this.app.use("/users", UserRoutes);
     this.app.use("/branch", AuthMiddleware, BranchRoutes);
     this.app.use("/permission", AuthMiddleware, PermissionRoutes);
-    // this.app.use("/schedule", AuthMiddleware, RoleValidation, ScheduleRoutes);
+    // this.app.use("/schedule", AuthMiddleware, RoleMiddleware, ScheduleRoutes);
     // this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);
     // this.app.use("/schedulepacking", AuthMiddleware, ScheduleItemPackingRoutes);
     this.app.use(
@@ -173,8 +173,8 @@ class App {
       // RoleValidation,
       RoleProfileRoutes
     );
-    // this.app.use("/rolelist", AuthMiddleware, RoleValidation, RoleListRoutes);
-    // this.app.use("/roleuser", AuthMiddleware, RoleValidation, RoleUserRoutes);
+    // this.app.use("/rolelist", AuthMiddleware, RoleMiddleware, RoleListRoutes);
+    // this.app.use("/roleuser", AuthMiddleware, RoleMiddleware, RoleUserRoutes);
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);
     // this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
     // this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);

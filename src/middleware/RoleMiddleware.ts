@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { RoleList, RoleUser } from "../models";
 
-export const RoleValidation = (
+export const RoleMiddleware = (
   req: Request | any,
   res: Response,
   next: NextFunction

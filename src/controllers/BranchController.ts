@@ -7,6 +7,7 @@ import { BranchModel, History } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
+import { PermissionMiddleware } from "../middleware";
 
 const Db = BranchModel;
 const redisName = "branch";
@@ -227,6 +228,7 @@ class BranchController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
+      await PermissionMiddleware.getUserPemission(req.userId, "branch");
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
       if (cache) {

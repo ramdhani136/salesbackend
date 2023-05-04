@@ -118,28 +118,28 @@ class PermissionController implements IController {
       // End
 
       const totalData = await Db.aggregate([
-        // {
-        //   $lookup: {
-        //     from: "users",
-        //     localField: "createdBy",
-        //     foreignField: "_id",
-        //     as: "createdBy",
-        //   },
-        // },
-        // {
-        //   $unwind: "$createdBy",
-        // },
-        // {
-        //   $lookup: {
-        //     from: "users",
-        //     localField: "user",
-        //     foreignField: "_id",
-        //     as: "user",
-        //   },
-        // },
-        // {
-        //   $unwind: "$createdBy",
-        // },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
         {
           $project: setField,
         },
@@ -155,28 +155,28 @@ class PermissionController implements IController {
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipeline: any = [
-        // {
-        //   $lookup: {
-        //     from: "users",
-        //     localField: "createdBy",
-        //     foreignField: "_id",
-        //     as: "createdBy",
-        //   },
-        // },
-        // {
-        //   $lookup: {
-        //     from: "users",
-        //     localField: "user",
-        //     foreignField: "_id",
-        //     as: "user",
-        //   },
-        // },
-        // {
-        //   $unwind: "$createdBy",
-        // },
-        // {
-        //   $unwind: "$user",
-        // },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $unwind: "$user",
+        },
         {
           $match: isFilter.data,
         },

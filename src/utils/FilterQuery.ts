@@ -1,6 +1,7 @@
 // filters=[["nama","=","Ilham Ramdhani"]]
 // fields=["name","username","email"]
 
+import { ObjectId } from "mongodb";
 import { IStateFilter } from "../Interfaces";
 
 interface IFilterQuery {
@@ -17,7 +18,8 @@ class FilterQuery {
   public getFilter(
     filters: any,
     stateFilter: IStateFilter[],
-    search?: ISearch
+    search?: ISearch,
+    permissionUser?: ObjectId[]
   ): IFilterQuery {
     let genSearch: any[] = [];
     if (search) {

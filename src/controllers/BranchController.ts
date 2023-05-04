@@ -98,12 +98,25 @@ class BranchController implements IController {
         value: req.query.search || "",
       };
 
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+
       // Mengambil hasil fields
       let setField = FilterQuery.getField(fields);
       // End
 
       // Mengambil hasil filter
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(
+        filters,
+        stateFilter,
+        search,
+        userPermission
+      );
       // End
 
       // Validasi apakah filter valid
@@ -232,12 +245,6 @@ class BranchController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.BRANCH
-      );
-
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
       if (cache) {

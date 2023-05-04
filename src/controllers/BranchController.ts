@@ -119,6 +119,8 @@ class BranchController implements IController {
       );
       // End
 
+      console.log(JSON.stringify(isFilter))
+
       // Validasi apakah filter valid
 
       if (!isFilter.status) {

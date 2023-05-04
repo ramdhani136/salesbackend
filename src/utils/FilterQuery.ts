@@ -7,6 +7,7 @@ import { IStateFilter } from "../Interfaces";
 interface IFilterQuery {
   status: boolean;
   data: any[];
+  coba: any;
 }
 
 export interface ISearch {
@@ -143,9 +144,12 @@ class FilterQuery {
       return {
         status: true,
         data: filterData,
+        coba: {
+          $and: [filterData, { createdBy: { $in: permissionUser } }],
+        },
       };
     } else {
-      return { status: false, data: [] };
+      return { status: false, data: [], coba: "" };
     }
   }
 

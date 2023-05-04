@@ -1,30 +1,30 @@
 import { PermissionModel } from "../models";
+const { ObjectId } = require("mongodb");
 
-// export enum permissionType {
-//     SCHEDULE = "schedule",
-//     SCHEDULEITEM = "scheduleitem",
-//     WAREHOUSE = "warehouse",
-//     PACKING = "schedulepacking",
-//     PACKINGID = "packingid",
-//     USERS = "users",
-//     CHAT = "chat",
-//     MESSAGE = "message",
-//     WORKFLOW = "workflow",
-//     ROLEPROFILE = "roleprofile",
-//   }
+export enum selPermissionAllow {
+  BRANCH = "branch",
+  CUSTOMERGROUP = "customerGroup",
+  CUSTOMER = "customer",
+  USER = "user",
+}
+
+export enum selPermissionType {
+  BRANCH = "branch",
+}
 
 class PermissionMiddleware {
-  public getUserPemission = async (
+  public getPermission = async (
     userid: string,
-    type: string
-  ): Promise<any> => {
+    allow: selPermissionAllow,
+    type: selPermissionType
+  ): Promise<any[]> => {
     let data = await PermissionModel.find({
       $or: [
-        { $and: [{ user: userid }, { allow: "user" }, { allDoc: true }] },
+        { $and: [{ user: userid }, { allow: allow }, { allDoc: true }] },
         {
           $and: [
             { user: userid },
-            { allow: "user" },
+            { allow: allow },
             { allDoc: false },
             { doc: type },
           ],
@@ -33,13 +33,20 @@ class PermissionMiddleware {
     });
     if (data.length > 0) {
       const isPemission = data.map((item: any) => {
-        return `user:${item.value}`;
+        return item.value;
       });
 
-      let final:any
-    //   final.d = isPemission;
-      console.log(isPemission);
+      const uniqueData = isPemission
+        .filter((item, index) => {
+          return isPemission.indexOf(item) === index;
+        })
+        .map((id) => {
+          return new ObjectId(id);
+        });
+
+      return uniqueData;
     }
+    return [];
   };
 }
 

@@ -126,7 +126,7 @@ class RoleProfileController implements IController {
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
-      const getAll = totalData[0].total_orders ?? 0;
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [
         {
@@ -150,12 +150,15 @@ class RoleProfileController implements IController {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
         {
-          $limit: limit > 0 ? limit : getAll,
-        },
-        {
           $project: setField,
         },
       ];
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+      }
+      // End
 
       // Menambahkan filter berdasarkan permission user
       if (userPermission.length > 0) {
@@ -219,7 +222,7 @@ class RoleProfileController implements IController {
           EX: 30,
         }
       );
-      
+
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
@@ -331,7 +334,7 @@ class RoleProfileController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         }).populate("createdBy", "name");
-        
+
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
           JSON.stringify(getData),

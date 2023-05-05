@@ -160,7 +160,7 @@ class BranchController implements IController {
 
       const totalData = await Db.aggregate(pipelineTotal);
 
-      const getAll = totalData[0].total_orders ?? 0;
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [
         {
@@ -184,9 +184,7 @@ class BranchController implements IController {
         {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
-        {
-          $limit: limit > 0 ? limit : getAll,
-        },
+
         {
           $project: setField,
         },
@@ -199,6 +197,12 @@ class BranchController implements IController {
             createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
           },
         });
+      }
+      // End
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
       }
       // End
 

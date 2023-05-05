@@ -117,7 +117,7 @@ class PermissionController implements IController {
 
       // End
 
-      const totalData = await Db.aggregate([
+      let pipelineTotal: any = [
         {
           $lookup: {
             from: "users",
@@ -150,11 +150,12 @@ class PermissionController implements IController {
         {
           $count: "total_orders",
         },
-      ]);
+      ];
+      const totalData = await Db.aggregate(pipelineTotal);
 
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
-      let pipeline: any = [
+      let pipelineResult: any = [
         {
           $lookup: {
             from: "users",
@@ -193,10 +194,10 @@ class PermissionController implements IController {
       ];
 
       if (limit > 0) {
-        pipeline.push({ $limit: limit });
+        pipelineResult.push({ $limit: limit });
       }
 
-      const result = await Db.aggregate(pipeline);
+      const result = await Db.aggregate(pipelineResult);
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,

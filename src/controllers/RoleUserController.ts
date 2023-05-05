@@ -4,9 +4,9 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { RoleProfile, RoleUser, User } from "../models";
+import { RoleProfileModel, RoleUserModel, User } from "../models";
 
-const Db = RoleUser;
+const Db = RoleUserModel;
 const redisName = "roleuser";
 
 class RoleUserController implements IController {
@@ -178,7 +178,7 @@ class RoleUserController implements IController {
     }
 
     try {
-      const cekRoleValid = await RoleProfile.findById(req.body.roleprofile);
+      const cekRoleValid = await RoleProfileModel.findById(req.body.roleprofile);
       const cekUser = await User.findById(req.body.user);
       if (!cekRoleValid) {
         return res

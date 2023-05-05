@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const RolUser = new mongoose.Schema(
+const RoleUserModel = new mongoose.Schema(
   {
     roleprofile: {
       type: Schema.Types.ObjectId,
@@ -20,16 +20,10 @@ const RolUser = new mongoose.Schema(
       required: true,
       index: true,
     },
-    uniqId: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
   },
   {
     timestamps: true,
   }
 );
 
-export default mongoose.model("RolUser", RolUser);
+export default mongoose.model("RoleUser", RoleUserModel);

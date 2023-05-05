@@ -4,7 +4,7 @@ import ScheduleItem from "./ScheduleItem";
 import ScheduleItemPacking from "./ScheduleItemPacking";
 import RoleProfileModel from "./RoleProfileModel";
 import RoleList from "./RoleList";
-import RoleUser from "./RoleUser";
+import RoleUserModel from "./RoleUserModel";
 import History from "./History";
 import Workflow from "./Workflow";
 import WorkflowAction from "./WorkflowAction";
@@ -23,7 +23,7 @@ export {
   ScheduleItemPacking,
   RoleProfileModel,
   RoleList,
-  RoleUser,
+  RoleUserModel,
   History,
   Workflow,
   WorkflowAction,

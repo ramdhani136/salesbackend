@@ -279,6 +279,7 @@ class RoleProfileController implements IController {
       )
         .populate("user", "name")
         .sort({ createdAt: -1 });
+        
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)

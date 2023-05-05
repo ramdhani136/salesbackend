@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { RoleListModel, RoleProfileModel } from "../models";
+import { History, RoleListModel, RoleProfileModel } from "../models";
 import HistoryController from "./HistoryController";
 
 const Db = RoleListModel;
@@ -262,18 +262,53 @@ class RoleListController implements IController {
     try {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
-        console.log("Cache");
-        return res.status(200).json({ status: 200, data: JSON.parse(cache) });
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+        });
       }
-      const result = await Db.findOne({ _id: req.params.id }).populate(
+      const result: any = await Db.findOne({ _id: req.params.id }).populate(
         "roleprofile",
         "name"
       );
+
+      const getHistory = await History.find(
+        {
+          $and: [
+            { "document._id": result._id },
+            { "document.type": redisName },
+          ],
+        },
+        ["_id", "message", "createdAt", "updatedAt"]
+      )
+        .populate("user", "name")
+        .sort({ createdAt: -1 });
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
       );
-      return res.status(200).json({ status: 200, data: result });
+      
+      return res.status(200).json({
+        status: 200,
+        data: result,
+        history: getHistory,
+      });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });
     }

@@ -7,6 +7,12 @@ import { History, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, UserController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
+import { PermissionMiddleware } from "../middleware";
+import {
+  selPermissionAllow,
+  selPermissionType,
+} from "../middleware/PermissionMiddleware";
+import { ObjectId } from "mongodb";
 
 const Db = PermissionModel;
 const redisName = "permission";
@@ -107,6 +113,14 @@ class PermissionController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
       // End
 
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+
       // Validasi apakah filter valid
 
       if (!isFilter.status) {
@@ -151,6 +165,17 @@ class PermissionController implements IController {
           $count: "total_orders",
         },
       ];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
       const totalData = await Db.aggregate(pipelineTotal);
 
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
@@ -193,9 +218,21 @@ class PermissionController implements IController {
         },
       ];
 
+      // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
         pipelineResult.push({ $limit: limit });
       }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
 
       const result = await Db.aggregate(pipelineResult);
       if (result.length > 0) {

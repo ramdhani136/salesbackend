@@ -178,7 +178,10 @@ class RoleUserController implements IController {
     }
 
     try {
-      const cekRoleValid = await RoleProfileModel.findById(req.body.roleprofile);
+      const cekRoleValid = await RoleProfileModel.findById(
+        req.body.roleprofile
+      );
+      // Cek user terdaftar
       const cekUser = await User.findById(req.body.user);
       if (!cekRoleValid) {
         return res
@@ -190,8 +193,22 @@ class RoleUserController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, user not found!" });
       }
+      // End
+
+      // Cek duplikasi data
+      const dupl = await Db.findOne({
+        $and: [{ user: req.body.user }, { roleprofile: req.body.roleprofile }],
+      });
+      // End
+
+      console.log(dupl);
+      if(dupl){
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, duplicate data" });
+      }
+
       req.body.createdBy = req.userId;
-      req.body.uniqId = `${req.body.user}${req.body.user}`;
       const result = new Db(req.body);
       const response = await result.save();
       return res.status(200).json({ status: 200, data: response });

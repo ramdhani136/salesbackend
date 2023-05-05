@@ -411,7 +411,9 @@ class UserController implements IController {
 
   checkUserRegistered = async (id: string): Promise<Boolean> => {
     try {
-      const user: any = await User.findOne({ _id: id });
+      const user: any = await User.findOne({
+        $and: [{ _id: id }, { status: "1" }],
+      });
       if (user) {
         return true;
       }

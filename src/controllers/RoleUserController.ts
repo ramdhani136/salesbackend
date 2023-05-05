@@ -229,20 +229,26 @@ class RoleUserController implements IController {
     }
 
     try {
-      const cekRoleValid = await RoleProfileModel.findById(
-        req.body.roleprofile
-      );
-      // Cek user terdaftar
-      const cekUser = await User.findById(req.body.user);
+      // Cek roleprofile terdaftar
+      const cekRoleValid = await RoleProfileModel.findOne({
+        $and: [{ _id: req.body.roleprofile }, { status: "1" }],
+      });
+
       if (!cekRoleValid) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, roleprofile not found!" });
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, roleprofile tidak aktif / ditemukan!",
+        });
       }
+
+      // Cek user terdaftar
+      const cekUser = await User.findOne({
+        $and: [{ _id: req.body.user }, { status: "1" }],
+      });
       if (!cekUser) {
         return res
           .status(404)
-          .json({ status: 404, msg: "Error, user not found!" });
+          .json({ status: 404, msg: "Error, tidak aktif / ditemukan!" });
       }
       // End
 
@@ -360,7 +366,82 @@ class RoleUserController implements IController {
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      }).populate("createdBy", "name");
+      })
+        .populate("roleprofile", "name")
+        .populate("user", "name")
+        .populate("createdBy", "name");
+
+      if (req.body.roleprofile) {
+        //Cek roleprofile aktif
+        const cekRoleValid = await RoleProfileModel.findOne({
+          $and: [{ _id: req.body.roleprofile }, { status: "1" }],
+        });
+
+        if (!cekRoleValid) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, roleprofile tidak aktif / ditemukan!",
+          });
+        }
+        // End
+
+        // Cek duplikasi data
+        const dupl = await Db.findOne({
+          $and: [
+            { user: result.user._id },
+            { roleprofile: req.body.roleprofile },
+          ],
+        });
+        if (dupl) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, duplicate data" });
+        }
+        // End
+      }
+
+      if (req.body.user) {
+        // Cek user terdaftar
+        const cekUser = await User.findOne({
+          $and: [{ _id: req.body.user }, { status: "1" }],
+        });
+        if (!cekUser) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, User tidak aktif / ditemukan!" });
+        }
+        // End
+
+        // Cek duplikasi data
+        const dupl = await Db.findOne({
+          $and: [
+            { user: req.body.user },
+            { roleprofile: result.roleprofile._id },
+          ],
+        });
+        if (dupl) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, duplicate data" });
+        }
+        // End
+      }
+
+      if (req.body.user && req.body.roleprofile) {
+        // Cek duplikasi data
+        const dupl = await Db.findOne({
+          $and: [
+            { user: req.body.user },
+            { roleprofile: req.body.roleprofile },
+          ],
+        });
+        if (dupl) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, duplicate data" });
+        }
+        // End
+      }
 
       if (result) {
         if (req.body.id_workflow && req.body.id_state) {
@@ -391,7 +472,11 @@ class RoleUserController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        }).populate("createdBy", "name");
+        })
+          .populate("roleprofile", "name")
+          .populate("user", "name")
+          .populate("createdBy", "name");
+
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
           JSON.stringify(getData),

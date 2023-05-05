@@ -12,6 +12,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
+import { ObjectId } from "mongodb";
 
 const Db = BranchModel;
 const redisName = "branch";
@@ -111,15 +112,8 @@ class BranchController implements IController {
       // End
 
       // Mengambil hasil filter
-      let isFilter = FilterQuery.getFilter(
-        filters,
-        stateFilter,
-        search,
-        userPermission
-      );
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
       // End
-
-      console.log(JSON.stringify(isFilter))
 
       // Validasi apakah filter valid
 
@@ -131,7 +125,7 @@ class BranchController implements IController {
 
       // End
 
-      const totalData = await Db.aggregate([
+      let pipelineTotal: any = [
         {
           $lookup: {
             from: "users",
@@ -152,14 +146,27 @@ class BranchController implements IController {
         {
           $count: "total_orders",
         },
-      ]);
+      ];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const totalData = await Db.aggregate(pipelineTotal);
 
       const getAll = totalData[0].total_orders ?? 0;
 
-      const result = await Db.aggregate([
+      let pipelineResult: any = [
         {
           $sort: order_by,
         },
+
         {
           $lookup: {
             from: "users",
@@ -184,7 +191,19 @@ class BranchController implements IController {
         {
           $project: setField,
         },
-      ]);
+      ];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({

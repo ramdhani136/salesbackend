@@ -187,7 +187,6 @@ class BranchController implements IController {
         {
           $limit: limit > 0 ? limit : getAll,
         },
-
         {
           $project: setField,
         },

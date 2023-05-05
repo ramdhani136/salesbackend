@@ -2,7 +2,7 @@ import User from "./UserModel";
 import Schedule from "./Schedule";
 import ScheduleItem from "./ScheduleItem";
 import ScheduleItemPacking from "./ScheduleItemPacking";
-import RoleProfile from "./RoleProfile";
+import RoleProfileModel from "./RoleProfileModel";
 import RoleList from "./RoleList";
 import RoleUser from "./RoleUser";
 import History from "./History";
@@ -21,7 +21,7 @@ export {
   Schedule,
   ScheduleItem,
   ScheduleItemPacking,
-  RoleProfile,
+  RoleProfileModel,
   RoleList,
   RoleUser,
   History,

@@ -173,8 +173,8 @@ class App {
       // RoleValidation,
       RoleProfileRoutes
     );
-    // this.app.use("/rolelist", AuthMiddleware, RoleMiddleware, RoleListRoutes);
-    // this.app.use("/roleuser", AuthMiddleware, RoleMiddleware, RoleUserRoutes);
+    this.app.use("/rolelist", AuthMiddleware, RoleListRoutes);
+    this.app.use("/roleuser", AuthMiddleware, RoleUserRoutes);
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);
     // this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
     // this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);

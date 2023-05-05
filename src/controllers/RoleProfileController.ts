@@ -4,16 +4,22 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { History, RoleProfile } from "../models";
+import { History, RoleProfileModel } from "../models";
 import { ISearch } from "../utils/FilterQuery";
 import WorkflowController from "./WorkflowController";
 import HistoryController from "./HistoryController";
+import { PermissionMiddleware } from "../middleware";
+import {
+  selPermissionAllow,
+  selPermissionType,
+} from "../middleware/PermissionMiddleware";
+import { ObjectId } from "mongodb";
 
-const Db = RoleProfile;
+const Db = RoleProfileModel;
 const redisName = "roleprofile";
 
 class RoleProfileController implements IController {
-  index = async (req: Request, res: Response): Promise<Response> => {
+  index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
@@ -68,6 +74,13 @@ class RoleProfileController implements IController {
         filter: ["name"],
         value: req.query.search || "",
       };
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
 
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
 
@@ -77,10 +90,47 @@ class RoleProfileController implements IController {
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
       // End
-      const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.aggregate([
+
+      let pipelineTotal: any = [
         {
-          $skip: page * limit - limit,
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $match: isFilter.data,
+        },
+
+        {
+          $project: setField,
+        },
+        {
+          $count: "total_orders",
+        },
+      ];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const totalData = await Db.aggregate(pipelineTotal);
+      const getAll = totalData[0].total_orders ?? 0;
+
+      let pipelineResult: any = [
+        {
+          $sort: order_by,
         },
         {
           $lookup: {
@@ -97,15 +147,27 @@ class RoleProfileController implements IController {
           $match: isFilter.data,
         },
         {
-          $limit: limit,
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $limit: limit > 0 ? limit : getAll,
         },
         {
           $project: setField,
         },
-        {
-          $sort: order_by,
-        },
-      ]);
+      ];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({

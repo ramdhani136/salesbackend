@@ -1,5 +1,5 @@
 import { PermissionModel } from "../models";
-const { ObjectId } = require("mongodb");
+import { ObjectId } from "mongodb";
 
 export enum selPermissionAllow {
   BRANCH = "branch",

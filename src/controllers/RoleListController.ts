@@ -24,6 +24,11 @@ class RoleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "createdBy.name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "doc",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
@@ -87,6 +92,7 @@ class RoleListController implements IController {
         ? JSON.parse(`${req.query.fields}`)
         : [
             "roleprofile.name",
+            "createdBy.name",
             "doc",
             "create",
             "update",
@@ -125,6 +131,17 @@ class RoleListController implements IController {
           $unwind: "$roleprofile",
         },
         {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
           $match: isFilter.data,
         },
         {
@@ -136,7 +153,8 @@ class RoleListController implements IController {
       ];
 
       const totalData = await Db.aggregate(pipelineTotal);
-      const getAll = totalData[0].total_orders ?? 0;
+
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       const pipelineResult: any = [
         {
@@ -154,19 +172,32 @@ class RoleListController implements IController {
           $unwind: "$roleprofile",
         },
         {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
           $match: isFilter.data,
         },
         {
           $project: setField,
         },
-
         {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
-        {
-          $limit: limit > 0 ? limit : getAll,
-        },
       ];
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+      }
+      // End
 
       const result = await Db.aggregate(pipelineResult);
 
@@ -282,10 +313,9 @@ class RoleListController implements IController {
           history: getHistory,
         });
       }
-      const result: any = await Db.findOne({ _id: req.params.id }).populate(
-        "roleprofile",
-        "name"
-      );
+      const result: any = await Db.findOne({ _id: req.params.id })
+        .populate("roleprofile", "name")
+        .populate("createdBy", "name");
 
       const getHistory = await History.find(
         {
@@ -316,16 +346,14 @@ class RoleListController implements IController {
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.findById(req.params.id).populate(
-        "roleprofile",
-        "name"
-      );
+      const result = await Db.findById(req.params.id)
+        .populate("roleprofile", "name")
+        .populate("createdBy", "name");
       if (result) {
         await Db.updateOne({ _id: req.params.id }, req.body);
-        const data: any = await Db.findOne({ _id: req.params.id }).populate(
-          "roleprofile",
-          "name"
-        );
+        const data: any = await Db.findOne({ _id: req.params.id })
+          .populate("roleprofile", "name")
+          .populate("createdBy", "name");
 
         // Push history semua field yang di update
         await HistoryController.pushUpdateMany(

@@ -166,7 +166,6 @@ class BranchController implements IController {
         {
           $sort: order_by,
         },
-
         {
           $lookup: {
             from: "users",

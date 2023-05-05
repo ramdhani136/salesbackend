@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const RoleList = new mongoose.Schema(
+const RoleListModel = new mongoose.Schema(
   {
     roleprofile: {
       type: Schema.Types.ObjectId,
@@ -11,12 +11,6 @@ const RoleList = new mongoose.Schema(
     doc: {
       type: String,
       require: true,
-      index: true,
-    },
-    uniqId: {
-      type: String,
-      required: true,
-      unique: true,
       index: true,
     },
     create: {
@@ -79,4 +73,4 @@ const RoleList = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("RoleLists", RoleList);
+export default mongoose.model("RoleLists", RoleListModel);

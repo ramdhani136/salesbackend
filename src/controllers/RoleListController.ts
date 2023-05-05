@@ -4,9 +4,10 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { RoleList, RoleProfile } from "../models";
+import { RoleListModel, RoleProfileModel } from "../models";
+import HistoryController from "./HistoryController";
 
-const Db = RoleList;
+const Db = RoleListModel;
 const redisName = "rolelist";
 
 class RoleListController implements IController {
@@ -172,17 +173,55 @@ class RoleListController implements IController {
     if (!req.body.doc) {
       return res.status(400).json({ status: 400, msg: "doc Required!" });
     }
-    req.body.uniqId = `${req.body.roleprofile}${req.body.doc}`;
+    req.body.createdBy = req.userId;
     try {
-      const cekRoleValid = await RoleProfile.findById(req.body.roleprofile);
+      // Cek duplikat data
+      const duplicate = await Db.findOne({
+        $and: [
+          { roleprofile: req.body.roleprofile },
+          {
+            doc: req.body.doc,
+          },
+        ],
+      });
+      if (duplicate) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, duplikasi data!" });
+      }
+      // End
+
+      //Mengecek roleprofile terdaftar
+      const cekRoleValid = await RoleProfileModel.findById(
+        req.body.roleprofile
+      );
       if (!cekRoleValid) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, roleprofile not found!" });
       }
+      // End
+
       const result = new Db(req.body);
       const response = await result.save();
-      return res.status(200).json({ status: 200, data: response });
+      const data:any = await response.populate({
+        path: "roleprofile",
+        select: "name",
+      })
+
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: data._id,
+          name: data.roleprofile.name,
+          type: redisName,
+        },
+        message: `Menambahkan rolelist doc ${data.doc} pada roleprofile ${data.roleprofile.name} `,
+        user: req.userId,
+      });
+      // End
+
+      return res.status(200).json({ status: 200, data: data });
     } catch (error) {
       return res
         .status(400)

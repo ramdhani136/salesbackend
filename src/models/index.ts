@@ -15,6 +15,7 @@ import ChatModel from "./ChatModel";
 import MessageModel from "./MessageModel";
 import BranchModel from "./BranchModel";
 import PermissionModel from "./PermissionModel";
+import CustomerModel from "./CustomerModel";
 
 export {
   User,
@@ -33,5 +34,6 @@ export {
   ChatModel,
   MessageModel,
   BranchModel,
-  PermissionModel
+  PermissionModel,
+  CustomerModel,
 };

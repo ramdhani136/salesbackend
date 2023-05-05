@@ -413,6 +413,10 @@ class PermissionController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
+
+        // CEK UPDATE DUPLIKASI DAN TERDAFTAR !!!!!!!!!!!!!!
+
+
         if (req.body.id_workflow && req.body.id_state) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(

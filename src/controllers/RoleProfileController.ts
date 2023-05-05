@@ -279,7 +279,7 @@ class RoleProfileController implements IController {
       )
         .populate("user", "name")
         .sort({ createdAt: -1 });
-        
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
@@ -331,6 +331,7 @@ class RoleProfileController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         }).populate("createdBy", "name");
+        
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
           JSON.stringify(getData),

@@ -260,28 +260,28 @@ class RoleListController implements IController {
 
   show = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-        });
-      }
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //   });
+      // }
       const result: any = await Db.findOne({ _id: req.params.id }).populate(
         "roleprofile",
         "name"
@@ -303,7 +303,7 @@ class RoleListController implements IController {
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
       );
-      
+
       return res.status(200).json({
         status: 200,
         data: result,
@@ -314,15 +314,39 @@ class RoleListController implements IController {
     }
   };
 
-  update = async (req: Request, res: Response): Promise<Response> => {
+  update = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.updateOne({ name: req.params.id }, req.body);
-      const getData = await Db.findOne({ name: req.params.id });
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(getData)
+      const result = await Db.findById(req.params.id).populate(
+        "roleprofile",
+        "name"
       );
-      return res.status(200).json({ status: 200, data: result });
+      if (result) {
+        await Db.updateOne({ _id: req.params.id }, req.body);
+        const data: any = await Db.findOne({ _id: req.params.id }).populate(
+          "roleprofile",
+          "name"
+        );
+
+        // Push history semua field yang di update
+        await HistoryController.pushUpdateMany(
+          result,
+          data,
+          req.user,
+          req.userId,
+          redisName
+        );
+        // End
+
+        await Redis.client.set(
+          `${redisName}-${req.params.id}`,
+          JSON.stringify(data)
+        );
+
+        return res.status(200).json({ status: 200, data: data });
+      }
+      return res
+        .status(400)
+        .json({ status: 404, msg: "Error update, data not found" });
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }

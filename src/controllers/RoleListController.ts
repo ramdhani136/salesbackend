@@ -351,6 +351,7 @@ class RoleListController implements IController {
         .populate("roleprofile", "name")
         .populate("createdBy", "name");
       if (result) {
+        
         if (req.body.roleprofile) {
           //Mengecek roleprofile terdaftar
           const cekRoleValid = await RoleProfileModel.findById(
@@ -366,6 +367,8 @@ class RoleListController implements IController {
           }
           // End
         }
+
+        // PR CEK DUPLIKAT DATA KETIKA MERUBAH DOC ATAU ROLEPROFILE
 
         await Db.updateOne({ _id: req.params.id }, req.body);
         const data: any = await Db.findOne({ _id: req.params.id })

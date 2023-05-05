@@ -171,7 +171,7 @@ class RoleUserController implements IController {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
         {
-          $limit: limit > 0 ? limit : getAll,
+          $limit: limit > 0 ? limit : getAll.length,
         },
       ];
 

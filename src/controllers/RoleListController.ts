@@ -111,10 +111,36 @@ class RoleListController implements IController {
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
       // End
-      const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.aggregate([
+
+      let pipelineTotal: any = [
         {
-          $skip: page * limit - limit,
+          $lookup: {
+            from: "roleprofiles",
+            localField: "roleprofile",
+            foreignField: "_id",
+            as: "roleprofile",
+          },
+        },
+        {
+          $unwind: "$roleprofile",
+        },
+        {
+          $match: isFilter.data,
+        },
+        {
+          $project: setField,
+        },
+        {
+          $count: "total_orders",
+        },
+      ];
+
+      const totalData = await Db.aggregate(pipelineTotal);
+      const getAll = totalData[0].total_orders ?? 0;
+
+      const pipelineResult: any = [
+        {
+          $sort: order_by,
         },
         {
           $lookup: {
@@ -131,23 +157,26 @@ class RoleListController implements IController {
           $match: isFilter.data,
         },
         {
-          $limit: limit,
-        },
-        {
           $project: setField,
         },
+
         {
-          $sort: order_by,
+          $skip: limit > 0 ? page * limit - limit : 0,
         },
-      ]);
+        {
+          $limit: limit > 0 ? limit : getAll,
+        },
+      ];
+
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
           total: getAll,
           limit,
-          nextPage: page + 1,
-          hasMore: getAll > page * limit ? true : false,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });
@@ -204,10 +233,10 @@ class RoleListController implements IController {
 
       const result = new Db(req.body);
       const response = await result.save();
-      const data:any = await response.populate({
+      const data: any = await response.populate({
         path: "roleprofile",
         select: "name",
-      })
+      });
 
       // push history
       await HistoryController.pushHistory({

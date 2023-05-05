@@ -384,7 +384,9 @@ class RoleUserController implements IController {
           });
         }
         // End
+      }
 
+      if (req.body.roleprofile && !req.body.user) {
         // Cek duplikasi data
         const dupl = await Db.findOne({
           $and: [
@@ -400,7 +402,7 @@ class RoleUserController implements IController {
         // End
       }
 
-      if (req.body.user) {
+      if (req.body.user && !req.body.roleprofile) {
         // Cek user terdaftar
         const cekUser = await User.findOne({
           $and: [{ _id: req.body.user }, { status: "1" }],

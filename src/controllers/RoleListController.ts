@@ -234,6 +234,7 @@ class RoleListController implements IController {
       return res.status(400).json({ status: 400, msg: "doc Required!" });
     }
     req.body.createdBy = req.userId;
+
     try {
       // Cek duplikat data
       const duplicate = await Db.findOne({
@@ -350,6 +351,22 @@ class RoleListController implements IController {
         .populate("roleprofile", "name")
         .populate("createdBy", "name");
       if (result) {
+        if (req.body.roleprofile) {
+          //Mengecek roleprofile terdaftar
+          const cekRoleValid = await RoleProfileModel.findById(
+            req.body.roleprofile
+          );
+          if (!cekRoleValid) {
+            return res
+              .status(404)
+              .json({
+                status: 404,
+                msg: "Error, roleprofile tidak di temukan!",
+              });
+          }
+          // End
+        }
+
         await Db.updateOne({ _id: req.params.id }, req.body);
         const data: any = await Db.findOne({ _id: req.params.id })
           .populate("roleprofile", "name")

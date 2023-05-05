@@ -367,12 +367,57 @@ class RoleListController implements IController {
 
         // PR CEK DUPLIKAT DATA KETIKA MERUBAH DOC ATAU ROLEPROFILE
         if (req.body.roleprofile && !req.body.doc) {
+          // Cek duplikat data
+          const duplicate = await Db.findOne({
+            $and: [
+              { roleprofile: req.body.roleprofile },
+              {
+                doc: result.doc,
+              },
+            ],
+          });
+          if (duplicate) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, duplikasi data!" });
+          }
+          // End
         }
 
         if (!req.body.roleprofile && req.body.doc) {
+          // Cek duplikat data
+          const duplicate = await Db.findOne({
+            $and: [
+              { roleprofile: result.roleprofile._id },
+              {
+                doc: req.body.doc,
+              },
+            ],
+          });
+          if (duplicate) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, duplikasi data!" });
+          }
+          // End
         }
 
         if (req.body.roleprofile && req.body.doc) {
+          // Cek duplikat data
+          const duplicate = await Db.findOne({
+            $and: [
+              { roleprofile: req.body.roleprofile },
+              {
+                doc: req.body.doc,
+              },
+            ],
+          });
+          if (duplicate) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, duplikasi data!" });
+          }
+          // End
         }
 
         await Db.updateOne({ _id: req.params.id }, req.body);

@@ -4,19 +4,21 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { RoleProfileModel, RoleUserModel, User } from "../models";
+import { History, RoleProfileModel, RoleUserModel, User } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
 import { ObjectId } from "mongodb";
+import HistoryController from "./HistoryController";
+import WorkflowController from "./WorkflowController";
 
 const Db = RoleUserModel;
 const redisName = "roleuser";
 
 class RoleUserController implements IController {
-  index = async (req: Request|any, res: Response): Promise<Response> => {
+  index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
@@ -109,7 +111,6 @@ class RoleUserController implements IController {
         },
       ];
 
-      
       // Menambahkan filter berdasarkan permission user
       if (userPermission.length > 0) {
         pipelineTotal.unshift({
@@ -174,8 +175,8 @@ class RoleUserController implements IController {
         },
       ];
 
-       // Menambahkan filter berdasarkan permission user
-       if (userPermission.length > 0) {
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
         pipelineResult.unshift({
           $match: {
             createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
@@ -191,8 +192,8 @@ class RoleUserController implements IController {
           status: 200,
           total: getAll.length,
           limit,
-          nextPage: page + 1,
-          hasMore: getAll.length > page * limit ? true : false,
+          nextPage: getAll.length > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll.length > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });
@@ -241,19 +242,36 @@ class RoleUserController implements IController {
       const dupl = await Db.findOne({
         $and: [{ user: req.body.user }, { roleprofile: req.body.roleprofile }],
       });
-      // End
 
-      console.log(dupl);
       if (dupl) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, duplicate data" });
       }
+      // End
 
       req.body.createdBy = req.userId;
       const result = new Db(req.body);
-      const response = await result.save();
-      return res.status(200).json({ status: 200, data: response });
+      const response: any = await result.save();
+
+      const data: any = await response.populate({
+        path: "user",
+        select: "name",
+      });
+
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: data._id,
+          name: data.user.name,
+          type: redisName,
+        },
+        message: `Menambahkan roleuser ${data.user.name} `,
+        user: req.userId,
+      });
+      // End
+
+      return res.status(200).json({ status: 200, data: data });
     } catch (error) {
       return res
         .status(400)
@@ -261,36 +279,135 @@ class RoleUserController implements IController {
     }
   };
 
-  show = async (req: Request, res: Response): Promise<Response> => {
+  show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
-        console.log("Cache");
-        return res.status(200).json({ status: 200, data: JSON.parse(cache) });
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
       }
-      const result = await Db.findOne({ _id: req.params.id })
+      const result: any = await Db.findOne({ _id: req.params.id })
         .populate("roleprofile", "name")
         .populate("user", "name")
         .populate("createdBy", "name");
+
+      const buttonActions = await WorkflowController.getButtonAction(
+        redisName,
+        req.userId,
+        result.workflowState
+      );
+
+      // return res.send(buttonActions)
+      const getHistory = await History.find(
+        {
+          $and: [
+            { "document._id": result._id },
+            { "document.type": redisName },
+          ],
+        },
+        ["_id", "message", "createdAt", "updatedAt"]
+      )
+        .populate("user", "name")
+        .sort({ createdAt: -1 });
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
       );
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({
+        status: 200,
+        data: result,
+        history: getHistory,
+        workflow: buttonActions,
+      });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });
     }
   };
 
-  update = async (req: Request, res: Response): Promise<Response> => {
+  update = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.updateOne({ name: req.params.id }, req.body);
-      const getData = await Db.findOne({ name: req.params.id });
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(getData)
-      );
-      return res.status(200).json({ status: 200, data: result });
+      const result: any = await Db.findOne({
+        _id: req.params.id,
+      }).populate("createdBy", "name");
+
+      if (result) {
+        if (req.body.id_workflow && req.body.id_state) {
+          const checkedWorkflow =
+            await WorkflowController.permissionUpdateAction(
+              req.body.id_workflow,
+              req.userId,
+              req.body.id_state,
+              result.createdBy._id
+            );
+
+          if (checkedWorkflow.status) {
+            await Db.updateOne(
+              { _id: req.params.id },
+              checkedWorkflow.data
+            ).populate("createdBy", "name");
+          } else {
+            return res
+              .status(403)
+              .json({ status: 403, msg: checkedWorkflow.msg });
+          }
+        } else {
+          await Db.updateOne({ _id: req.params.id }, req.body).populate(
+            "createdBy",
+            "name"
+          );
+        }
+
+        const getData: any = await Db.findOne({
+          _id: req.params.id,
+        }).populate("createdBy", "name");
+        await Redis.client.set(
+          `${redisName}-${req.params.id}`,
+          JSON.stringify(getData),
+          {
+            EX: 30,
+          }
+        );
+
+        // push history semua field yang di update
+        await HistoryController.pushUpdateMany(
+          result,
+          getData,
+          req.user,
+          req.userId,
+          redisName
+        );
+
+        return res.status(200).json({ status: 200, data: getData });
+        // End
+      } else {
+        return res
+          .status(400)
+          .json({ status: 404, msg: "Error update, data not found" });
+      }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }

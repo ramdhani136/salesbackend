@@ -348,7 +348,7 @@ class BranchController implements IController {
               req.body.id_workflow,
               req.userId,
               req.body.id_state,
-              result.user._id
+              result.createdBy._id
             );
 
           if (checkedWorkflow.status) {

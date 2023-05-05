@@ -20,6 +20,16 @@ const RoleUserModel = new mongoose.Schema(
       required: true,
       index: true,
     },
+    status: {
+      type: String,
+      enum: ["0", "1", "2"],
+      default: "1",
+    },
+    workflowState: {
+      type: String,
+      required:true,
+      default:"Submitted"
+    },
   },
   {
     timestamps: true,

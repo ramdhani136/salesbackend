@@ -174,8 +174,8 @@ class RoleProfileController implements IController {
           status: 200,
           total: getAll,
           limit,
-          nextPage: page + 1,
-          hasMore: getAll > page * limit ? true : false,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });
@@ -210,6 +210,7 @@ class RoleProfileController implements IController {
         message: `Membuat ${redisName} baru`,
         user: req.userId,
       });
+      // End
 
       await Redis.client.set(
         `${redisName}-${response._id}`,
@@ -218,7 +219,7 @@ class RoleProfileController implements IController {
           EX: 30,
         }
       );
-      // End
+      
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
@@ -306,7 +307,7 @@ class RoleProfileController implements IController {
               req.body.id_workflow,
               req.userId,
               req.body.id_state,
-              result.user._id
+              result.createdBy._id
             );
 
           if (checkedWorkflow.status) {

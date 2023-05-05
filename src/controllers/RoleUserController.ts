@@ -5,12 +5,18 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { RoleProfileModel, RoleUserModel, User } from "../models";
+import { PermissionMiddleware } from "../middleware";
+import {
+  selPermissionAllow,
+  selPermissionType,
+} from "../middleware/PermissionMiddleware";
+import { ObjectId } from "mongodb";
 
 const Db = RoleUserModel;
 const redisName = "roleuser";
 
 class RoleUserController implements IController {
-  index = async (req: Request, res: Response): Promise<Response> => {
+  index = async (req: Request|any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
@@ -58,13 +64,22 @@ class RoleUserController implements IController {
       let setField = FilterQuery.getField(fields);
       let isFilter = FilterQuery.getFilter(filters, stateFilter);
 
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+
       if (!isFilter.status) {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
       // End
-      const getAll = await Db.aggregate([
+
+      let pipelineTotal: any = [
         {
           $lookup: {
             from: "roleprofiles",
@@ -92,10 +107,24 @@ class RoleUserController implements IController {
         {
           $match: isFilter.data,
         },
-      ]);
-      const result = await Db.aggregate([
+      ];
+
+      
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const getAll = await Db.aggregate(pipelineTotal);
+
+      let pipelineResult: any = [
         {
-          $skip: page * limit - limit,
+          $sort: order_by,
         },
         {
           $lookup: {
@@ -133,16 +162,29 @@ class RoleUserController implements IController {
         {
           $match: isFilter.data,
         },
-        {
-          $limit: limit,
-        },
+
         {
           $project: setField,
         },
         {
-          $sort: order_by,
+          $skip: limit > 0 ? page * limit - limit : 0,
         },
-      ]);
+        {
+          $limit: limit > 0 ? limit : getAll,
+        },
+      ];
+
+       // Menambahkan filter berdasarkan permission user
+       if (userPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -202,7 +244,7 @@ class RoleUserController implements IController {
       // End
 
       console.log(dupl);
-      if(dupl){
+      if (dupl) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, duplicate data" });

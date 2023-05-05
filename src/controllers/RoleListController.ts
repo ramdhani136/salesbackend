@@ -351,24 +351,29 @@ class RoleListController implements IController {
         .populate("roleprofile", "name")
         .populate("createdBy", "name");
       if (result) {
-        
         if (req.body.roleprofile) {
           //Mengecek roleprofile terdaftar
           const cekRoleValid = await RoleProfileModel.findById(
             req.body.roleprofile
           );
           if (!cekRoleValid) {
-            return res
-              .status(404)
-              .json({
-                status: 404,
-                msg: "Error, roleprofile tidak di temukan!",
-              });
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, roleprofile tidak di temukan!",
+            });
           }
           // End
         }
 
         // PR CEK DUPLIKAT DATA KETIKA MERUBAH DOC ATAU ROLEPROFILE
+        if (req.body.roleprofile && !req.body.doc) {
+        }
+
+        if (!req.body.roleprofile && req.body.doc) {
+        }
+
+        if (req.body.roleprofile && req.body.doc) {
+        }
 
         await Db.updateOne({ _id: req.params.id }, req.body);
         const data: any = await Db.findOne({ _id: req.params.id })

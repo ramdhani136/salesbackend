@@ -109,6 +109,9 @@ class RoleUserController implements IController {
         {
           $match: isFilter.data,
         },
+        {
+          $count: "total_orders",
+        },
       ];
 
       // Menambahkan filter berdasarkan permission user
@@ -121,7 +124,9 @@ class RoleUserController implements IController {
       }
       // End
 
-      const getAll = await Db.aggregate(pipelineTotal);
+      const totalData = await Db.aggregate(pipelineTotal);
+
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [
         {
@@ -170,10 +175,13 @@ class RoleUserController implements IController {
         {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
-        {
-          $limit: limit > 0 ? limit : getAll.length,
-        },
       ];
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+      }
+      // End
 
       // Menambahkan filter berdasarkan permission user
       if (userPermission.length > 0) {
@@ -190,10 +198,10 @@ class RoleUserController implements IController {
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
-          total: getAll.length,
+          total: getAll,
           limit,
-          nextPage: getAll.length > page * limit && limit > 0 ? page + 1 : page,
-          hasMore: getAll.length > page * limit && limit > 0 ? true : false,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });

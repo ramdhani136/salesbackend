@@ -57,7 +57,14 @@ class RoleUserController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["roleprofile.name", "user.name", "createdBy.name"];
+        : [
+            "roleprofile.name",
+            "roleprofile._id",
+            "user.name",
+            "user._id",
+            "createdBy.name",
+            "createdBy._id",
+          ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -386,57 +393,22 @@ class RoleUserController implements IController {
         // End
       }
 
-      if (req.body.roleprofile && !req.body.user) {
+      if (req.body.roleprofile || req.body.user) {
         // Cek duplikasi data
         const dupl = await Db.findOne({
           $and: [
-            { user: result.user._id },
-            { roleprofile: req.body.roleprofile },
+            { user: req.body.user ? req.body.user : result.user._id },
+            {
+              roleprofile: req.body.roleprofile
+                ? req.body.roleprofile
+                : result.roleprofile._id,
+            },
+            {
+              _id: { $ne: req.params.id },
+            },
           ],
         });
-        if (dupl) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, duplicate data" });
-        }
-        // End
-      }
 
-      if (req.body.user && !req.body.roleprofile) {
-        // Cek user terdaftar
-        const cekUser = await User.findOne({
-          $and: [{ _id: req.body.user }, { status: "1" }],
-        });
-        if (!cekUser) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, User tidak aktif / ditemukan!" });
-        }
-        // End
-
-        // Cek duplikasi data
-        const dupl = await Db.findOne({
-          $and: [
-            { user: req.body.user },
-            { roleprofile: result.roleprofile._id },
-          ],
-        });
-        if (dupl) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, duplicate data" });
-        }
-        // End
-      }
-
-      if (req.body.user && req.body.roleprofile) {
-        // Cek duplikasi data
-        const dupl = await Db.findOne({
-          $and: [
-            { user: req.body.user },
-            { roleprofile: req.body.roleprofile },
-          ],
-        });
         if (dupl) {
           return res
             .status(404)

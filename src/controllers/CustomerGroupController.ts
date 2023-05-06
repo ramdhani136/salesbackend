@@ -415,49 +415,56 @@ class CustomerGroupController implements IController {
         .populate("branch", "name")
         .populate("createdBy", "name");
 
-      //Cek roleprofile aktif
-      if (req.body.roleprofile) {
-        const cekRoleValid: any = await RoleProfileModel.findOne({
-          $and: [{ _id: req.body.roleprofile }],
+      // Cek branch terdaftar
+      const cekBranch: any = await BranchModel.findOne({
+        $and: [{ _id: req.body.branch }],
+      });
+
+      if (!cekBranch) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, branch tidak ditemukan!",
         });
+      }
 
-        if (!cekRoleValid) {
-          return res.status(404).json({
-            status: 404,
-            msg: "Error, roleprofile tidak ditemukan!",
-          });
-        }
-
-        if (cekRoleValid.status != 1) {
-          return res.status(404).json({
-            status: 404,
-            msg: "Error, roleprofile tidak aktif!",
-          });
-        }
+      if (cekBranch.status != 1) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, branch tidak aktif!",
+        });
       }
       // End
 
-      // Cek duplikasi data
-      if (req.body.roleprofile || req.body.user) {
-        const dupl = await Db.findOne({
-          $and: [
-            { user: req.body.user ? req.body.user : result.user._id },
-            {
-              roleprofile: req.body.roleprofile
-                ? req.body.roleprofile
-                : result.roleprofile._id,
-            },
-            {
-              _id: { $ne: req.params.id },
-            },
-          ],
+      // Cek Parent
+      if (req.body.parent) {
+        const cekParent: any = await Db.findOne({
+          _id: new ObjectId(req.body.parent),
         });
 
-        if (dupl) {
+        if (!cekParent) {
           return res
-            .status(404)
-            .json({ status: 404, msg: "Error, duplicate data" });
+            .status(400)
+            .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
         }
+
+        if (cekParent.status != 1) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "Error, parent tidak aktif!" });
+        }
+
+        // Cek branch harus sama dengan parent
+        if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
+          return res.status(400).json({
+            status: 400,
+            msg: "Error, branch harus sama dengan parent!",
+          });
+        }
+        // End
+        req.body.parent = {
+          _id: new ObjectId(req.body.parent),
+          name: cekParent.name,
+        };
       }
       // End
 

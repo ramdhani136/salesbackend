@@ -358,7 +358,7 @@ class CustomerGroupController implements IController {
             startWith: "$_id",
             connectFromField: "_id",
             connectToField: "parent",
-            as: "descendants",
+            as: "childs",
           },
         },
         {
@@ -371,7 +371,7 @@ class CustomerGroupController implements IController {
             createdBy: 1,
             // createdAt: 1,
             // updatedAt: 1,
-            descendants: {
+            childs: {
               _id: 1,
               name: 1,
             },

@@ -290,7 +290,7 @@ class CustomerGroupController implements IController {
           });
         }
         // End
-      }
+       }
       // End
 
       req.body.createdBy = req.userId;
@@ -348,8 +348,7 @@ class CustomerGroupController implements IController {
         });
       }
       const result: any = await Db.findOne({ _id: req.params.id })
-        .populate("roleprofile", "name")
-        .populate("user", "name")
+        .populate("branch", "name")
         .populate("createdBy", "name");
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -358,7 +357,6 @@ class CustomerGroupController implements IController {
         result.workflowState
       );
 
-      // return res.send(buttonActions)
       const getHistory = await History.find(
         {
           $and: [
@@ -375,6 +373,7 @@ class CustomerGroupController implements IController {
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
       );
+      
       return res.status(200).json({
         status: 200,
         data: result,
@@ -391,9 +390,8 @@ class CustomerGroupController implements IController {
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
-        .populate("roleprofile", "name")
-        .populate("user", "name")
-        .populate("createdBy", "name");
+      .populate("branch", "name")
+      .populate("createdBy", "name");
 
       //Cek roleprofile aktif
       if (req.body.roleprofile) {

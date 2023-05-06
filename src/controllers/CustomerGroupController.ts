@@ -290,7 +290,8 @@ class CustomerGroupController implements IController {
           });
         }
         // End
-       }
+        req.body.parent = new ObjectId(req.body.parent);
+      }
       // End
 
       req.body.createdBy = req.userId;
@@ -319,50 +320,80 @@ class CustomerGroupController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
-      const result: any = await Db.findOne({ _id: req.params.id })
-        .populate("branch", "name")
-        .populate("createdBy", "name");
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
+      const result: any = await Db.aggregate([
+        {
+          $match: { _id: new ObjectId(req.params.id) },
+        },
+        {
+          $graphLookup: {
+            from: "customergroups",
+            startWith: "$_id",
+            connectFromField: "_id",
+            connectToField: "parent",
+            as: "descendants",
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            parent: 1,
+            branch: 1,
+            status: 1,
+            workflowState: 1,
+            createdBy: 1,
+            // createdAt: 1,
+            // updatedAt: 1,
+            descendants: {
+              _id: 1,
+              name: 1,
+            },
+          },
+        },
+      ]);
+
+      let data: any = {};
+      if (result.length > 0) {
+        data = result[0];
+      }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,
-        result.workflowState
+        data.workflowState
       );
-
-      const coba = await result.parent
 
       const getHistory = await History.find(
         {
           $and: [
-            { "document._id": result._id },
+            { "document._id": data._id },
             { "document.type": redisName },
           ],
         },
@@ -373,12 +404,12 @@ class CustomerGroupController implements IController {
 
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
+        JSON.stringify(data)
       );
-      
+
       return res.status(200).json({
         status: 200,
-        data: coba,
+        data: data,
         history: getHistory,
         workflow: buttonActions,
       });
@@ -392,8 +423,8 @@ class CustomerGroupController implements IController {
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
-      .populate("branch", "name")
-      .populate("createdBy", "name");
+        .populate("branch", "name")
+        .populate("createdBy", "name");
 
       //Cek roleprofile aktif
       if (req.body.roleprofile) {

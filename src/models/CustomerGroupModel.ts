@@ -12,7 +12,7 @@ const CustomerGroupModel = new mongoose.Schema(
       type: String,
     },
     parent: {
-      type: String,
+      type: Schema.Types.ObjectId,
       default: null,
     },
     branch: {
@@ -45,4 +45,4 @@ const CustomerGroupModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("customerGroup", CustomerGroupModel);
+export default mongoose.model("customergroup", CustomerGroupModel);

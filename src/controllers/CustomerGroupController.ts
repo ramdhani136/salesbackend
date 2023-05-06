@@ -4,7 +4,13 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { History, RoleProfileModel, RoleUserModel, User } from "../models";
+import {
+  BranchModel,
+  CustomerGroupModel as Db,
+  History,
+  RoleProfileModel,
+  User,
+} from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -14,10 +20,9 @@ import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 
-const Db = RoleUserModel;
-const redisName = "roleuser";
+const redisName = "customergroup";
 
-class RoleUserController implements IController {
+class CustomerGroupController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -226,55 +231,65 @@ class RoleUserController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.roleprofile) {
+    if (!req.body.name) {
       return res
         .status(400)
-        .json({ status: 400, msg: "roleprofile Required!" });
+        .json({ status: 400, msg: "Error, name wajib diisi!" });
     }
-    if (!req.body.user) {
-      return res.status(400).json({ status: 400, msg: "user Required!" });
+
+    if (!req.body.branch) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, branch wajib diisi!" });
     }
 
     try {
-      // Cek roleprofile terdaftar
-      const cekRoleValid:any = await RoleProfileModel.findOne({
-        $and: [{ _id: req.body.roleprofile }],
+      // Cek branch terdaftar
+      const cekBranch: any = await BranchModel.findOne({
+        $and: [{ _id: req.body.branch }],
       });
 
-      if (!cekRoleValid) {
+      if (!cekBranch) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, roleprofile tidak ditemukan!",
+          msg: "Error, branch tidak ditemukan!",
         });
       }
 
-      if (cekRoleValid.status != 1) {
+      if (cekBranch.status != 1) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, roleprofile tidak aktif!",
+          msg: "Error, branch tidak aktif!",
         });
-      }
-
-      // Cek user terdaftar
-      const cekUser = await User.findOne({
-        $and: [{ _id: req.body.user }, { status: "1" }],
-      });
-      if (!cekUser) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, tidak aktif / ditemukan!" });
       }
       // End
 
-      // Cek duplikasi data
-      const dupl = await Db.findOne({
-        $and: [{ user: req.body.user }, { roleprofile: req.body.roleprofile }],
-      });
+      // Cek Parent
+      if (req.body.parent) {
+        const cekParent: any = await Db.findOne({
+          _id: new ObjectId(req.body.parent),
+        });
 
-      if (dupl) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, duplicate data" });
+        if (!cekParent) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
+        }
+
+        if (cekParent.status != 1) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "Error, parent tidak aktif!" });
+        }
+
+        // Cek branch harus sama dengan parent
+        if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
+          return res.status(400).json({
+            status: 400,
+            msg: "Error, branch harus sama dengan parent!",
+          });
+        }
+        // End
       }
       // End
 
@@ -282,24 +297,19 @@ class RoleUserController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save();
 
-      const data: any = await response.populate({
-        path: "user",
-        select: "name",
-      });
-
       // push history
       await HistoryController.pushHistory({
         document: {
-          _id: data._id,
-          name: data.user.name,
+          _id: response._id,
+          name: response.name,
           type: redisName,
         },
-        message: `Menambahkan roleuser ${data.user.name} `,
+        message: `Menambahkan customer group ${response.name} `,
         user: req.userId,
       });
       // End
 
-      return res.status(200).json({ status: 200, data: data });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)
@@ -511,4 +521,4 @@ class RoleUserController implements IController {
   };
 }
 
-export default new RoleUserController();
+export default new CustomerGroupController();

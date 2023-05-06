@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const CustomerModel = new mongoose.Schema(
+const CustomerGroupModel = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -8,32 +8,18 @@ const CustomerModel = new mongoose.Schema(
       unique: true,
       index: true,
     },
-    type: {
+    desc: {
       type: String,
-      enum: ["Individual", "Company"],
-      default: "Company",
-      index: true,
     },
-    customerGroup: {
-      type: Schema.Types.ObjectId,
-      ref: "customerGroup",
-      required: true,
-      index: true,
+    parent: {
+      type: String,
+      default: null,
     },
     branch: {
       type: Schema.Types.ObjectId,
       ref: "branch",
       required: true,
       index: true,
-    },
-    img: {
-      type: String,
-    },
-    lat: {
-      type: String,
-    },
-    lng: {
-      type: String,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -59,4 +45,4 @@ const CustomerModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("customer", CustomerModel);
+export default mongoose.model("customerGroup", CustomerGroupModel);

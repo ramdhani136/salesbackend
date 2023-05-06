@@ -17,6 +17,7 @@ import ChatController from "./ChatController";
 import MessageController from "./MessageController";
 import BranchController from "./BranchController";
 import PermissionController from "./PermissionController";
+import CustomerGroupController from "./CustomerGroupController";
 
 export {
   UserController,
@@ -37,5 +38,6 @@ export {
   ChatController,
   MessageController,
   BranchController,
-  PermissionController
+  PermissionController,
+  CustomerGroupController,
 };

@@ -16,6 +16,7 @@ import MessageModel from "./MessageModel";
 import BranchModel from "./BranchModel";
 import PermissionModel from "./PermissionModel";
 import CustomerModel from "./CustomerModel";
+import CustomerGroupModel from "./CustomerGroupModel";
 
 export {
   User,
@@ -36,4 +37,5 @@ export {
   BranchModel,
   PermissionModel,
   CustomerModel,
+  CustomerGroupModel
 };

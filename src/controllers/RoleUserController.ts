@@ -77,7 +77,7 @@ class RoleUserController implements IController {
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
-        selPermissionType.BRANCH
+        selPermissionType.ROLEUSER
       );
       // End
 
@@ -112,6 +112,15 @@ class RoleUserController implements IController {
             foreignField: "_id",
             as: "createdBy",
           },
+        },
+        {
+          $unwind: "$roleprofile",
+        },
+        {
+          $unwind: "$user",
+        },
+        {
+          $unwind: "$createdBy",
         },
         {
           $match: isFilter.data,
@@ -237,7 +246,7 @@ class RoleUserController implements IController {
 
     try {
       // Cek roleprofile terdaftar
-      const cekRoleValid:any = await RoleProfileModel.findOne({
+      const cekRoleValid: any = await RoleProfileModel.findOne({
         $and: [{ _id: req.body.roleprofile }],
       });
 

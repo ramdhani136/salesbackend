@@ -3,13 +3,18 @@ const { ObjectId } = require("mongodb");
 
 export enum selPermissionAllow {
   BRANCH = "branch",
-  CUSTOMERGROUP = "customerGroup",
+  CUSTOMERGROUP = "customergroup",
   CUSTOMER = "customer",
   USER = "user",
 }
 
 export enum selPermissionType {
   BRANCH = "branch",
+  CUSTOMERGROUP = "customergroup",
+  ROLEPROFILE = "roleprofile",
+  ROLELIST = "rolelist",
+  ROLEUSER = "roleuser",
+  PERMISSION = "permission",
 }
 
 class PermissionMiddleware {

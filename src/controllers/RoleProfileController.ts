@@ -78,7 +78,7 @@ class RoleProfileController implements IController {
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
-        selPermissionType.BRANCH
+        selPermissionType.ROLEPROFILE
       );
       // End
 

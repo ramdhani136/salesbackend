@@ -31,12 +31,12 @@ class CustomerGroupController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "roleprofile.name",
+        name: "parent.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "user.name",
+        name: "branch.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -63,12 +63,14 @@ class CustomerGroupController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "roleprofile.name",
-            "roleprofile._id",
-            "user.name",
-            "user._id",
+            "name",
+            "parent.name",
+            "parent._id",
+            "branch.name",
+            "branch._id",
             "createdBy.name",
             "createdBy._id",
+            "updatedAt",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -82,7 +84,7 @@ class CustomerGroupController implements IController {
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
-        selPermissionType.BRANCH
+        selPermissionType.CUSTOMERGROUP
       );
       // End
 
@@ -96,19 +98,14 @@ class CustomerGroupController implements IController {
       let pipelineTotal: any = [
         {
           $lookup: {
-            from: "roleprofiles",
-            localField: "roleprofile",
+            from: "branches",
+            localField: "branch",
             foreignField: "_id",
-            as: "roleprofile",
+            as: "branch",
           },
         },
         {
-          $lookup: {
-            from: "users",
-            localField: "user",
-            foreignField: "_id",
-            as: "user",
-          },
+          $unwind: "$branch",
         },
         {
           $lookup: {
@@ -119,6 +116,9 @@ class CustomerGroupController implements IController {
           },
         },
         {
+          $unwind: "$createdBy",
+        },
+        {
           $match: isFilter.data,
         },
         {
@@ -126,7 +126,7 @@ class CustomerGroupController implements IController {
         },
       ];
 
-      // Menambahkan filter berdasarkan permission user
+      // // Menambahkan filter berdasarkan permission user
       if (userPermission.length > 0) {
         pipelineTotal.unshift({
           $match: {
@@ -134,7 +134,7 @@ class CustomerGroupController implements IController {
           },
         });
       }
-      // End
+      // // End
 
       const totalData = await Db.aggregate(pipelineTotal);
 
@@ -146,19 +146,14 @@ class CustomerGroupController implements IController {
         },
         {
           $lookup: {
-            from: "roleprofiles",
-            localField: "roleprofile",
+            from: "branches",
+            localField: "branch",
             foreignField: "_id",
-            as: "roleprofile",
+            as: "branch",
           },
         },
         {
-          $lookup: {
-            from: "users",
-            localField: "user",
-            foreignField: "_id",
-            as: "user",
-          },
+          $unwind: "$branch",
         },
         {
           $lookup: {
@@ -167,12 +162,6 @@ class CustomerGroupController implements IController {
             foreignField: "_id",
             as: "createdBy",
           },
-        },
-        {
-          $unwind: "$roleprofile",
-        },
-        {
-          $unwind: "$user",
         },
         {
           $unwind: "$createdBy",

@@ -237,14 +237,21 @@ class RoleUserController implements IController {
 
     try {
       // Cek roleprofile terdaftar
-      const cekRoleValid = await RoleProfileModel.findOne({
-        $and: [{ _id: req.body.roleprofile }, { status: "1" }],
+      const cekRoleValid:any = await RoleProfileModel.findOne({
+        $and: [{ _id: req.body.roleprofile }],
       });
 
       if (!cekRoleValid) {
         return res.status(404).json({
           status: 404,
           msg: "Error, roleprofile tidak aktif / ditemukan!",
+        });
+      }
+
+      if (cekRoleValid.status != 1) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, roleprofile tidak aktif!",
         });
       }
 

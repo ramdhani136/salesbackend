@@ -253,13 +253,20 @@ class RoleListController implements IController {
       // End
 
       //Mengecek roleprofile terdaftar dan aktif
-      const cekRoleValid = await RoleProfileModel.findOne({
-        $and: [{ _id: req.body.roleprofile }, { status: "1" }],
+      const cekRoleValid: any = await RoleProfileModel.findOne({
+        $and: [{ _id: req.body.roleprofile }],
       });
       if (!cekRoleValid) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, roleprofile tidak ditemukan!" });
+      }
+
+      if (cekRoleValid.status != 1) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, roleprofile tidak aktif!",
+        });
       }
       // End
 
@@ -353,13 +360,20 @@ class RoleListController implements IController {
       if (result) {
         //Mengecek roleprofile terdaftar dan aktif
         if (req.body.roleprofile) {
-          const cekRoleValid = await RoleProfileModel.findOne({
-            $and: [{ _id: req.body.roleprofile }, { status: "1" }],
+          const cekRoleValid: any = await RoleProfileModel.findOne({
+            $and: [{ _id: req.body.roleprofile }],
           });
           if (!cekRoleValid) {
             return res.status(404).json({
               status: 404,
               msg: "Error, roleprofile tidak di temukan!",
+            });
+          }
+
+          if (cekRoleValid.status != 1) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, roleprofile tidak aktif!",
             });
           }
         }

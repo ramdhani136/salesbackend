@@ -304,6 +304,7 @@ class PermissionController implements IController {
         return res.status(400).json({ status: 400, msg: "Duplicate Data!" });
       }
       // End
+
       const result = new Db(req.body);
       const response: any = await result.save();
 
@@ -410,12 +411,41 @@ class PermissionController implements IController {
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      }).populate("createdBy", "name");
+      })
+        .populate("createdBy", "name")
+        .populate("user", "name");
 
       if (result) {
+        // Cek User terdaftar
+        if (req.body.user) {
+          const isRegUser = await UserController.checkUserRegistered(
+            req.body.user
+          );
 
-        // CEK UPDATE DUPLIKASI DAN TERDAFTAR !!!!!!!!!!!!!!
+          if (!isRegUser) {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "User is not registered!!" });
+          }
+        }
+        // End
 
+        // Cek apakah terdapat duplikasi data
+        const cekDuplicate = await Db.findOne({
+          $and: [
+            { doc: req.body.doc ? req.body.doc : result.doc },
+            { allow: req.body.allow ? req.body.allow : result.allow },
+            { user: req.body.user ? req.body.user : result.user._id },
+            { value: req.body.value ? req.body.value : result.value },
+            { allDoc: req.body.allDoc ? req.body.allDoc : result.allDoc },
+            { _id: { $ne: req.params.id } },
+          ],
+        });
+
+        if (cekDuplicate) {
+          return res.status(400).json({ status: 400, msg: "Duplicate Data!" });
+        }
+        // End
 
         if (req.body.id_workflow && req.body.id_state) {
           const checkedWorkflow =
@@ -445,7 +475,9 @@ class PermissionController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        }).populate("createdBy", "name");
+        })
+          .populate("createdBy", "name")
+          .populate("user", "name");
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
           JSON.stringify(getData),

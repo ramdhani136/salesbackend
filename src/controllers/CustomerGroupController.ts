@@ -290,7 +290,10 @@ class CustomerGroupController implements IController {
           });
         }
         // End
-        req.body.parent = new ObjectId(req.body.parent);
+        req.body.parent = {
+          _id: new ObjectId(req.body.parent),
+          name: cekParent.name,
+        };
       }
       // End
 
@@ -357,7 +360,7 @@ class CustomerGroupController implements IController {
             from: "customergroups",
             startWith: "$_id",
             connectFromField: "_id",
-            connectToField: "parent",
+            connectToField: "parent._id",
             as: "childs",
           },
         },
@@ -392,10 +395,7 @@ class CustomerGroupController implements IController {
 
       const getHistory = await History.find(
         {
-          $and: [
-            { "document._id": data._id },
-            { "document.type": redisName },
-          ],
+          $and: [{ "document._id": data._id }, { "document.type": redisName }],
         },
         ["_id", "message", "createdAt", "updatedAt"]
       )

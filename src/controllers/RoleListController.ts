@@ -351,8 +351,8 @@ class RoleListController implements IController {
         .populate("roleprofile", "name")
         .populate("createdBy", "name");
       if (result) {
+        //Mengecek roleprofile terdaftar dan aktif
         if (req.body.roleprofile) {
-          //Mengecek roleprofile terdaftar dan aktif
           const cekRoleValid = await RoleProfileModel.findOne({
             $and: [{ _id: req.body.roleprofile }, { status: "1" }],
           });
@@ -362,17 +362,23 @@ class RoleListController implements IController {
               msg: "Error, roleprofile tidak di temukan!",
             });
           }
-          // End
         }
+        // End
 
-        // PR CEK DUPLIKAT DATA KETIKA MERUBAH DOC ATAU ROLEPROFILE
-        if (req.body.roleprofile && !req.body.doc) {
-          // Cek duplikat data
+        // Cek duplikat data
+        if (req.body.roleprofile || req.body.doc) {
           const duplicate = await Db.findOne({
             $and: [
-              { roleprofile: req.body.roleprofile },
               {
-                doc: result.doc,
+                roleprofile: req.body.roleprofile
+                  ? req.body.roleprofile
+                  : result.roleprofile._id,
+              },
+              {
+                doc: req.body.doc ? req.body.doc : result.doc,
+              },
+              {
+                _id: { $ne: req.params.id },
               },
             ],
           });
@@ -381,44 +387,8 @@ class RoleListController implements IController {
               .status(404)
               .json({ status: 404, msg: "Error, duplikasi data!" });
           }
-          // End
         }
-
-        if (!req.body.roleprofile && req.body.doc) {
-          // Cek duplikat data
-          const duplicate = await Db.findOne({
-            $and: [
-              { roleprofile: result.roleprofile._id },
-              {
-                doc: req.body.doc,
-              },
-            ],
-          });
-          if (duplicate) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Error, duplikasi data!" });
-          }
-          // End
-        }
-
-        if (req.body.roleprofile && req.body.doc) {
-          // Cek duplikat data
-          const duplicate = await Db.findOne({
-            $and: [
-              { roleprofile: req.body.roleprofile },
-              {
-                doc: req.body.doc,
-              },
-            ],
-          });
-          if (duplicate) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Error, duplikasi data!" });
-          }
-          // End
-        }
+        // End
 
         await Db.updateOne({ _id: req.params.id }, req.body);
         const data: any = await Db.findOne({ _id: req.params.id })

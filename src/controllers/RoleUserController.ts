@@ -378,8 +378,8 @@ class RoleUserController implements IController {
         .populate("user", "name")
         .populate("createdBy", "name");
 
+      //Cek roleprofile aktif
       if (req.body.roleprofile) {
-        //Cek roleprofile aktif
         const cekRoleValid = await RoleProfileModel.findOne({
           $and: [{ _id: req.body.roleprofile }, { status: "1" }],
         });
@@ -390,11 +390,11 @@ class RoleUserController implements IController {
             msg: "Error, roleprofile tidak aktif / ditemukan!",
           });
         }
-        // End
       }
+      // End
 
+      // Cek duplikasi data
       if (req.body.roleprofile || req.body.user) {
-        // Cek duplikasi data
         const dupl = await Db.findOne({
           $and: [
             { user: req.body.user ? req.body.user : result.user._id },
@@ -414,8 +414,8 @@ class RoleUserController implements IController {
             .status(404)
             .json({ status: 404, msg: "Error, duplicate data" });
         }
-        // End
       }
+      // End
 
       if (result) {
         if (req.body.id_workflow && req.body.id_state) {

@@ -177,7 +177,7 @@ class CustomerController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `Menambahkan customer ${response.name} `,
+        message: `${req.user} menambahkan customer ${response.name} `,
         user: req.userId,
       });
       // End

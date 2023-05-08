@@ -161,7 +161,7 @@ class CustomerController implements IController {
       };
       // End
 
-      req.body.branch = CekCG.branch;
+      req.body.customerGroup.branch = CekCG.branch;
       // End
 
       req.body.createdBy = {
@@ -302,7 +302,8 @@ class CustomerController implements IController {
           };
           // End
 
-          req.body.branch = CekCG.branch;
+          req.body.customerGroup.branch = CekCG.branch;
+          // End
         }
         // End
 

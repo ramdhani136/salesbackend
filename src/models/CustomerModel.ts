@@ -20,14 +20,15 @@ const CustomerModel = new mongoose.Schema(
         required: true,
       },
       name: { type: String, required: true },
-    },
-    branch: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
+      branch: {
+        _id: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        name: { type: String, required: true },
       },
-      name: { type: String, required: true },
     },
+
     img: {
       type: String,
     },

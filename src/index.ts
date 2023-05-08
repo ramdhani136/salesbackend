@@ -29,6 +29,7 @@ import {
   BranchRoutes,
   PermissionRoutes,
   CustomerGroupRoutes,
+  CustomerRoutes,
 } from "./routes";
 import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -165,6 +166,7 @@ class App {
     this.app.use("/users", UserRoutes);
     this.app.use("/branch", AuthMiddleware, BranchRoutes);
     this.app.use("/permission", AuthMiddleware, PermissionRoutes);
+    this.app.use("/customer", AuthMiddleware, CustomerRoutes);
     this.app.use("/customergroup", AuthMiddleware, CustomerGroupRoutes);
     // this.app.use("/schedule", AuthMiddleware, RoleMiddleware, ScheduleRoutes);
     // this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);

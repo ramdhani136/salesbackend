@@ -18,6 +18,7 @@ import ChatRoutes from "./ChatRoutes";
 import BranchRoutes from "./BranchRoutes";
 import PermissionRoutes from "./PermissionRoutes";
 import CustomerGroupRoutes from "./CustomerGroupRoutes";
+import CustomerRoutes from "./CustomerRoutes";
 
 export {
   UserRoutes,
@@ -40,4 +41,5 @@ export {
   BranchRoutes,
   PermissionRoutes,
   CustomerGroupRoutes,
+  CustomerRoutes,
 };

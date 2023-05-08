@@ -18,6 +18,7 @@ import MessageController from "./MessageController";
 import BranchController from "./BranchController";
 import PermissionController from "./PermissionController";
 import CustomerGroupController from "./CustomerGroupController";
+import CustomerController from "./CustomerController";
 
 export {
   UserController,
@@ -40,4 +41,5 @@ export {
   BranchController,
   PermissionController,
   CustomerGroupController,
+  CustomerController,
 };

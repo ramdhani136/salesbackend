@@ -134,6 +134,7 @@ class CustomerController implements IController {
     }
 
     try {
+      //Mengecek Customer Group
       const CekCG: any = await CustomerGroupModel.findOne({
         $and: [{ _id: req.body.customerGroup }],
       }).populate("branch", "name");
@@ -151,6 +152,7 @@ class CustomerController implements IController {
           msg: "Error, customerGroup tidak aktif!",
         });
       }
+      // End
 
       // set setCustomerGroup
       req.body.customerGroup = {
@@ -259,67 +261,51 @@ class CustomerController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    if (req.body.branch) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, tidak dapat merubah branch!",
+      });
+    }
+
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      })
-        .populate("branch", "name")
-        .populate("createdBy", "name");
-
-      // Cek branch terdaftar
-      const cekBranch: any = await BranchModel.findOne({
-        $and: [{ _id: req.body.branch }],
       });
 
-      if (!cekBranch) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, branch tidak ditemukan!",
-        });
-      }
+      if (result) {
+        //Mengecek jika Customer Group dirubah
+        if (req.body.customerGroup) {
+          const CekCG: any = await CustomerGroupModel.findOne({
+            $and: [{ _id: req.body.customerGroup }],
+          }).populate("branch", "name");
 
-      if (cekBranch.status != 1) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, branch tidak aktif!",
-        });
-      }
-      // End
+          if (!CekCG) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customerGroup tidak ditemukan!",
+            });
+          }
 
-      // Cek Parent
-      if (req.body.parent) {
-        const cekParent: any = await Db.findOne({
-          _id: new ObjectId(req.body.parent),
-        });
+          if (CekCG.status != 1) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customerGroup tidak aktif!",
+            });
+          }
+          // End
 
-        if (!cekParent) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
-        }
+          // set setCustomerGroup
+          req.body.customerGroup = {
+            _id: CekCG._id,
+            name: CekCG.name,
+          };
+          // End
 
-        if (cekParent.status != 1) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak aktif!" });
-        }
-
-        // Cek branch harus sama dengan parent
-        if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
-          return res.status(400).json({
-            status: 400,
-            msg: "Error, branch harus sama dengan parent!",
-          });
+          req.body.branch = CekCG.branch;
         }
         // End
-        req.body.parent = {
-          _id: new ObjectId(req.body.parent),
-          name: cekParent.name,
-        };
-      }
-      // End
 
-      if (result) {
         if (req.body.id_workflow && req.body.id_state) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -348,10 +334,7 @@ class CustomerController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        })
-          .populate("roleprofile", "name")
-          .populate("user", "name")
-          .populate("createdBy", "name");
+        });
 
         await Redis.client.set(
           `${redisName}-${req.params.id}`,

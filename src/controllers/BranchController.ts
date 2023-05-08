@@ -127,6 +127,9 @@ class BranchController implements IController {
 
       let pipelineTotal: any = [
         {
+          $match: isFilter.data,
+        },
+        {
           $lookup: {
             from: "users",
             localField: "createdBy",
@@ -140,9 +143,7 @@ class BranchController implements IController {
         {
           $project: setField,
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $count: "total_orders",
         },
@@ -167,6 +168,9 @@ class BranchController implements IController {
           $sort: order_by,
         },
         {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
           $lookup: {
             from: "users",
             localField: "createdBy",
@@ -179,9 +183,6 @@ class BranchController implements IController {
         },
         {
           $match: isFilter.data,
-        },
-        {
-          $skip: limit > 0 ? page * limit - limit : 0,
         },
 
         {
@@ -201,7 +202,7 @@ class BranchController implements IController {
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
-        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+        pipelineResult.unshift({ $limit: limit > 0 ? limit : getAll });
       }
       // End
 

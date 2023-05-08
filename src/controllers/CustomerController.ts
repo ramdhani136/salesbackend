@@ -30,7 +30,12 @@ class CustomerController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "parent.name",
+        name: "name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customerGroup.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -61,16 +66,7 @@ class CustomerController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : [
-            "name",
-            "parent.name",
-            "parent._id",
-            "branch.name",
-            "branch._id",
-            "createdBy.name",
-            "createdBy._id",
-            "updatedAt",
-          ];
+        : ["name", "branch", "createdBy", "updatedAt", "customerGroup"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -80,11 +76,11 @@ class CustomerController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter);
 
       // Mengambil rincian permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.CUSTOMERGROUP
-      );
+      // const userPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.USER,
+      //   selPermissionType.CUSTOMERGROUP
+      // );
       // End
 
       if (!isFilter.status) {
@@ -94,106 +90,12 @@ class CustomerController implements IController {
       }
       // End
 
-      let pipelineTotal: any = [
-        {
-          $lookup: {
-            from: "branches",
-            localField: "branch",
-            foreignField: "_id",
-            as: "branch",
-          },
-        },
-        {
-          $unwind: "$branch",
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-          },
-        },
-        {
-          $unwind: "$createdBy",
-        },
-        {
-          $match: isFilter.data,
-        },
-        {
-          $count: "total_orders",
-        },
-      ];
+      const getAll = await Db.find(isFilter.data, setField).count();
 
-      // // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineTotal.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // // End
-
-      const totalData = await Db.aggregate(pipelineTotal);
-
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
-
-      let pipelineResult: any = [
-        {
-          $sort: order_by,
-        },
-        {
-          $lookup: {
-            from: "branches",
-            localField: "branch",
-            foreignField: "_id",
-            as: "branch",
-          },
-        },
-        {
-          $unwind: "$branch",
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-          },
-        },
-        {
-          $unwind: "$createdBy",
-        },
-        {
-          $match: isFilter.data,
-        },
-
-        {
-          $project: setField,
-        },
-        {
-          $skip: limit > 0 ? page * limit - limit : 0,
-        },
-      ];
-
-      // Menambahkan limit ketika terdapat limit
-      if (limit > 0) {
-        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
-      }
-      // End
-
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineResult.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
-
-      const result = await Db.aggregate(pipelineResult);
+      const result = await Db.find(isFilter.data, setField)
+        .sort(order_by)
+        .limit(limit)
+        .skip(limit > 0 ? page * limit - limit : 0);
 
       if (result.length > 0) {
         return res.status(200).json({

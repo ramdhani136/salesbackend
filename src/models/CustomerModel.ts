@@ -14,12 +14,6 @@ const CustomerModel = new mongoose.Schema(
       default: "Company",
       index: true,
     },
-    // customerGroup: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: "customergroup",
-    //   required: true,
-    //   index: true,
-    // },
     customerGroup: {
       _id: {
         type: Schema.Types.ObjectId,

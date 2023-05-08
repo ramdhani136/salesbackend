@@ -7,6 +7,7 @@ import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   BranchModel,
   CustomerGroupModel,
+  CustomerModel,
   visitModel as Db,
   History,
 } from "../models";
@@ -181,9 +182,9 @@ class VistController implements IController {
 
     try {
       //Mengecek Customer
-      const cekCustomer: any = await CustomerGroupModel.findOne({
-        $and: [{ _id: req.body.customerGroup }],
-      }).populate("branch", "name");
+      const cekCustomer: any = await CustomerModel.findOne({
+        $and: [{ _id: req.body.customer }],
+      })
 
       if (!cekCustomer) {
         return res.status(404).json({

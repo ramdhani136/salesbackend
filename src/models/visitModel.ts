@@ -13,6 +13,11 @@ const VisitModel = new mongoose.Schema(
       default: "insite",
     },
     customer: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
       customerGroup: {
         _id: {
           type: Schema.Types.ObjectId,

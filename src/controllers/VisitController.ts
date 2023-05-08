@@ -134,29 +134,29 @@ class VistController implements IController {
         .json({ status: 400, msg: "Error, customer wajib diisi!" });
     }
 
-    if (!req.body.contact) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, contact wajib diisi!" });
-    }
+    // if (!req.body.contact) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: 400, msg: "Error, contact wajib diisi!" });
+    // }
 
-    if (!req.body.signature) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, signature wajib diisi!" });
-    }
+    // if (!req.body.signature) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: 400, msg: "Error, signature wajib diisi!" });
+    // }
 
-    if (!req.body.location.lat) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
-    }
+    // if (!req.body.location.lat) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
+    // }
 
-    if (!req.body.location.lng) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-    }
+    // if (!req.body.location.lng) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
+    // }
 
     // Jika ada checkout
     if (req.body.checkOut) {
@@ -182,9 +182,12 @@ class VistController implements IController {
 
     try {
       //Mengecek Customer
-      const cekCustomer: any = await CustomerModel.findOne({
-        $and: [{ _id: req.body.customer }],
-      })
+      const cekCustomer: any = await CustomerModel.findOne(
+        {
+          $and: [{ _id: req.body.customer }],
+        },
+        ["name", "status", "customerGroup"]
+      );
 
       if (!cekCustomer) {
         return res.status(404).json({
@@ -200,12 +203,15 @@ class VistController implements IController {
         });
       }
 
+      // req.body.customer = {
+      //   _id: new ObjectId(cekCustomer._id),
+      //   name: cekCustomer.name,
+      //   customerGroup: cekCustomer.customerGroup,
+      // };
+
       console.log(cekCustomer);
 
-      // set setCustomerGroup
-      // req.body.customer = {};
-
-      // const branch  = cekCustomer.branch;
+      // End
 
       // Jika ada schedule
 

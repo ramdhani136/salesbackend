@@ -31,8 +31,8 @@ const Branch = new mongoose.Schema(
     },
     workflowState: {
       type: String,
-      required:true,
-      default:"Draft",
+      required: true,
+      default: "Draft",
       index: true,
     },
   },
@@ -42,3 +42,5 @@ const Branch = new mongoose.Schema(
 );
 
 export default mongoose.model("branch", Branch);
+
+Branch.index({ name: 1, status: 1 });

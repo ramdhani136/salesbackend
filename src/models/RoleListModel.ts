@@ -74,3 +74,5 @@ const RoleListModel = new mongoose.Schema(
 );
 
 export default mongoose.model("RoleLists", RoleListModel);
+
+RoleListModel.index({doc:1})

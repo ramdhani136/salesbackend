@@ -21,8 +21,8 @@ const RoleProfile = new mongoose.Schema(
     },
     workflowState: {
       type: String,
-      required:true,
-      default:"Draft"
+      required: true,
+      default: "Draft",
     },
   },
   {
@@ -31,3 +31,5 @@ const RoleProfile = new mongoose.Schema(
 );
 
 export default mongoose.model("RoleProfiles", RoleProfile);
+
+RoleProfile.index({ name: 1, status: 1, workflowState: 1 });

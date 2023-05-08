@@ -46,3 +46,5 @@ const CustomerGroupModel = new mongoose.Schema(
 );
 
 export default mongoose.model("customergroup", CustomerGroupModel);
+
+CustomerGroupModel.index({ name: 1, status: 1, parent: 1, workflowState: 1 });

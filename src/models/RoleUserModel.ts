@@ -37,3 +37,5 @@ const RoleUserModel = new mongoose.Schema(
 );
 
 export default mongoose.model("RoleUser", RoleUserModel);
+
+RoleUserModel.index({ status: 1, workflowState: 1 });

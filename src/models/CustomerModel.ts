@@ -60,3 +60,5 @@ const CustomerModel = new mongoose.Schema(
 );
 
 export default mongoose.model("customer", CustomerModel);
+
+CustomerModel.index({ name: 1, type: 1, status: 1, workflowState: 1 });

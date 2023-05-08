@@ -41,3 +41,5 @@ const User = new mongoose.Schema(
 );
 
 export default mongoose.model("Users", User);
+
+User.index({ name: 1, email: 1, username: 1, status: 1 });

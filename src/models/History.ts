@@ -41,3 +41,5 @@ const History = new mongoose.Schema(
 );
 
 export default mongoose.model("history", History);
+
+History.index({ status: 1 });

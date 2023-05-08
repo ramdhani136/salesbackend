@@ -15,6 +15,7 @@ export enum selPermissionType {
   ROLELIST = "rolelist",
   ROLEUSER = "roleuser",
   PERMISSION = "permission",
+  CUSTOMER = "customer",
 }
 
 class PermissionMiddleware {

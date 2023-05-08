@@ -79,7 +79,7 @@ class CustomerController implements IController {
       // const userPermission = await PermissionMiddleware.getPermission(
       //   req.userId,
       //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMERGROUP
+      //   selPermissionType.CUSTOMER
       // );
       // End
 

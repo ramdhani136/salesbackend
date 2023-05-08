@@ -12,8 +12,8 @@ const CustomerGroupModel = new mongoose.Schema(
       type: String,
     },
     parent: {
-      _id: { type: Schema.Types.ObjectId, default: "" },
-      name: { type: String, default: "" },
+      _id: { type: Schema.Types.ObjectId, default: null },
+      name: { type: String, default: null },
     },
     branch: {
       type: Schema.Types.ObjectId,

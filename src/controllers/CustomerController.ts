@@ -232,32 +232,9 @@ class CustomerController implements IController {
     }
 
     try {
-      // // Cek branch terdaftar
-      // const cekBranch: any = await BranchModel.findOne({
-      //   $and: [{ _id: req.body.branch }],
-      // });
-
-      // if (!cekBranch) {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: "Error, branch tidak ditemukan!",
-      //   });
-      // }
-
-      // if (cekBranch.status != 1) {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: "Error, branch tidak aktif!",
-      //   });
-      // }
-
-      // req.body.branch = cekBranch.name;
-      // // End
-
-      // Cek CustomerGroup terdaftar
       const CekCG: any = await CustomerGroupModel.findOne({
         $and: [{ _id: req.body.customerGroup }],
-      });
+      }).populate("branch", "name");
 
       if (!CekCG) {
         return res.status(404).json({
@@ -273,15 +250,25 @@ class CustomerController implements IController {
         });
       }
 
+      // set setCustomerGroup
+      req.body.customerGroup = {
+        _id: CekCG._id,
+        name: CekCG.name,
+      };
+      // End
+
       req.body.branch = CekCG.branch;
       // End
 
-      req.body.createdBy = req.userId;
+      req.body.createdBy = {
+        _id: new ObjectId(req.userId),
+        name: req.user,
+      };
+
       const result = new Db(req.body);
       const response: any = await result.save();
 
       // push history
-
       await HistoryController.pushHistory({
         document: {
           _id: response._id,

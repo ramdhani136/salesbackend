@@ -44,6 +44,7 @@ const VisitModel = new mongoose.Schema(
     },
     signature: {
       type: String,
+      required: true,
     },
     lat: {
       type: String,
@@ -61,21 +62,33 @@ const VisitModel = new mongoose.Schema(
       },
       name: { type: String, required: true },
     },
-    status: {
-      type: String,
-      enum: ["0", "1", "2"],
-      default: "1",
-      index: true,
-    },
+
     schedule: {
       _id: { type: Schema.Types.ObjectId },
       name: { type: String },
       scheduleList: { type: Schema.Types.ObjectId },
     },
+    checkOut: {
+      createdAt: { type: Date, required: true },
+      lat: {
+        type: String,
+        required: true,
+      },
+      lng: {
+        type: String,
+        required: true,
+      },
+    },
+    status: {
+      type: String,
+      enum: ["0", "1", "2"],
+      default: "0",
+      index: true,
+    },
     workflowState: {
       type: String,
       required: true,
-      default: "Submitted",
+      default: "Draft",
       index: true,
     },
   },
@@ -84,13 +97,15 @@ const VisitModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("customer", VisitModel);
+export default mongoose.model("visit", VisitModel);
 
 VisitModel.index({
-  // name: 1,
-  // type: 1,
-  // status: 1,
-  // workflowState: 1,
-  // customerGroup: 1,
-  // branch: 1,
+  name: 1,
+  type: 1,
+  status: 1,
+  workflowState: 1,
+  customer: 1,
+  rate: 1,
+  contact: 1,
+  schedule: 1,
 });

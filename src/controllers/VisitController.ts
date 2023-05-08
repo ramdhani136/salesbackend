@@ -157,21 +157,19 @@ class VistController implements IController {
         .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
     }
 
-    // Jika ada schedule
-
-    // End
-
     // Jika ada checkout
     if (req.body.checkOut) {
       if (!req.body.checkOut.lng) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, lokasi lng checkout wajib diisi!" });
+        return res.status(400).json({
+          status: 400,
+          msg: "Error, lokasi lng checkout wajib diisi!",
+        });
       }
       if (!req.body.checkOut.lat) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, lokasi lat checkout wajib diisi!" });
+        return res.status(400).json({
+          status: 400,
+          msg: "Error, lokasi lat checkout wajib diisi!",
+        });
       }
       if (!req.body.checkOut.createdAt) {
         return res
@@ -182,34 +180,34 @@ class VistController implements IController {
     // ENd
 
     try {
-      //Mengecek Customer Group
-      const CekCG: any = await CustomerGroupModel.findOne({
+      //Mengecek Customer
+      const cekCustomer: any = await CustomerGroupModel.findOne({
         $and: [{ _id: req.body.customerGroup }],
       }).populate("branch", "name");
 
-      if (!CekCG) {
+      if (!cekCustomer) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, customerGroup tidak ditemukan!",
+          msg: "Error, customer tidak ditemukan!",
         });
       }
 
-      if (CekCG.status != 1) {
+      if (cekCustomer.status != 1) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, customerGroup tidak aktif!",
+          msg: "Error, customer tidak aktif!",
         });
       }
-      // End
+
+      console.log(cekCustomer);
 
       // set setCustomerGroup
-      req.body.customerGroup = {
-        _id: CekCG._id,
-        name: CekCG.name,
-      };
-      // End
+      // req.body.customer = {};
 
-      req.body.customerGroup.branch = CekCG.branch;
+      // const branch  = cekCustomer.branch;
+
+      // Jika ada schedule
+
       // End
 
       req.body.createdBy = {
@@ -217,22 +215,22 @@ class VistController implements IController {
         name: req.user,
       };
 
-      const result = new Db(req.body);
-      const response: any = await result.save();
+      // const result = new Db(req.body);
+      // const response: any = await result.save();
 
       // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name,
-          type: redisName,
-        },
-        message: `${req.user} menambahkan customer ${response.name} `,
-        user: req.userId,
-      });
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: response._id,
+      //     name: response.name,
+      //     type: redisName,
+      //   },
+      //   message: `${req.user} menambahkan customer ${response.name} `,
+      //   user: req.userId,
+      // });
       // End
 
-      return res.status(200).json({ status: 200, data: response });
+      return res.status(200).json({ status: 200, data: "tes" });
     } catch (error) {
       return res
         .status(400)

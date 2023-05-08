@@ -51,6 +51,9 @@ const VisitModel = new mongoose.Schema(
     lng: {
       type: String,
     },
+    rate: {
+      type: Number,
+    },
     createdBy: {
       _id: {
         type: Schema.Types.ObjectId,
@@ -63,6 +66,11 @@ const VisitModel = new mongoose.Schema(
       enum: ["0", "1", "2"],
       default: "1",
       index: true,
+    },
+    schedule: {
+      _id: { type: Schema.Types.ObjectId },
+      name: { type: String },
+      scheduleList: { type: Schema.Types.ObjectId },
     },
     workflowState: {
       type: String,

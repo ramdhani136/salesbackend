@@ -134,11 +134,11 @@ class VistController implements IController {
         .json({ status: 400, msg: "Error, customer wajib diisi!" });
     }
 
-    // if (!req.body.contact) {
-    //   return res
-    //     .status(400)
-    //     .json({ status: 400, msg: "Error, contact wajib diisi!" });
-    // }
+    if (!req.body.contact) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, contact wajib diisi!" });
+    }
 
     // if (!req.body.signature) {
     //   return res
@@ -203,14 +203,11 @@ class VistController implements IController {
         });
       }
 
-      // req.body.customer = {
-      //   _id: new ObjectId(cekCustomer._id),
-      //   name: cekCustomer.name,
-      //   customerGroup: cekCustomer.customerGroup,
-      // };
-
-      console.log(cekCustomer);
-
+      req.body.customer = {
+        _id: new ObjectId(cekCustomer._id),
+        name: cekCustomer.name,
+        customerGroup: cekCustomer.customerGroup,
+      };
       // End
 
       // Jika ada schedule

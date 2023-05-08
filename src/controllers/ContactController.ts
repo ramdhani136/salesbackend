@@ -163,6 +163,8 @@ class ContactController implements IController {
       }
       // End
 
+      console.log(cekCustomer);
+
       // set customer
       req.body.customer = {};
       // End

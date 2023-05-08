@@ -46,11 +46,15 @@ const VisitModel = new mongoose.Schema(
       type: String,
       required: true,
     },
-    lat: {
-      type: String,
-    },
-    lng: {
-      type: String,
+    location: {
+      lat: {
+        required: true,
+        type: String,
+      },
+      lng: {
+        required: true,
+        type: String,
+      },
     },
     rate: {
       type: Number,
@@ -69,14 +73,12 @@ const VisitModel = new mongoose.Schema(
       scheduleList: { type: Schema.Types.ObjectId },
     },
     checkOut: {
-      createdAt: { type: Date, required: true },
+      createdAt: { type: Date },
       lat: {
         type: String,
-        required: true,
       },
       lng: {
         type: String,
-        required: true,
       },
     },
     status: {

@@ -5,8 +5,9 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  BranchModel,
   CustomerGroupModel,
-  CustomerModel as Db,
+  ContactModel as Db,
   History,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -18,9 +19,9 @@ import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 
-const redisName = "customer";
+const redisName = "contact";
 
-class CustomerController implements IController {
+class ContactController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -126,26 +127,35 @@ class CustomerController implements IController {
         .json({ status: 400, msg: "Error, name wajib diisi!" });
     }
 
-    if (!req.body.customerGroup) {
+    if (!req.body.phone) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, customerGroup wajib diisi!" });
+        .json({ status: 400, msg: "Error, phone wajib diisi!" });
+    }
+
+    if (!req.body.customer) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, phone wajib diisi!" });
     }
 
     try {
-      //Mengecek Customer Group
-      const CekCG: any = await CustomerGroupModel.findOne({
-        $and: [{ _id: req.body.customerGroup }],
-      }).populate("branch", "name");
+      //Mengecek Customer
+      const cekCustomer: any = await CustomerGroupModel.findOne(
+        {
+          $and: [{ _id: req.body.customer }],
+        },
+        ["name", "customerGroup", "status"]
+      );
 
-      if (!CekCG) {
+      if (!cekCustomer) {
         return res.status(404).json({
           status: 404,
           msg: "Error, customerGroup tidak ditemukan!",
         });
       }
 
-      if (CekCG.status != 1) {
+      if (cekCustomer.status != 1) {
         return res.status(404).json({
           status: 404,
           msg: "Error, customerGroup tidak aktif!",
@@ -153,37 +163,33 @@ class CustomerController implements IController {
       }
       // End
 
-      // set setCustomerGroup
-      req.body.customerGroup = {
-        _id: CekCG._id,
-        name: CekCG.name,
-      };
+      // set customer
+      req.body.customer = {};
       // End
 
-      req.body.customerGroup.branch = CekCG.branch;
-      // End
-
+      // set CreatedAt
       req.body.createdBy = {
         _id: new ObjectId(req.userId),
         name: req.user,
       };
-
-      const result = new Db(req.body);
-      const response: any = await result.save();
-
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name,
-          type: redisName,
-        },
-        message: `${req.user} menambahkan customer ${response.name} `,
-        user: req.userId,
-      });
       // End
 
-      return res.status(200).json({ status: 200, data: response });
+      // const result = new Db(req.body);
+      // const response: any = await result.save();
+
+      // push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: response._id,
+      //     name: response.name,
+      //     type: redisName,
+      //   },
+      //   message: `${req.user} menambahkan customer ${response.name} `,
+      //   user: req.userId,
+      // });
+      // End
+
+      return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {
       return res
         .status(400)
@@ -382,4 +388,4 @@ class CustomerController implements IController {
   };
 }
 
-export default new CustomerController();
+export default new ContactController();

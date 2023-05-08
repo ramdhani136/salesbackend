@@ -18,6 +18,7 @@ import PermissionModel from "./PermissionModel";
 import CustomerModel from "./CustomerModel";
 import CustomerGroupModel from "./CustomerGroupModel";
 import visitModel from "./visitModel";
+import ContactModel from "./ContactModel";
 
 export {
   User,
@@ -40,4 +41,5 @@ export {
   CustomerModel,
   CustomerGroupModel,
   visitModel,
+  ContactModel,
 };

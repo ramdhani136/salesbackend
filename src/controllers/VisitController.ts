@@ -157,6 +157,30 @@ class VistController implements IController {
         .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
     }
 
+    // Jika ada schedule
+
+    // End
+
+    // Jika ada checkout
+    if (req.body.checkOut) {
+      if (!req.body.checkOut.lng) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, lokasi lng checkout wajib diisi!" });
+      }
+      if (!req.body.checkOut.lat) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, lokasi lat checkout wajib diisi!" });
+      }
+      if (!req.body.checkOut.createdAt) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, waktu checkout wajib diisi!" });
+      }
+    }
+    // ENd
+
     try {
       //Mengecek Customer Group
       const CekCG: any = await CustomerGroupModel.findOne({

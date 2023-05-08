@@ -66,12 +66,13 @@ const VisitModel = new mongoose.Schema(
       },
       name: { type: String, required: true },
     },
-
-    schedule: {
-      _id: { type: Schema.Types.ObjectId },
-      name: { type: String },
-      scheduleList: { type: Schema.Types.ObjectId },
-    },
+    schedule: [
+      {
+        _id: { type: Schema.Types.ObjectId },
+        name: { type: String },
+        scheduleList: { type: Schema.Types.ObjectId },
+      },
+    ],
     checkOut: {
       createdAt: { type: Date },
       lat: {

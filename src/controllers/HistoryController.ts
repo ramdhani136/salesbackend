@@ -175,7 +175,8 @@ class HistoryController implements IController {
       "roleprofile",
       "rolelist",
       "permission",
-      "customergroup"
+      "customergroup",
+      "customer",
     ];
 
     const cekDocType = doctype.find((item) => item == req.body.document.type);
@@ -274,7 +275,8 @@ class HistoryController implements IController {
       "rolelist",
       "branch",
       "permission",
-      "customergroup"
+      "customergroup",
+      "customer",
     ];
 
     const cekDocType = doctype.find((item) => item == data.document.type);

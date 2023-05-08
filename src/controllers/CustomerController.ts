@@ -6,6 +6,7 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   BranchModel,
+  CustomerGroupModel,
   CustomerModel as Db,
   History,
 } from "../models";
@@ -224,64 +225,55 @@ class CustomerController implements IController {
         .json({ status: 400, msg: "Error, name wajib diisi!" });
     }
 
-    if (!req.body.branch) {
+    if (!req.body.customerGroup) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, branch wajib diisi!" });
+        .json({ status: 400, msg: "Error, customerGroup wajib diisi!" });
     }
 
     try {
-      // Cek branch terdaftar
-      const cekBranch: any = await BranchModel.findOne({
-        $and: [{ _id: req.body.branch }],
+      // // Cek branch terdaftar
+      // const cekBranch: any = await BranchModel.findOne({
+      //   $and: [{ _id: req.body.branch }],
+      // });
+
+      // if (!cekBranch) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, branch tidak ditemukan!",
+      //   });
+      // }
+
+      // if (cekBranch.status != 1) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, branch tidak aktif!",
+      //   });
+      // }
+
+      // req.body.branch = cekBranch.name;
+      // // End
+
+      // Cek CustomerGroup terdaftar
+      const CekCG: any = await CustomerGroupModel.findOne({
+        $and: [{ _id: req.body.customerGroup }],
       });
 
-      if (!cekBranch) {
+      if (!CekCG) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, branch tidak ditemukan!",
+          msg: "Error, customerGroup tidak ditemukan!",
         });
       }
 
-      if (cekBranch.status != 1) {
+      if (CekCG.status != 1) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, branch tidak aktif!",
+          msg: "Error, customerGroup tidak aktif!",
         });
       }
-      // End
 
-      // Cek Parent
-      if (req.body.parent) {
-        const cekParent: any = await Db.findOne({
-          _id: new ObjectId(req.body.parent),
-        });
-
-        if (!cekParent) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
-        }
-
-        if (cekParent.status != 1) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak aktif!" });
-        }
-
-        // Cek branch harus sama dengan parent
-        if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
-          return res.status(400).json({
-            status: 400,
-            msg: "Error, branch harus sama dengan parent!",
-          });
-        }
-        // End
-        req.body.parent = {
-          _id: new ObjectId(req.body.parent),
-          name: cekParent.name,
-        };
-      }
+      req.body.branch = CekCG.branch;
       // End
 
       req.body.createdBy = req.userId;
@@ -289,13 +281,14 @@ class CustomerController implements IController {
       const response: any = await result.save();
 
       // push history
+
       await HistoryController.pushHistory({
         document: {
           _id: response._id,
           name: response.name,
           type: redisName,
         },
-        message: `Menambahkan customer group ${response.name} `,
+        message: `Menambahkan customer ${response.name} `,
         user: req.userId,
       });
       // End
@@ -310,79 +303,53 @@ class CustomerController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
-      const result: any = await Db.aggregate([
-        {
-          $match: { _id: new ObjectId(req.params.id) },
-        },
-        {
-          $graphLookup: {
-            from: "customergroups",
-            startWith: "$_id",
-            connectFromField: "_id",
-            connectToField: "parent._id",
-            as: "childs",
-          },
-        },
-        {
-          $project: {
-            name: 1,
-            parent: 1,
-            branch: 1,
-            status: 1,
-            workflowState: 1,
-            createdBy: 1,
-            // createdAt: 1,
-            // updatedAt: 1,
-            childs: {
-              _id: 1,
-              name: 1,
-            },
-          },
-        },
-      ]);
-
-      let data: any = {};
-      if (result.length > 0) {
-        data = result[0];
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
+      const result: any = await Db.findOne({
+        _id: req.params.id,
+      })
+        .populate("createdBy", "name")
+        .populate("customerGroup", "name")
+        .populate("branch", "name");
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,
-        data.workflowState
+        result.workflowState
       );
 
       const getHistory = await History.find(
         {
-          $and: [{ "document._id": data._id }, { "document.type": redisName }],
+          $and: [
+            { "document._id": result._id },
+            { "document.type": redisName },
+          ],
         },
         ["_id", "message", "createdAt", "updatedAt"]
       )
@@ -391,12 +358,12 @@ class CustomerController implements IController {
 
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
-        JSON.stringify(data)
+        JSON.stringify(result)
       );
 
       return res.status(200).json({
         status: 200,
-        data: data,
+        data: result,
         history: getHistory,
         workflow: buttonActions,
       });

@@ -16,7 +16,7 @@ const CustomerModel = new mongoose.Schema(
     },
     customerGroup: {
       type: Schema.Types.ObjectId,
-      ref: "customerGroup",
+      ref: "customergroup",
       required: true,
       index: true,
     },

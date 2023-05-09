@@ -10,7 +10,6 @@ const VisitModel = new mongoose.Schema(
     type: {
       type: String,
       enum: ["insite", "outsite"],
-      default: "insite",
     },
     customer: {
       _id: {

@@ -6,6 +6,7 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   BranchModel,
+  ContactModel,
   CustomerGroupModel,
   CustomerModel,
   visitModel as Db,
@@ -140,23 +141,42 @@ class VistController implements IController {
         .json({ status: 400, msg: "Error, contact wajib diisi!" });
     }
 
-    // if (!req.body.signature) {
-    //   return res
-    //     .status(400)
-    //     .json({ status: 400, msg: "Error, signature wajib diisi!" });
-    // }
+    if (!req.body.type) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, type wajib diisi!" });
+    } else {
+      if (req.body.type !== "insite" && req.body.type !== "outsite") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, pilih insite atau outsite !" });
+      }
+      if (req.body.type === "insite") {
+        if (!req.body.img) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "Error, Image wajib diisi!" });
+        }
+      }
+    }
 
-    // if (!req.body.location.lat) {
-    //   return res
-    //     .status(400)
-    //     .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
-    // }
+    if (!req.body.signature) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, signature wajib diisi!" });
+    }
 
-    // if (!req.body.location.lng) {
-    //   return res
-    //     .status(400)
-    //     .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-    // }
+    if (!req.body.location?.lat) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
+    }
+
+    if (!req.body.location?.lng) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
+    }
 
     // Jika ada checkout
     if (req.body.checkOut) {
@@ -178,7 +198,7 @@ class VistController implements IController {
           .json({ status: 400, msg: "Error, waktu checkout wajib diisi!" });
       }
     }
-    // ENd
+    // End
 
     try {
       //Mengecek Customer
@@ -210,7 +230,39 @@ class VistController implements IController {
       };
       // End
 
-      // Jika ada schedule
+      // Mengecek contact jika terdapat kontak untuk customer tersebut
+      const contact = await ContactModel.findOne(
+        {
+          $and: [
+            { _id: req.body.contact },
+            {
+              "customer._id": req.body.customer,
+            },
+          ],
+        },
+        ["name", "phone", "status"]
+      );
+
+      if (!contact) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, kontak tidak ditemukan!",
+        });
+      }
+
+      if (contact.status !== "1") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, kontak tidak aktif!",
+        });
+      }
+
+      // set contact
+      req.body.contact = {
+        _id: contact._id,
+        name: contact.name,
+        phone: contact.phone,
+      };
 
       // End
 
@@ -229,12 +281,12 @@ class VistController implements IController {
       //     name: response.name,
       //     type: redisName,
       //   },
-      //   message: `${req.user} menambahkan customer ${response.name} `,
+      //   message: `${req.user} menambahkan visit ${response.name} `,
       //   user: req.userId,
       // });
       // End
 
-      return res.status(200).json({ status: 200, data: "tes" });
+      return res.status(200).json({ status: 200, data: req.body.contact });
     } catch (error) {
       return res
         .status(400)

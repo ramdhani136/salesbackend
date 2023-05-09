@@ -177,7 +177,9 @@ class HistoryController implements IController {
       "permission",
       "customergroup",
       "customer",
-      "contact"
+      "contact",
+      "visit",
+      "callsheet"
     ];
 
     const cekDocType = doctype.find((item) => item == req.body.document.type);
@@ -278,7 +280,9 @@ class HistoryController implements IController {
       "permission",
       "customergroup",
       "customer",
-      "contact"
+      "contact",
+      "visit",
+      "callsheet"
     ];
 
     const cekDocType = doctype.find((item) => item == data.document.type);

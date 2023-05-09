@@ -149,16 +149,15 @@ class VistController implements IController {
     // Set nama/nomor doc
 
     // Cek naming series
-    const namingSeries:any = await namingSeriesModel.findOne({
+    const namingSeries: any = await namingSeriesModel.findOne({
       _id: req.body.namingSeries,
     });
 
-    if(!namingSeries){
+    if (!namingSeries) {
       return res
         .status(400)
         .json({ status: 400, msg: "Error, naming series tidak ditemukan!" });
     }
-  
 
     //End
 
@@ -169,7 +168,7 @@ class VistController implements IController {
     const latest = 2;
 
     let ambilIndex: Boolean = false;
-    const olahKata = split.map((item:any) => {
+    const olahKata = split.map((item: any) => {
       if (item === "YYYY") {
         return new Date().getFullYear().toString();
       } else if (item === "MM") {
@@ -192,15 +191,14 @@ class VistController implements IController {
       }
     });
 
-    console.log(ambilIndex);
     req.body.name = ambilIndex
       ? olahKata.join("")
       : olahKata.join("") + PaddyData(latest + 1, 4).toString();
 
     // End
     return res.status(200).json({
-      karakter: jumlahKarakter,
-      hasil: req.body.name,
+      karakter: ambilIndex ? jumlahKarakter : jumlahKarakter + 4,
+      hasil: req.body.name.length,
     });
 
     if (!req.body.customer) {

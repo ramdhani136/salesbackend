@@ -245,10 +245,21 @@ class VistController implements IController {
 
       const regex = new RegExp(olahKata.join(""), "i");
 
-      const visit = await Db.findOne({ name: { $regex: regex } });
-      console.log(visit);
+      const visit = await Db.findOne({
+        $and: [
+          { name: { $regex: regex } },
+          {
+            $where: `this.name.length === ${
+              ambilIndex ? jumlahKarakter : jumlahKarakter + 4
+            }`,
+          },
+        ],
+      }).sort({ createdAt: -1 });
 
       if (visit) {
+        latest = parseInt(
+          `${visit.name.slice(ambilIndex ? -ambilIndex.length : -4)}`
+        );
       }
 
       req.body.name = ambilIndex

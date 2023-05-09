@@ -1,7 +1,12 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery, PaddyData } from "../utils";
+import {
+  CekKarakterSama,
+  FilterQuery,
+  HapusKarakter,
+  PaddyData,
+} from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
@@ -124,83 +129,6 @@ class VistController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    const cekKarakterSama = (kata: String) => {
-      var karakterPertama = kata.charAt(0); // Mendapatkan karakter pertama dari kata
-      for (var i = 1; i < kata.length; i++) {
-        if (kata.charAt(i) !== karakterPertama) {
-          return false; // Karakter tidak sama dengan karakter pertama, mengembalikan false
-        }
-      }
-      return true; // Semua karakter sama dengan karakter pertama, mengembalikan true
-    };
-
-    const hapusKarakter = (kata: String, karakter: String[]): String => {
-      let hasil: string = "";
-      for (let i = 0; i < kata.length; i++) {
-        let cek = karakter.includes(kata[i]);
-        if (!cek) {
-          hasil += kata[i];
-        }
-      }
-
-      return hasil;
-    };
-
-    // Set nama/nomor doc
-
-    // Cek naming series
-    const namingSeries: any = await namingSeriesModel.findOne({
-      _id: req.body.namingSeries,
-    });
-
-    if (!namingSeries) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, naming series tidak ditemukan!" });
-    }
-
-    //End
-
-    const split = namingSeries.name.split(".");
-
-    const jumlahKarakter = hapusKarakter(namingSeries.name, ["."]).length;
-
-    const latest = 2;
-
-    let ambilIndex: Boolean = false;
-    const olahKata = split.map((item: any) => {
-      if (item === "YYYY") {
-        return new Date().getFullYear().toString();
-      } else if (item === "MM") {
-        return PaddyData(new Date().getMonth() + 1, 2).toString();
-      } else {
-        if (item.includes("#")) {
-          if (cekKarakterSama(item)) {
-            if (!ambilIndex) {
-              ambilIndex = true;
-              if (item.length > 2) {
-                return PaddyData(latest + 1, item.length).toString();
-              }
-            } else {
-              return "";
-            }
-          }
-        }
-
-        return item;
-      }
-    });
-
-    req.body.name = ambilIndex
-      ? olahKata.join("")
-      : olahKata.join("") + PaddyData(latest + 1, 4).toString();
-
-    // End
-    return res.status(200).json({
-      karakter: ambilIndex ? jumlahKarakter : jumlahKarakter + 4,
-      hasil: req.body.name.length,
-    });
-
     if (!req.body.customer) {
       return res
         .status(400)
@@ -223,7 +151,7 @@ class VistController implements IController {
           .status(400)
           .json({ status: 400, msg: "Error, pilih insite atau outsite !" });
       }
-      if (req.body.type === "insite") {
+      if (req.body.type === "outsite") {
         if (!req.body.img) {
           return res
             .status(400)
@@ -273,19 +201,90 @@ class VistController implements IController {
     // End
 
     try {
-      // Membuat nomor doc
-      const date =
-        new Date().getFullYear().toString() +
-        PaddyData(new Date().getMonth() + 1, 2).toString();
+      // Set nama/nomor doc
+      // Cek naming series
+      const namingSeries: any = await namingSeriesModel.findOne({
+        _id: req.body.namingSeries,
+      });
 
-      const regex = new RegExp(
-        `%${PaddyData(req.body.id_branch, 3)}${date}%`,
-        "i"
+      if (!namingSeries) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, naming series tidak ditemukan!" });
+      }
+
+      //End
+
+      const split = namingSeries.name.split(".");
+
+      const jumlahKarakter = HapusKarakter(namingSeries.name, ["."]).length;
+
+      let ambilIndex: String = "";
+      const olahKata = split.map((item: any) => {
+        if (item === "YYYY") {
+          return new Date().getFullYear().toString();
+        } else if (item === "MM") {
+          return PaddyData(new Date().getMonth() + 1, 2).toString();
+        } else {
+          if (item.includes("#")) {
+            if (CekKarakterSama(item)) {
+              if (!ambilIndex) {
+                if (item.length > 2) {
+                  ambilIndex = item;
+                }
+              }
+              return "";
+            }
+          }
+
+          return item;
+        }
+      });
+
+      let latest = 0;
+
+      const regex = new RegExp(olahKata.join(""), "i");
+
+      const visit = await Db.findOne({ name: { $regex: regex } });
+      console.log(visit);
+
+      if (visit) {
+      }
+
+      req.body.name = ambilIndex
+        ? olahKata.join("") +
+          PaddyData(latest + 1, ambilIndex.length).toString()
+        : olahKata.join("") + PaddyData(latest + 1, 4).toString();
+      // End set name
+
+      //Mengecek Customer
+      const cekCustomer: any = await CustomerModel.findOne(
+        {
+          $and: [{ _id: req.body.customer }],
+        },
+        ["name", "status", "customerGroup"]
       );
 
-      const visit = Db.findOne({ nama: { $regex: regex } });
-      console.log(visit);
-      // end
+      if (!cekCustomer) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, customer tidak ditemukan!",
+        });
+      }
+
+      if (cekCustomer.status != 1) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, customer tidak aktif!",
+        });
+      }
+
+      req.body.customer = {
+        _id: new ObjectId(cekCustomer._id),
+        name: cekCustomer.name,
+        customerGroup: cekCustomer.customerGroup,
+      };
+      // End
 
       // Mengecek contact jika terdapat kontak untuk customer tersebut
       const contact = await ContactModel.findOne(
@@ -300,26 +299,26 @@ class VistController implements IController {
         ["name", "phone", "status"]
       );
 
-      // if (!contact) {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: "Error, kontak tidak ditemukan!",
-      //   });
-      // }
+      if (!contact) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, kontak tidak ditemukan!",
+        });
+      }
 
-      // if (contact.status !== "1") {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: "Error, kontak tidak aktif!",
-      //   });
-      // }
+      if (contact.status !== "1") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, kontak tidak aktif!",
+        });
+      }
 
-      // // set contact
-      // req.body.contact = {
-      //   _id: contact._id,
-      //   name: contact.name,
-      //   phone: contact.phone,
-      // };
+      // set contact
+      req.body.contact = {
+        _id: contact._id,
+        name: contact.name,
+        phone: contact.phone,
+      };
 
       // End
 
@@ -328,22 +327,22 @@ class VistController implements IController {
         name: req.user,
       };
 
-      // const result = new Db(req.body);
-      // const response: any = await result.save();
+      const result = new Db(req.body);
+      const response: any = await result.save();
 
-      // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan visit ${response.name} `,
-      //   user: req.userId,
-      // });
-      // End
+      //push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan visit ${response.name} `,
+        user: req.userId,
+      });
+      //End
 
-      return res.status(200).json({ status: 200, data: date });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)

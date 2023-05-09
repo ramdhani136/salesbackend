@@ -11,6 +11,7 @@ import {
   CustomerModel,
   visitModel as Db,
   History,
+  namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -123,12 +124,7 @@ class VistController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    const namanya = "VSTBGR.MM.YYYY.XXXX";
-    const split = namanya.split(".");
-
-    const latest = 2;
-
-    const cekHurufSama = (kata: String) => {
+    const cekKarakterSama = (kata: String) => {
       var karakterPertama = kata.charAt(0); // Mendapatkan karakter pertama dari kata
       for (var i = 1; i < kata.length; i++) {
         if (kata.charAt(i) !== karakterPertama) {
@@ -138,16 +134,56 @@ class VistController implements IController {
       return true; // Semua karakter sama dengan karakter pertama, mengembalikan true
     };
 
-    const olahKata = split.map((item) => {
+    const hapusKarakter = (kata: String, karakter: String[]): String => {
+      let hasil: string = "";
+      for (let i = 0; i < kata.length; i++) {
+        let cek = karakter.includes(kata[i]);
+        if (!cek) {
+          hasil += kata[i];
+        }
+      }
+
+      return hasil;
+    };
+
+    // Set nama/nomor doc
+
+    // Cek naming series
+    const namingSeries:any = await namingSeriesModel.findOne({
+      _id: req.body.namingSeries,
+    });
+
+    if(!namingSeries){
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, naming series tidak ditemukan!" });
+    }
+  
+
+    //End
+
+    const split = namingSeries.name.split(".");
+
+    const jumlahKarakter = hapusKarakter(namingSeries.name, ["."]).length;
+
+    const latest = 2;
+
+    let ambilIndex: Boolean = false;
+    const olahKata = split.map((item:any) => {
       if (item === "YYYY") {
         return new Date().getFullYear().toString();
       } else if (item === "MM") {
         return PaddyData(new Date().getMonth() + 1, 2).toString();
       } else {
-        if (item.includes("X")) {
-          if (cekHurufSama(item)) {
-            if (item.length > 2) {
-              return PaddyData(latest + 1, item.length).toString();
+        if (item.includes("#")) {
+          if (cekKarakterSama(item)) {
+            if (!ambilIndex) {
+              ambilIndex = true;
+              if (item.length > 2) {
+                return PaddyData(latest + 1, item.length).toString();
+              }
+            } else {
+              return "";
             }
           }
         }
@@ -156,7 +192,16 @@ class VistController implements IController {
       }
     });
 
-    return res.status(200).send(olahKata);
+    console.log(ambilIndex);
+    req.body.name = ambilIndex
+      ? olahKata.join("")
+      : olahKata.join("") + PaddyData(latest + 1, 4).toString();
+
+    // End
+    return res.status(200).json({
+      karakter: jumlahKarakter,
+      hasil: req.body.name,
+    });
 
     if (!req.body.customer) {
       return res

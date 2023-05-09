@@ -25,6 +25,7 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
+import mongoose from "mongoose";
 
 const redisName = "visit";
 
@@ -233,6 +234,9 @@ class VistController implements IController {
     }
     // End
 
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
       // Set nama/nomor doc
       // Cek naming series
@@ -287,7 +291,10 @@ class VistController implements IController {
             }`,
           },
         ],
-      }).sort({ createdAt: -1 });
+      })
+        .sort({ createdAt: -1 })
+        .session(session)
+        .exec();
 
       if (visit) {
         latest = parseInt(
@@ -372,7 +379,10 @@ class VistController implements IController {
       };
 
       const result = new Db(req.body);
-      const response: any = await result.save();
+      const response: any = await result.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
 
       //push history
       await HistoryController.pushHistory({
@@ -385,9 +395,12 @@ class VistController implements IController {
         user: req.userId,
       });
       //End
+      
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(400)
         .json({ status: 400, msg: error ?? "Error Connection!" });

@@ -7,6 +7,7 @@ import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   BranchModel,
   CustomerGroupModel,
+  CustomerModel,
   ContactModel as Db,
   History,
 } from "../models";
@@ -35,12 +36,37 @@ class ContactController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "customerGroup.name",
+        name: "phone",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "branch.name",
+        name: "email",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.customerGroup.name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.customerGroup.branch.name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "status",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -66,7 +92,7 @@ class ContactController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "branch", "createdBy", "updatedAt", "customerGroup"];
+        : [];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -141,7 +167,7 @@ class ContactController implements IController {
 
     try {
       //Mengecek Customer
-      const cekCustomer: any = await CustomerGroupModel.findOne(
+      const cekCustomer: any = await CustomerModel.findOne(
         {
           $and: [{ _id: req.body.customer }],
         },
@@ -151,22 +177,24 @@ class ContactController implements IController {
       if (!cekCustomer) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, customerGroup tidak ditemukan!",
+          msg: "Error, customer tidak ditemukan!",
         });
       }
 
       if (cekCustomer.status != 1) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, customerGroup tidak aktif!",
+          msg: "Error, customer tidak aktif!",
         });
       }
       // End
 
-      console.log(cekCustomer);
-
       // set customer
-      req.body.customer = {};
+      req.body.customer = {
+        _id: cekCustomer._id,
+        name: cekCustomer.name,
+        customerGroup: cekCustomer.customerGroup,
+      };
       // End
 
       // set CreatedAt
@@ -176,22 +204,44 @@ class ContactController implements IController {
       };
       // End
 
-      // const result = new Db(req.body);
-      // const response: any = await result.save();
-
-      // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan customer ${response.name} `,
-      //   user: req.userId,
-      // });
+      // Cek valid contact
+      const duplc = await Db.findOne({ name: req.body.name });
+      if (duplc) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, nama kontak sudah digunakan sebelumnya!",
+        });
+      }
       // End
 
-      return res.status(200).json({ status: 200, data: "d" });
+      // Cek nomor phone
+      const regex = /^\d{10,}$/;
+      const isValidPhone = regex.test(req.body.phone);
+
+      if (!isValidPhone) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali nomor telepon",
+        });
+      }
+      // End
+
+      const result = new Db(req.body);
+      const response: any = await result.save();
+
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan kontak ${response.name} pada customer ${response.customer.name} `,
+        user: req.userId,
+      });
+      // End
+
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)
@@ -268,49 +318,77 @@ class ContactController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
-    if (req.body.branch) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, tidak dapat merubah branch!",
-      });
-    }
-
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
       });
 
       if (result) {
-        //Mengecek jika Customer Group dirubah
-        if (req.body.customerGroup) {
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
-
-          if (!CekCG) {
+        // Cek duplicate
+        if (req.body.name) {
+          const duplc = await Db.findOne({
+            $and: [
+              { name: req.body.name },
+              {
+                _id: { $ne: req.params.id },
+              },
+            ],
+          });
+          if (duplc) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak ditemukan!",
+              msg: "Error, nama kontak sudah digunakan sebelumnya!",
+            });
+          }
+          // End
+        }
+
+        //Mengecek Customer
+        if (req.body.customer) {
+          const cekCustomer: any = await CustomerModel.findOne(
+            {
+              $and: [{ _id: req.body.customer }],
+            },
+            ["name", "customerGroup", "status"]
+          );
+
+          if (!cekCustomer) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customer tidak ditemukan!",
             });
           }
 
-          if (CekCG.status != 1) {
+          if (cekCustomer.status != 1) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak aktif!",
+              msg: "Error, customer tidak aktif!",
             });
           }
           // End
 
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
+          // set customer
+          req.body.customer = {
+            _id: cekCustomer._id,
+            name: cekCustomer.name,
+            customerGroup: cekCustomer.customerGroup,
           };
           // End
+        }
 
-          req.body.customerGroup.branch = CekCG.branch;
-          // End
+        // End
+
+        // Cek nomor phone
+        if (req.body.phone) {
+          const regex = /^\d{10,}$/;
+          const isValidPhone = regex.test(req.body.phone);
+
+          if (!isValidPhone) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Cek kembali nomor telepon",
+            });
+          }
         }
         // End
 

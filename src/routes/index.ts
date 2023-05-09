@@ -21,6 +21,7 @@ import CustomerGroupRoutes from "./CustomerGroupRoutes";
 import CustomerRoutes from "./CustomerRoutes";
 import VisitRoutes from "./VisitRoutes";
 import ContactRoutes from "./ContactRoutes";
+import NamingSeriesRoutes from "./NamingSeriesRoutes";
 
 export {
   UserRoutes,
@@ -46,4 +47,5 @@ export {
   CustomerRoutes,
   VisitRoutes,
   ContactRoutes,
+  NamingSeriesRoutes
 };

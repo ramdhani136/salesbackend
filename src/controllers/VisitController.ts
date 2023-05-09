@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, PaddyData } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
@@ -123,11 +123,40 @@ class VistController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.name) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, name wajib diisi!" });
-    }
+    const namanya = "VSTBGR.MM.YYYY.XXXX";
+    const split = namanya.split(".");
+
+    const latest = 2;
+
+    const cekHurufSama = (kata: String) => {
+      var karakterPertama = kata.charAt(0); // Mendapatkan karakter pertama dari kata
+      for (var i = 1; i < kata.length; i++) {
+        if (kata.charAt(i) !== karakterPertama) {
+          return false; // Karakter tidak sama dengan karakter pertama, mengembalikan false
+        }
+      }
+      return true; // Semua karakter sama dengan karakter pertama, mengembalikan true
+    };
+
+    const olahKata = split.map((item) => {
+      if (item === "YYYY") {
+        return new Date().getFullYear().toString();
+      } else if (item === "MM") {
+        return PaddyData(new Date().getMonth() + 1, 2).toString();
+      } else {
+        if (item.includes("X")) {
+          if (cekHurufSama(item)) {
+            if (item.length > 2) {
+              return PaddyData(latest + 1, item.length).toString();
+            }
+          }
+        }
+
+        return item;
+      }
+    });
+
+    return res.status(200).send(olahKata);
 
     if (!req.body.customer) {
       return res
@@ -201,34 +230,19 @@ class VistController implements IController {
     // End
 
     try {
-      //Mengecek Customer
-      const cekCustomer: any = await CustomerModel.findOne(
-        {
-          $and: [{ _id: req.body.customer }],
-        },
-        ["name", "status", "customerGroup"]
+      // Membuat nomor doc
+      const date =
+        new Date().getFullYear().toString() +
+        PaddyData(new Date().getMonth() + 1, 2).toString();
+
+      const regex = new RegExp(
+        `%${PaddyData(req.body.id_branch, 3)}${date}%`,
+        "i"
       );
 
-      if (!cekCustomer) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, customer tidak ditemukan!",
-        });
-      }
-
-      if (cekCustomer.status != 1) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, customer tidak aktif!",
-        });
-      }
-
-      req.body.customer = {
-        _id: new ObjectId(cekCustomer._id),
-        name: cekCustomer.name,
-        customerGroup: cekCustomer.customerGroup,
-      };
-      // End
+      const visit = Db.findOne({ nama: { $regex: regex } });
+      console.log(visit);
+      // end
 
       // Mengecek contact jika terdapat kontak untuk customer tersebut
       const contact = await ContactModel.findOne(
@@ -243,26 +257,26 @@ class VistController implements IController {
         ["name", "phone", "status"]
       );
 
-      if (!contact) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, kontak tidak ditemukan!",
-        });
-      }
+      // if (!contact) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, kontak tidak ditemukan!",
+      //   });
+      // }
 
-      if (contact.status !== "1") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, kontak tidak aktif!",
-        });
-      }
+      // if (contact.status !== "1") {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, kontak tidak aktif!",
+      //   });
+      // }
 
-      // set contact
-      req.body.contact = {
-        _id: contact._id,
-        name: contact.name,
-        phone: contact.phone,
-      };
+      // // set contact
+      // req.body.contact = {
+      //   _id: contact._id,
+      //   name: contact.name,
+      //   phone: contact.phone,
+      // };
 
       // End
 
@@ -286,7 +300,7 @@ class VistController implements IController {
       // });
       // End
 
-      return res.status(200).json({ status: 200, data: req.body.contact });
+      return res.status(200).json({ status: 200, data: date });
     } catch (error) {
       return res
         .status(400)

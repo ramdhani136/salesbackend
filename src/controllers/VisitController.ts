@@ -10,7 +10,6 @@ import {
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
-  BranchModel,
   ContactModel,
   CustomerGroupModel,
   CustomerModel,

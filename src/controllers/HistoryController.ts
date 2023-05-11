@@ -179,6 +179,7 @@ class HistoryController implements IController {
       "visit",
       "callsheet",
       "namingseries",
+      "usergroup",
     ];
 
     const cekDocType = doctype.find((item) => item == req.body.document.type);
@@ -270,7 +271,7 @@ class HistoryController implements IController {
     const doctype = [
       "user",
       "schedule",
-  
+      "usergroup",
       "roleuser",
       "roleprofile",
       "rolelist",

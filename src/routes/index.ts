@@ -1,6 +1,6 @@
 import UserRoutes from "./UserRoutes";
 import ScheduleRoutes from "./ScheduleRoutes";
-
+import UserGroupRoutes from "./UserGroupRoutes";
 import RoleProfileRoutes from "./RoleProfileRoutes";
 import RoleListRoutes from "./RoleListRoutes";
 import RoleUserRoutes from "./RoleUserRoutes";
@@ -10,8 +10,6 @@ import workflowActionRoutes from "./workflowActionRoutes";
 import WorkflowRoutes from "./WorkflowRoutes";
 import WorkflowTransitionRoutes from "./WorkflowTransitionRoutes";
 import WorkflowCangerRoutes from "./WorkflowCangerRoutes";
-
-import PackingIdRoutes from "./PackingIdRoutes";
 import MessageRoutes from "./MessageRoutes";
 import ChatRoutes from "./ChatRoutes";
 import BranchRoutes from "./BranchRoutes";
@@ -34,7 +32,6 @@ export {
   WorkflowRoutes,
   WorkflowTransitionRoutes,
   WorkflowCangerRoutes,
-  PackingIdRoutes,
   MessageRoutes,
   ChatRoutes,
   BranchRoutes,
@@ -44,4 +41,5 @@ export {
   VisitRoutes,
   ContactRoutes,
   NamingSeriesRoutes,
+  UserGroupRoutes,
 };

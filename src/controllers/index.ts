@@ -20,6 +20,7 @@ import VisitController from "./VisitController";
 import ContactController from "./ContactController";
 import NamingSeriesController from "./NamingSeriesController";
 import ScheduleController from "./ScheduleController";
+import UserGroupController from "./UserGroupController";
 
 export {
   UserController,
@@ -42,4 +43,5 @@ export {
   ContactController,
   NamingSeriesController,
   ScheduleController,
+  UserGroupController,
 };

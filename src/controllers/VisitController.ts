@@ -538,12 +538,33 @@ class VistController implements IController {
           .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
       }
     }
+
+    // Validasi yang tidak boleh di rubah
     if (req.body.createdBy) {
       return res.status(404).json({
         status: 404,
-        msg: "Error, Tidak dapat merubah data ini createdBy!",
+        msg: "Error, Tidak dapat merubah data createdBy!",
       });
     }
+    if (req.body.type) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Tidak dapat merubah data type(insite/outsite)!",
+      });
+    }
+    if (req.body.name) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Tidak dapat merubah nomor dokumen!",
+      });
+    }
+    if (req.body.img) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Tidak dapat merubah img name!",
+      });
+    }
+    // End
 
     // try {
     //   const result: any = await Db.findOne({

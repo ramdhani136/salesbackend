@@ -174,6 +174,7 @@ class App {
     this.app.use("/namingseries", AuthMiddleware, NamingSeriesRoutes);
     this.app.use("/usergroup", AuthMiddleware, UserGroupRoutes);
     this.app.use("/usergrouplist", AuthMiddleware, UserGroupListRoutes);
+    this.app.use("/schedule", AuthMiddleware, ScheduleRoutes);
     // this.app.use("/schedule", AuthMiddleware, RoleMiddleware, ScheduleRoutes);
     // this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);
     // this.app.use("/schedulepacking", AuthMiddleware, ScheduleItemPackingRoutes);

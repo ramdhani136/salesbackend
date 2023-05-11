@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { CustomerGroupModel, ScheduleModel as Db, History } from "../models";
+import { CustomerGroupModel, ScheduleModel as Db, History, UserGroupModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -22,6 +22,11 @@ class ScheduleController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -163,16 +168,12 @@ class ScheduleController implements IController {
         .status(400)
         .json({ status: 400, msg: "Error, notes wajib diisi!" });
     }
-    if (!req.body.userGroup?._id) {
+    if (!req.body.userGroup) {
       return res
         .status(400)
         .json({ status: 400, msg: "Error, _id userGroup wajib diisi!" });
     }
-    if (!req.body.userGroup?.name) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, name userGroup wajib diisi!" });
-    }
+
     if (!req.body.activeDate) {
       return res
         .status(400)
@@ -184,9 +185,16 @@ class ScheduleController implements IController {
         .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
     }
 
+    if (typeof req.body.userGroup !== "string") {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
+      });
+    }
+
     try {
-      //Mengecek User Group
-      const cekUserGroup: any = await CustomerGroupModel.findOne({
+      //Mengecek UsPer Group
+      const cekUserGroup: any = await UserGroupModel.findOne({
         $and: [{ _id: req.body.userGroup }],
       });
 
@@ -206,7 +214,7 @@ class ScheduleController implements IController {
       // End
 
       // set setCustomerGroup
-      req.body.customerGroup = {
+      req.body.userGroup = {
         _id: cekUserGroup._id,
         name: cekUserGroup.name,
       };

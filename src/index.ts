@@ -58,7 +58,7 @@ class App {
     this.plugins();
     this.database = new DataConnect();
     this.routes();
-    this.Cron();
+    // this.Cron();
   }
 
   protected plugins(): void {

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
@@ -461,31 +461,7 @@ class ScheduleController implements IController {
     }
   };
 
-  // Cek & close schedule yang sudah melebihi closing date
-  CheckExpiredSchedule = async (): Promise<void> => {
-    const today = new Date();
-    const startOfToday = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-      0,
-      0,
-      0,
-      0
-    );
-    const update = { $set: { status: "3", workflowState: "Closed" } };
-    try {
-      await ScheduleModel.updateMany(
-        {
-          $and: [{ closingDate: { $lt: startOfToday } }, { status: "1" }],
-        },
-        update
-      );
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  // End
+  
 }
 
 export default new ScheduleController();

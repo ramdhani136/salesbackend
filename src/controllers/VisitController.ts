@@ -25,7 +25,7 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
-
+import fs from "fs";
 import sharp from "sharp";
 import path from "path";
 
@@ -299,8 +299,6 @@ class VistController implements IController {
         : olahKata.join("") + PaddyData(latest + 1, 4).toString();
       // End set name
 
-    
-
       //Mengecek Customer
       const cekCustomer: any = await CustomerModel.findOne(
         {
@@ -371,17 +369,23 @@ class VistController implements IController {
         name: req.user,
       };
 
-        // Menset img ketika terdapat gambar
-        if (req.body.type === "outsite") {
-          req.body.img = req.body.name + ".jpg";
+      // Menset img ketika terdapat gambar
+      if (req.body.type === "outsite") {
+        if(!req.file){
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, img wajib diisi!",
+          });
         }
-        // End
+        req.body.img = req.body.name + ".jpg";
+      }
+      // End
 
       const result = new Db(req.body);
       const response: any = await result.save({});
 
-       // Mengecek ketika outsite apakah terdapat gambar
-       if (req.body.type === "outsite") {
+      // Mengecek ketika outsite apakah terdapat gambar
+      if (req.body.type === "outsite") {
         const compressedImage = path.join(
           __dirname,
           "../public/images",
@@ -422,6 +426,14 @@ class VistController implements IController {
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
+      if (req.file) {
+        // Jika pembuatan visit gagal, hapus foto yang telah di-upload
+        fs.unlinkSync(req.file.path);
+        if (fs.existsSync(path.join(__dirname, req.file.path))) {
+          fs.unlinkSync(req.file.path);
+        }
+        // End
+      }
       return res
         .status(400)
         .json({ status: 400, msg: error ?? "Error Connection!" });

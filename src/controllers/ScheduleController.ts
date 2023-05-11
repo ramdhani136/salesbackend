@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import axios from "axios";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import Schedule from "../models/Schedule";
+import Schedule from "../models/ScheduleModel";
 import { FilterQuery, PaddyData } from "../utils";
 import IController from "./ControllerInterface";
 import { History, ScheduleItem } from "../models";

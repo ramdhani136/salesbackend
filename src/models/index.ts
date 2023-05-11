@@ -1,5 +1,5 @@
 import User from "./UserModel";
-import Schedule from "./Schedule";
+import ScheduleModel from "./ScheduleModel";
 import ScheduleItem from "./ScheduleItem";
 import ScheduleItemPacking from "./ScheduleItemPacking";
 import RoleProfileModel from "./RoleProfileModel";
@@ -23,7 +23,7 @@ import namingSeriesModel from "./namingSeriesModel";
 
 export {
   User,
-  Schedule,
+  ScheduleModel,
   ScheduleItem,
   ScheduleItemPacking,
   RoleProfileModel,

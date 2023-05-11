@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const Schedule = new mongoose.Schema(
+const ScheduleModel = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -57,4 +57,6 @@ const Schedule = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("Schedules", Schedule);
+export default mongoose.model("schedule", ScheduleModel);
+
+ScheduleModel.index({ name: 1, status: 1, type: 1, workflowState: 1 });

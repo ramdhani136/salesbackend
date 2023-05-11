@@ -27,6 +27,8 @@ const NamingSeriesModel = new mongoose.Schema(
   }
 );
 
+NamingSeriesModel.index({ name: 1, branch: 1, doc: 1 });
+
+
 export default mongoose.model("namingseries", NamingSeriesModel);
 
-NamingSeriesModel.index({ name: 1, branch: 1, doc: 1 });

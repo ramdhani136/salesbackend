@@ -62,8 +62,6 @@ const ContactModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("contact", ContactModel);
-
 ContactModel.index({
   name: 1,
   phone: 1,
@@ -72,3 +70,7 @@ ContactModel.index({
   status: 1,
   workflowState: 1,
 });
+
+
+export default mongoose.model("contact", ContactModel);
+

@@ -25,6 +25,8 @@ const VisitNoteModel = new mongoose.Schema(
   }
 );
 
+VisitNoteModel.index({ name: 1 });
+
+
 export default mongoose.model("visitnote", VisitNoteModel);
 
-VisitNoteModel.index({ name: 1 });

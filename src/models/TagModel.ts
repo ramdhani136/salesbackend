@@ -21,6 +21,8 @@ const TagModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("tag", TagModel);
 
 TagModel.index({ name: 1 });
+
+
+export default mongoose.model("tag", TagModel);

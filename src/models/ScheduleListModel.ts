@@ -47,6 +47,8 @@ const ScheduleListModel = new mongoose.Schema(
   }
 );
 
+ScheduleListModel.index({ schedule: 1, status: 1, customer: 1, workflowState: 1 });
+
+
 export default mongoose.model("schedulelist", ScheduleListModel);
 
-ScheduleListModel.index({ name: 1, status: 1, type: 1, workflowState: 1 });

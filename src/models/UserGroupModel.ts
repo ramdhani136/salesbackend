@@ -30,6 +30,8 @@ const UserGroupModel = new mongoose.Schema(
   }
 );
 
+UserGroupModel.index({ name: 1, status: 1, workflowState: 1 });
+
 export default mongoose.model("usergroup", UserGroupModel);
 
-UserGroupModel.index({ name: 1, status: 1, workflowState: 1 });
+

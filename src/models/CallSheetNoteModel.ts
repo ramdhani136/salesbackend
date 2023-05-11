@@ -25,6 +25,8 @@ const CallsheetNoteModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("callsheetnote", CallsheetNoteModel);
 
 CallsheetNoteModel.index({ name: 1 });
+
+export default mongoose.model("callsheetnote", CallsheetNoteModel);
+

@@ -108,8 +108,6 @@ const VisitModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("visit", VisitModel);
-
 VisitModel.index({
   name: 1,
   type: 1,
@@ -120,3 +118,5 @@ VisitModel.index({
   contact: 1,
   schedule: 1,
 });
+
+export default mongoose.model("visit", VisitModel);

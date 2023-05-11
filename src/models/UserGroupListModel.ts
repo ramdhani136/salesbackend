@@ -29,6 +29,8 @@ const UserGroupListModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("usergrouplist", UserGroupListModel);
 
 UserGroupListModel.index({ name: 1, status: 1, workflowState: 1 });
+
+
+export default mongoose.model("usergrouplist", UserGroupListModel);

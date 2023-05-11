@@ -30,6 +30,8 @@ const RoleProfile = new mongoose.Schema(
   }
 );
 
+RoleProfile.index({ name: 1, status: 1, workflowState: 1 });
+
+
 export default mongoose.model("RoleProfiles", RoleProfile);
 
-RoleProfile.index({ name: 1, status: 1, workflowState: 1 });

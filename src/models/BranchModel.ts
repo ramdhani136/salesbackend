@@ -41,6 +41,7 @@ const Branch = new mongoose.Schema(
   }
 );
 
+Branch.index({ name: 1, status: 1 });
+
 export default mongoose.model("branch", Branch);
 
-Branch.index({ name: 1, status: 1 });

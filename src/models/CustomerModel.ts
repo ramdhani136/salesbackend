@@ -63,8 +63,6 @@ const CustomerModel = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("customer", CustomerModel);
-
 CustomerModel.index({
   name: 1,
   type: 1,
@@ -73,3 +71,7 @@ CustomerModel.index({
   customerGroup: 1,
   branch: 1,
 });
+
+
+export default mongoose.model("customer", CustomerModel);
+

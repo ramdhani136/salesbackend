@@ -2,11 +2,6 @@ import mongoose, { Schema } from "mongoose";
 
 const UserGroupListModel = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     user: {
       _id: {
         type: Schema.Types.ObjectId,

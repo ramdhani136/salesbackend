@@ -140,16 +140,21 @@ class UserGroupListController implements IController {
       if (!cekUG) {
         return res.status(404).json({
           status: 404,
-          msg: "Error, customerGroup tidak ditemukan!",
+          msg: "Error, userGroup tidak ditemukan!",
         });
       }
 
       if (cekUG.status !== "1") {
         return res.status(404).json({
           status: 404,
-          msg: "Error, customerGroup tidak aktif!",
+          msg: "Error, userGroup tidak aktif!",
         });
       }
+
+      req.body.userGroup = {
+        _id: cekUG._id,
+        name: cekUG.name,
+      };
       // End
 
       // Cek User
@@ -183,15 +188,18 @@ class UserGroupListController implements IController {
           msg: "Error, user tidak aktif!",
         });
       }
+
+      req.body.user = {
+        _id: cekUser._id,
+        name: cekUser.name,
+      };
       // End
 
       // Cek duplicate
       const dup = await Db.findOne({
-        $and: [
-          { userGroup: new ObjectId(cekUG._id) },
-          { user: new ObjectId(cekUser._id) },
-        ],
+        $and: [{ "userGroup._id": cekUG._id }, { "user._id": cekUser._id }],
       });
+
       if (dup) {
         return res.status(400).json({
           status: 400,
@@ -215,7 +223,7 @@ class UserGroupListController implements IController {
           name: response.userGroup.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan userGroupList ${response.userGroup.name} `,
+        message: `${req.user} menambahkan user ${response.user.name} ke group ${response.userGroup.name} `,
         user: req.userId,
       });
       // End

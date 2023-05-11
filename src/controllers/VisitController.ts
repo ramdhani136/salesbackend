@@ -371,7 +371,7 @@ class VistController implements IController {
 
       // Menset img ketika terdapat gambar
       if (req.body.type === "outsite") {
-        if(!req.file){
+        if (!req.file) {
           return res.status(404).json({
             status: 404,
             msg: "Error, img wajib diisi!",
@@ -384,7 +384,7 @@ class VistController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save({});
 
-      // Mengecek ketika outsite apakah terdapat gambar
+      // Upload data ketika outsite
       if (req.body.type === "outsite") {
         const compressedImage = path.join(
           __dirname,
@@ -622,7 +622,25 @@ class VistController implements IController {
         return res.status(404).json({ status: 404, msg: "Not found!" });
       }
 
-      const result = await Db.deleteOne({ _id: req.params.id });
+      const result: any = await Db.deleteOne({ _id: req.params.id });
+      if (
+        fs.existsSync(path.join(__dirname, "../public/images/" + getData.img))
+      ) {
+        fs.unlink(
+          path.join(__dirname, "../public/images/" + getData.img),
+          function (err) {
+            if (err && err.code == "ENOENT") {
+              // file doens't exist
+              console.log(err);
+            } else if (err) {
+              // other errors, e.g. maybe we don't have enough permission
+              console.log("Error occurred while trying to remove file");
+            } else {
+              console.log(`removed`);
+            }
+          }
+        );
+      }
       await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {

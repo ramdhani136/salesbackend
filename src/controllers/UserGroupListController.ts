@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import {  UserGroupListModel as Db, History } from "../models";
+import { UserGroupListModel as Db, History } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -117,15 +117,30 @@ class UserGroupListController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.name) {
+    if (!req.body.userGroup?._id) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, name wajib diisi!" });
+        .json({ status: 400, msg: "Error, userGroup id wajib diisi!" });
+    }
+    if (!req.body.userGroup?.name) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, userGroup name wajib diisi!" });
+    }
+    if (!req.body.user?._id) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, user id wajib diisi!" });
+    }
+    if (!req.body.user?.name) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, user name wajib diisi!" });
     }
 
     try {
       // Cek duplicate
-      const dup = await Db.findOne({ name: req.body.name });
+      const dup = await Db.findOne({ $and: [{ name: req.body.name }] });
       if (dup) {
         return res.status(400).json({
           status: 400,
@@ -251,12 +266,10 @@ class UserGroupListController implements IController {
         ],
       });
       if (dupl) {
-        return res
-          .status(404)
-          .json({
-            status: 404,
-            msg: `Error, name ${req.body.name} sudah terinput di database!`,
-          });
+        return res.status(404).json({
+          status: 404,
+          msg: `Error, name ${req.body.name} sudah terinput di database!`,
+        });
       }
     }
 

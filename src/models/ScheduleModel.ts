@@ -57,6 +57,8 @@ const ScheduleModel = new mongoose.Schema(
   }
 );
 
+ScheduleModel.index({ name: 1, status: 1, type: 1, workflowState: 1 });
+
+
 export default mongoose.model("schedule", ScheduleModel);
 
-ScheduleModel.index({ name: 1, status: 1, type: 1, workflowState: 1 });

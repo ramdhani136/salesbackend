@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { UserGroupListModel as Db, History } from "../models";
+import { UserGroupListModel as Db, History, UserGroupModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -117,28 +117,40 @@ class UserGroupListController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.userGroup?._id) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, userGroup id wajib diisi!" });
-    }
-    if (!req.body.userGroup?.name) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, userGroup name wajib diisi!" });
-    }
-    if (!req.body.user?._id) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, user id wajib diisi!" });
-    }
-    if (!req.body.user?.name) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, user name wajib diisi!" });
-    }
-
     try {
+      // Cek User
+      if (!req.body.userGroup) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, userGroup id wajib diisi!" });
+      }
+
+      if (typeof req.body.userGroup !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
+        });
+      }
+
+      const cekUG = await UserGroupModel.findOne({
+        $and: [{ _id: new ObjectId(req.body.userGroup) }],
+      });
+
+      if (!cekUG) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, customerGroup tidak ditemukan!",
+        });
+      }
+
+      if (cekUG.status !== "1") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, customerGroup tidak aktif!",
+        });
+      }
+      // End
+
       // Cek duplicate
       const dup = await Db.findOne({ $and: [{ name: req.body.name }] });
       if (dup) {

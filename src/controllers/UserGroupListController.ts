@@ -14,6 +14,7 @@ import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
+import UserModel from "../models/UserModel";
 
 const redisName = "usergrouplist";
 
@@ -151,12 +152,50 @@ class UserGroupListController implements IController {
       }
       // End
 
+      // Cek User
+      if (!req.body.user) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, user wajib diisi!" });
+      }
+
+      if (typeof req.body.user !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data user, Data harus berupa string id user!",
+        });
+      }
+
+      const cekUser = await UserModel.findOne({
+        $and: [{ _id: new ObjectId(req.body.user) }],
+      });
+
+      if (!cekUser) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, user tidak ditemukan!",
+        });
+      }
+
+      if (cekUser.status !== "1") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, user tidak aktif!",
+        });
+      }
+      // End
+
       // Cek duplicate
-      const dup = await Db.findOne({ $and: [{ name: req.body.name }] });
+      const dup = await Db.findOne({
+        $and: [
+          { userGroup: new ObjectId(cekUG._id) },
+          { user: new ObjectId(cekUser._id) },
+        ],
+      });
       if (dup) {
         return res.status(400).json({
           status: 400,
-          msg: `Error , name ${req.body.name} sudah ada di database!`,
+          msg: `Error , data sudah ada di database!`,
         });
       }
       // End
@@ -173,10 +212,10 @@ class UserGroupListController implements IController {
       await HistoryController.pushHistory({
         document: {
           _id: response._id,
-          name: response.name,
+          name: response.userGroup.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan userGroup ${response.name} `,
+        message: `${req.user} menambahkan userGroupList ${response.userGroup.name} `,
         user: req.userId,
       });
       // End

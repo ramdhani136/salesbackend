@@ -141,12 +141,6 @@ class VistController implements IController {
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0);
 
-      const coba = await Db.find(isFilter.data, setField)
-        .sort(order_by)
-        .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0)
-        .explain();
-
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,

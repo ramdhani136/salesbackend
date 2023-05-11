@@ -22,7 +22,7 @@ const UserGroupModel = new mongoose.Schema(
         type: Schema.Types.ObjectId,
         required: true,
       },
-      name: { type: String },
+      name: { type: String ,required:true},
     },
   },
   {

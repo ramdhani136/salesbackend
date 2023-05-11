@@ -19,6 +19,7 @@ import visitModel from "./visitModel";
 import ContactModel from "./ContactModel";
 import namingSeriesModel from "./namingSeriesModel";
 import UserGroupModel from "./UserGroupModel";
+import UserGroupListModel from "./UserGroupListModel";
 
 export {
   User,
@@ -42,4 +43,5 @@ export {
   ContactModel,
   namingSeriesModel,
   UserGroupModel,
+  UserGroupListModel,
 };

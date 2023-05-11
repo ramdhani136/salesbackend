@@ -19,6 +19,7 @@ import CustomerRoutes from "./CustomerRoutes";
 import VisitRoutes from "./VisitRoutes";
 import ContactRoutes from "./ContactRoutes";
 import NamingSeriesRoutes from "./NamingSeriesRoutes";
+import UserGroupListRoutes from "./UserGroupListRoutes";
 
 export {
   UserRoutes,
@@ -42,4 +43,5 @@ export {
   ContactRoutes,
   NamingSeriesRoutes,
   UserGroupRoutes,
+  UserGroupListRoutes,
 };

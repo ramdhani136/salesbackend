@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { ScheduleModel } from "../models";
 
 // Cek & close schedule yang sudah melebihi closing date
-export const CheckExpiredSchedule = async (
+export const CheckExpiredScheduleMiddleWare = async (
     req: Request | any,
     res: Response,
     next: NextFunction

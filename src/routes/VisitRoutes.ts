@@ -2,7 +2,7 @@ import {
   VisitController as Controller,
   ScheduleController,
 } from "../controllers";
-import { CheckExpiredSchedule, DeleteValid } from "../middleware";
+import { CheckExpiredScheduleMiddleWare, DeleteValid } from "../middleware";
 import RouteBase from "./RouteBase";
 import multer from "multer";
 import path from "path";
@@ -23,13 +23,13 @@ class VisitRoutes extends RouteBase {
   routes(): void {
     this.router.get(
       "/",
-      CheckExpiredSchedule,
+      CheckExpiredScheduleMiddleWare,
       Controller.index
     );
     this.router.post("/", upload.single("img"), Controller.create);
     this.router.get(
       "/:id",
-      CheckExpiredSchedule,
+      CheckExpiredScheduleMiddleWare,
       Controller.show
     );
     this.router.delete("/:id", DeleteValid, Controller.delete);

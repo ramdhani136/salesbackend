@@ -2,12 +2,12 @@ import { AuthMiddleware } from "./AuthMiddleware";
 import { DeleteValid } from "./DeleteValid";
 import { RoleMiddleware } from "./RoleMiddleware";
 import PermissionMiddleware from "./PermissionMiddleware";
-import { CheckExpiredSchedule } from "./CheckExpiredSchedule";
+import { CheckExpiredScheduleMiddleWare } from "./CheckExpiredScheduleMiddleware";
 
 export {
   AuthMiddleware,
   DeleteValid,
   RoleMiddleware,
   PermissionMiddleware,
-  CheckExpiredSchedule,
+  CheckExpiredScheduleMiddleWare,
 };

@@ -25,7 +25,9 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
-import mongoose from "mongoose";
+
+import sharp from "sharp";
+import path from "path";
 
 const redisName = "visit";
 
@@ -185,13 +187,6 @@ class VistController implements IController {
           .status(400)
           .json({ status: 400, msg: "Error, pilih insite atau outsite !" });
       }
-      if (req.body.type === "outsite") {
-        if (!req.body.img) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, Image wajib diisi!" });
-        }
-      }
     }
 
     if (!req.body.signature) {
@@ -200,17 +195,17 @@ class VistController implements IController {
         .json({ status: 400, msg: "Error, signature wajib diisi!" });
     }
 
-    if (!req.body.location?.lat) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
-    }
+    // if (!req.body.location?.lat) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
+    // }
 
-    if (!req.body.location?.lng) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-    }
+    // if (!req.body.location?.lng) {
+    //   return res
+    //     .status(400)
+    //     .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
+    // }
 
     // Jika ada checkout
     if (req.body.checkOut) {
@@ -234,9 +229,6 @@ class VistController implements IController {
     }
     // End
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
       // Set nama/nomor doc
       // Cek naming series
@@ -247,7 +239,7 @@ class VistController implements IController {
       if (!namingSeries) {
         return res
           .status(400)
-          .json({ status: 400, msg: "Error, naming series tidak ditemukan!" });
+          .json({ status: 400, msg: "Error, namingSeries tidak ditemukan!" });
       }
 
       //End
@@ -293,7 +285,6 @@ class VistController implements IController {
         ],
       })
         .sort({ createdAt: -1 })
-        .session(session)
         .exec();
 
       if (visit) {
@@ -307,6 +298,8 @@ class VistController implements IController {
           PaddyData(latest + 1, ambilIndex.length).toString()
         : olahKata.join("") + PaddyData(latest + 1, 4).toString();
       // End set name
+
+    
 
       //Mengecek Customer
       const cekCustomer: any = await CustomerModel.findOne(
@@ -378,11 +371,42 @@ class VistController implements IController {
         name: req.user,
       };
 
-      const result = new Db(req.body);
-      const response: any = await result.save({ session });
+        // Menset img ketika terdapat gambar
+        if (req.body.type === "outsite") {
+          req.body.img = req.body.name + ".jpg";
+        }
+        // End
 
-      await session.commitTransaction();
-      session.endSession();
+      const result = new Db(req.body);
+      const response: any = await result.save({});
+
+       // Mengecek ketika outsite apakah terdapat gambar
+       if (req.body.type === "outsite") {
+        const compressedImage = path.join(
+          __dirname,
+          "../public/images",
+          req.body.img
+        );
+        sharp(req.file.path)
+          .resize(640, 480, {
+            fit: sharp.fit.inside,
+            withoutEnlargement: true,
+          })
+          .jpeg({
+            quality: 100,
+            progressive: true,
+            chromaSubsampling: "4:4:4",
+          })
+          .withMetadata()
+          .toFile(compressedImage, (err, info) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(info);
+            }
+          });
+      }
+      // End
 
       //push history
       await HistoryController.pushHistory({
@@ -395,12 +419,9 @@ class VistController implements IController {
         user: req.userId,
       });
       //End
-      
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
       return res
         .status(400)
         .json({ status: 400, msg: error ?? "Error Connection!" });

@@ -16,11 +16,8 @@ import {
   RoleListRoutes,
   RoleProfileRoutes,
   RoleUserRoutes,
-  ScheduleItemPackingRoutes,
-  ScheduleItemRoutes,
   ScheduleRoutes,
   UserRoutes,
-  WarehouseRoutes,
   workflowActionRoutes,
   WorkflowCangerRoutes,
   WorkflowRoutes,
@@ -36,9 +33,9 @@ import {
 } from "./routes";
 import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
-import { Schedule } from "./models";
 import cron from "node-cron";
 import { AuthMiddleware, RoleMiddleware } from "./middleware";
+import { ScheduleModel } from "./models";
 
 const cookieParser = require("cookie-parser");
 
@@ -85,7 +82,7 @@ class App {
 
   protected Cron(): void {
     cron.schedule("* * * * *", async function () {
-      // Cek & close schedule yang sudah melebihi due date
+      // Cek & close schedule yang sudah melebihi closing date
       const today = new Date();
       const startOfToday = new Date(
         today.getFullYear(),
@@ -98,9 +95,9 @@ class App {
       );
       const update = { $set: { status: "3", workflowState: "Closed" } };
       try {
-        await Schedule.updateMany(
+        await ScheduleModel.updateMany(
           {
-            $and: [{ dueDate: { $lt: startOfToday } }, { status: "1" }],
+            $and: [{ closingDate: { $lt: startOfToday } }, { status: "1" }],
           },
           update
         );

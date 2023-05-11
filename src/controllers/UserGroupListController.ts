@@ -59,18 +59,15 @@ class UserGroupListController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "createdBy", "updatedAt", "status", "workflowState"];
+        : ["user", "createdBy", "updatedAt", "userGroup"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let search: ISearch = {
-        filter: ["name"],
-        value: req.query.search || "",
-      };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+
+      let isFilter = FilterQuery.getFilter(filters, stateFilter);
 
       // Mengambil rincian permission user
       // const userPermission = await PermissionMiddleware.getPermission(
@@ -119,7 +116,7 @@ class UserGroupListController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // Cek User
+      // Cek User Group
       if (!req.body.userGroup) {
         return res
           .status(400)
@@ -314,30 +311,103 @@ class UserGroupListController implements IController {
     }
     // End
 
-    // Jika nama dirubah
-    if (req.body.name) {
-      const dupl = await Db.findOne({
-        $and: [
-          { name: req.body.name },
-          {
-            _id: { $ne: req.params.id },
-          },
-        ],
-      });
-      if (dupl) {
+    // Cek User Group
+    if (req.body.userGroup) {
+      if (typeof req.body.userGroup !== "string") {
         return res.status(404).json({
           status: 404,
-          msg: `Error, name ${req.body.name} sudah terinput di database!`,
+          msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
         });
       }
+
+      const cekUG = await UserGroupModel.findOne({
+        $and: [{ _id: new ObjectId(req.body.userGroup) }],
+      });
+
+      if (!cekUG) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, userGroup tidak ditemukan!",
+        });
+      }
+
+      if (cekUG.status !== "1") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, userGroup tidak aktif!",
+        });
+      }
+
+      req.body.userGroup = {
+        _id: cekUG._id,
+        name: cekUG.name,
+      };
     }
 
+    // End
+
+    // Cek User
+    if (req.body.user) {
+      if (typeof req.body.user !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data user, Data harus berupa string id user!",
+        });
+      }
+
+      const cekUser = await UserModel.findOne({
+        $and: [{ _id: new ObjectId(req.body.user) }],
+      });
+
+      if (!cekUser) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, user tidak ditemukan!",
+        });
+      }
+
+      if (cekUser.status !== "1") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, user tidak aktif!",
+        });
+      }
+
+      req.body.user = {
+        _id: cekUser._id,
+        name: cekUser.name,
+      };
+    }
     // End
 
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
       });
+
+      // Cek duplicate
+      const dup = await Db.findOne({
+        $and: [
+          {
+            "userGroup._id": req.body.userGroup
+              ? new ObjectId(req.body.userGroup._id)
+              : result.userGroup._id,
+          },
+          {
+            "user._id": req.body.user
+              ? new ObjectId(req.body.user._id)
+              : result.user._id,
+          },
+        ],
+      });
+
+      if (dup) {
+        return res.status(400).json({
+          status: 400,
+          msg: `Error , data sudah ada di database!`,
+        });
+      }
+      // End
 
       if (result) {
         if (req.body.id_workflow && req.body.id_state) {

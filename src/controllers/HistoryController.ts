@@ -169,8 +169,6 @@ class HistoryController implements IController {
 
     const doctype = [
       "schedule",
-      "scheduleitem",
-      "schedulepacking",
       "roleuser",
       "roleprofile",
       "rolelist",
@@ -272,8 +270,7 @@ class HistoryController implements IController {
     const doctype = [
       "user",
       "schedule",
-      "scheduleitem",
-      "schedulepacking",
+  
       "roleuser",
       "roleprofile",
       "rolelist",

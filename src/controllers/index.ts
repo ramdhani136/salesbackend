@@ -19,6 +19,7 @@ import CustomerController from "./CustomerController";
 import VisitController from "./VisitController";
 import ContactController from "./ContactController";
 import NamingSeriesController from "./NamingSeriesController";
+import ScheduleController from "./ScheduleController";
 
 export {
   UserController,
@@ -40,4 +41,5 @@ export {
   VisitController,
   ContactController,
   NamingSeriesController,
+  ScheduleController,
 };

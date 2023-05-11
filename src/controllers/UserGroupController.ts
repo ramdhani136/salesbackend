@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { CustomerGroupModel, UserGroupModel as Db, History } from "../models";
+import {  UserGroupModel as Db, History } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,

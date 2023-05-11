@@ -195,17 +195,17 @@ class VistController implements IController {
         .json({ status: 400, msg: "Error, signature wajib diisi!" });
     }
 
-    // if (!req.body.location?.lat) {
-    //   return res
-    //     .status(400)
-    //     .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
-    // }
+    if (!req.body.location?.lat) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
+    }
 
-    // if (!req.body.location?.lng) {
-    //   return res
-    //     .status(400)
-    //     .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-    // }
+    if (!req.body.location?.lng) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
+    }
 
     // Jika ada checkout
     if (req.body.checkOut) {
@@ -508,110 +508,139 @@ class VistController implements IController {
     }
   };
 
-  update = async (req: Request | any, res: Response): Promise<Response> => {
-    if (req.body.branch) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, tidak dapat merubah branch!",
-      });
-    }
-
-    try {
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      });
-
-      if (result) {
-        //Mengecek jika Customer Group dirubah
-        if (req.body.customerGroup) {
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
-
-          if (!CekCG) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customerGroup tidak ditemukan!",
-            });
-          }
-
-          if (CekCG.status != 1) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customerGroup tidak aktif!",
-            });
-          }
-          // End
-
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
-          };
-          // End
-
-          req.body.customerGroup.branch = CekCG.branch;
-          // End
-        }
-        // End
-
-        if (req.body.id_workflow && req.body.id_state) {
-          const checkedWorkflow =
-            await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
-              req.userId,
-              req.body.id_state,
-              result.createdBy._id
-            );
-
-          if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
-          } else {
-            return res
-              .status(403)
-              .json({ status: 403, msg: checkedWorkflow.msg });
-          }
-        } else {
-          await Db.updateOne({ _id: req.params.id }, req.body).populate(
-            "createdBy",
-            "name"
-          );
-        }
-
-        const getData: any = await Db.findOne({
-          _id: req.params.id,
+  update = async (req: Request | any, res: Response): Promise<any> => {
+    if (req.body.customer) {
+      if (typeof req.body.customer !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data customer, Data harus berupa string id customer!",
         });
-
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
-          {
-            EX: 30,
-          }
-        );
-
-        // push history semua field yang di update
-        await HistoryController.pushUpdateMany(
-          result,
-          getData,
-          req.user,
-          req.userId,
-          redisName
-        );
-
-        return res.status(200).json({ status: 200, data: getData });
-        // End
-      } else {
+      }
+    }
+    if (req.body.contact) {
+      if (typeof req.body.contact !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data contact, Data harus berupa string id contact!",
+        });
+      }
+    }
+    if (req.body.location) {
+      if (!req.body.location?.lat) {
         return res
           .status(400)
-          .json({ status: 404, msg: "Error update, data not found" });
+          .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
       }
-    } catch (error: any) {
-      return res.status(404).json({ status: 404, data: error });
+
+      if (!req.body.location?.lng) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
+      }
     }
+    if (req.body.createdBy) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Tidak dapat merubah data ini createdBy!",
+      });
+    }
+
+    // try {
+    //   const result: any = await Db.findOne({
+    //     _id: req.params.id,
+    //   });
+
+    //   if (result) {
+    //     //Mengecek jika Customer Group dirubah
+    //     if (req.body.customerGroup) {
+    //       const CekCG: any = await CustomerGroupModel.findOne({
+    //         $and: [{ _id: req.body.customerGroup }],
+    //       }).populate("branch", "name");
+
+    //       if (!CekCG) {
+    //         return res.status(404).json({
+    //           status: 404,
+    //           msg: "Error, customerGroup tidak ditemukan!",
+    //         });
+    //       }
+
+    //       if (CekCG.status != 1) {
+    //         return res.status(404).json({
+    //           status: 404,
+    //           msg: "Error, customerGroup tidak aktif!",
+    //         });
+    //       }
+    //       // End
+
+    //       // set setCustomerGroup
+    //       req.body.customerGroup = {
+    //         _id: CekCG._id,
+    //         name: CekCG.name,
+    //       };
+    //       // End
+
+    //       req.body.customerGroup.branch = CekCG.branch;
+    //       // End
+    //     }
+    //     // End
+
+    //     if (req.body.id_workflow && req.body.id_state) {
+    //       const checkedWorkflow =
+    //         await WorkflowController.permissionUpdateAction(
+    //           req.body.id_workflow,
+    //           req.userId,
+    //           req.body.id_state,
+    //           result.createdBy._id
+    //         );
+
+    //       if (checkedWorkflow.status) {
+    //         await Db.updateOne(
+    //           { _id: req.params.id },
+    //           checkedWorkflow.data
+    //         ).populate("createdBy", "name");
+    //       } else {
+    //         return res
+    //           .status(403)
+    //           .json({ status: 403, msg: checkedWorkflow.msg });
+    //       }
+    //     } else {
+    //       await Db.updateOne({ _id: req.params.id }, req.body).populate(
+    //         "createdBy",
+    //         "name"
+    //       );
+    //     }
+
+    //     const getData: any = await Db.findOne({
+    //       _id: req.params.id,
+    //     });
+
+    //     await Redis.client.set(
+    //       `${redisName}-${req.params.id}`,
+    //       JSON.stringify(getData),
+    //       {
+    //         EX: 30,
+    //       }
+    //     );
+
+    //     // push history semua field yang di update
+    //     await HistoryController.pushUpdateMany(
+    //       result,
+    //       getData,
+    //       req.user,
+    //       req.userId,
+    //       redisName
+    //     );
+
+    //     return res.status(200).json({ status: 200, data: getData });
+    //     // End
+    //   } else {
+    //     return res
+    //       .status(400)
+    //       .json({ status: 404, msg: "Error update, data not found" });
+    //   }
+    // } catch (error: any) {
+    //   return res.status(404).json({ status: 404, data: error });
+    // }
   };
 
   delete = async (req: Request, res: Response): Promise<Response> => {

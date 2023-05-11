@@ -1,62 +1,55 @@
 import mongoose, { Schema } from "mongoose";
 
-const allowModel = {
-  barcode: {
-    type: Boolean,
-    required: true,
-    default: true,
-  },
-  manual: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
-};
-
 const Schedule = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
+    type: {
+      type: String,
       required: true,
-      index: true,
+      enum: ["visit", "callsheet"],
     },
-    startDate: {
+    notes: {
+      type: String,
+      required: true,
+    },
+    userGroup: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+    },
+    activeDate: {
       type: Date,
       required: true,
-      index: true,
     },
-    dueDate: {
+    closingDate: {
       type: Date,
       require: true,
-      index: true,
+    },
+    status: {
+      type: String,
+      enum: ["0", "1", "2"],
+      default: "0",
     },
     workflowState: {
       type: String,
-      require: true,
-      index: true,
+      required: true,
       default: "Draft",
     },
-    warehouse: {
-      type: String,
-      require: true,
-      index: true,
-    },
-    note: {
-      type: String,
-    },
-    allow: allowModel,
-    status: {
-      type: String,
-      required: true,
-      index: true,
-      default: 0,
+    createdBy: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String },
     },
   },
   {

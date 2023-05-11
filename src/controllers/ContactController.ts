@@ -318,6 +318,14 @@ class ContactController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    // Cek data yang tidak boleh dirubah
+    if (req.body.createdBy) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, createdby tidak dapat dirubah",
+      });
+    }
+    // End
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
@@ -344,7 +352,15 @@ class ContactController implements IController {
         }
 
         //Mengecek Customer
+
         if (req.body.customer) {
+          if (typeof req.body.customer !== "string") {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Cek kembali data customer, Data harus berupa string id customer!",
+            });
+          }
+
           const cekCustomer: any = await CustomerModel.findOne(
             {
               $and: [{ _id: req.body.customer }],

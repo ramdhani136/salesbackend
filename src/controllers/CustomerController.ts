@@ -4,11 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import {
-  CustomerGroupModel,
-  CustomerModel as Db,
-  History,
-} from "../models";
+import { CustomerGroupModel, CustomerModel as Db, History } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -260,6 +256,14 @@ class CustomerController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    // Cek data yang tidak boleh dirubah
+    if (req.body.createdBy) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, createdby tidak dapat dirubah",
+      });
+    }
+    // End
     if (req.body.branch) {
       return res.status(404).json({
         status: 404,
@@ -275,6 +279,13 @@ class CustomerController implements IController {
       if (result) {
         //Mengecek jika Customer Group dirubah
         if (req.body.customerGroup) {
+          if (typeof req.body.customerGroup !== "string") {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Cek kembali data customerGroup, Data harus berupa string id customerGroup!",
+            });
+          }
+
           const CekCG: any = await CustomerGroupModel.findOne({
             $and: [{ _id: req.body.customerGroup }],
           }).populate("branch", "name");

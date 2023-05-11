@@ -4,7 +4,13 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { CustomerGroupModel, ScheduleModel as Db, History, UserGroupModel } from "../models";
+import {
+  CustomerGroupModel,
+  ScheduleModel as Db,
+  History,
+  ScheduleModel,
+  UserGroupModel,
+} from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -454,6 +460,32 @@ class ScheduleController implements IController {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
+
+  // Cek & close schedule yang sudah melebihi closing date
+  CheckExpiredSchedule = async (): Promise<void> => {
+    const today = new Date();
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0,
+      0
+    );
+    const update = { $set: { status: "3", workflowState: "Closed" } };
+    try {
+      await ScheduleModel.updateMany(
+        {
+          $and: [{ closingDate: { $lt: startOfToday } }, { status: "1" }],
+        },
+        update
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  // End
 }
 
 export default new ScheduleController();

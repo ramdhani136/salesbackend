@@ -74,7 +74,11 @@ const VisitModel = new mongoose.Schema(
       {
         _id: { type: Schema.Types.ObjectId },
         name: { type: String },
-        scheduleList: { type: Schema.Types.ObjectId },
+        notes: { type: String },
+        scheduleList: {
+          _id: { type: Schema.Types.ObjectId },
+          notes: { type: String },
+        },
       },
     ],
     checkOut: {

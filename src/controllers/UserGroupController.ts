@@ -27,7 +27,7 @@ class UserGroupController implements IController {
       },
 
       {
-        name: "createdBy.name",
+        name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -124,6 +124,16 @@ class UserGroupController implements IController {
     }
 
     try {
+      // Cek duplicate
+      const dup = await Db.findOne({ name: req.body.name });
+      if (dup) {
+        return res.status(400).json({
+          status: 400,
+          msg: `Error , name ${req.body.name} sudah ada di database!`,
+        });
+      }
+      // End
+
       req.body.createdBy = {
         _id: new ObjectId(req.userId),
         name: req.user,
@@ -229,12 +239,28 @@ class UserGroupController implements IController {
       });
     }
     // End
-    if (req.body.branch) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, tidak dapat merubah branch!",
+
+    // Jika nama dirubah
+    if (req.body.name) {
+      const dupl = await Db.findOne({
+        $and: [
+          { name: req.body.name },
+          {
+            _id: { $ne: req.params.id },
+          },
+        ],
       });
+      if (dupl) {
+        return res
+          .status(404)
+          .json({
+            status: 404,
+            msg: `Error, name ${req.body.name} sudah terinput di database!`,
+          });
+      }
     }
+
+    // End
 
     try {
       const result: any = await Db.findOne({
@@ -242,46 +268,6 @@ class UserGroupController implements IController {
       });
 
       if (result) {
-        //Mengecek jika Customer Group dirubah
-        if (req.body.customerGroup) {
-          if (typeof req.body.customerGroup !== "string") {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, Cek kembali data customerGroup, Data harus berupa string id customerGroup!",
-            });
-          }
-
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
-
-          if (!CekCG) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customerGroup tidak ditemukan!",
-            });
-          }
-
-          if (CekCG.status != 1) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customerGroup tidak aktif!",
-            });
-          }
-          // End
-
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
-          };
-          // End
-
-          req.body.customerGroup.branch = CekCG.branch;
-          // End
-        }
-        // End
-
         if (req.body.id_workflow && req.body.id_state) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(

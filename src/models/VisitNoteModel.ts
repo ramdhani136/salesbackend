@@ -5,7 +5,6 @@ const VisitNoteModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       index: true,
     },
 
@@ -14,7 +13,6 @@ const VisitNoteModel = new mongoose.Schema(
       name: {
         type: String,
         required: true,
-        unique: true,
         index: true,
       },
       type: {
@@ -49,6 +47,7 @@ const VisitNoteModel = new mongoose.Schema(
       rate: {
         type: Number,
         index: true,
+        default: 0,
       },
       createdBy: {
         _id: {
@@ -90,12 +89,26 @@ const VisitNoteModel = new mongoose.Schema(
         required: true,
       },
     },
-    tag: [
-      {
-        _id: { type: Schema.Types.ObjectId, required: true, index: true },
-        name: { type: String, required: true, index: true },
+    tag: {
+      type: [
+        {
+          _id: { type: Schema.Types.ObjectId, required: true, index: true },
+          name: { type: String, required: true, index: true },
+        },
+      ],
+      required: true,
+      validate: {
+        validator: function (arr: any) {
+          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
+        },
+        message: "Array harus diisi setidaknya dengan satu tag.",
       },
-    ],
+    },
+    note: {
+      type: String,
+      required: true,
+    },
+
     createdBy: {
       _id: {
         type: Schema.Types.ObjectId,
@@ -109,19 +122,5 @@ const VisitNoteModel = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-// VisitNoteModel.index({
-//   name: 1,
-//   "visit.name": 1,
-//   "visit.rate": 1,
-//   "visit._id": 1,
-//   "visit.type": 1,
-//   "visit.customer.name": 1,
-//   "visit.customer._id": 1,
-//   "visit.customer.customerGroup._id": 1,
-//   "visit.customer.customerGroup.name": 1,
-//   "visit.customer.customerGroup.branch._id": 1,
-//   "visit.customer.customerGroup.branch.name": 1,
-// });
 
 export default mongoose.model("visitnote", VisitNoteModel);

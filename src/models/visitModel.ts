@@ -62,6 +62,7 @@ const VisitModel = new mongoose.Schema(
     },
     rate: {
       type: Number,
+      default: 0,
     },
     createdBy: {
       _id: {

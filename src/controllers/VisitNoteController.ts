@@ -73,6 +73,11 @@ class VisitNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "visit.status",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "visit.customer._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
@@ -124,11 +129,24 @@ class VisitNoteController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "createdBy.name", "updatedAt"];
+        : [
+            "name",
+            "visit.name",
+            "visit.customer.name",
+            "visit.customer.customerGroup.name",
+            "visit.customer.customerGroup.branch.name",
+            "createdBy.name",
+            "updatedAt",
+            "schedule.name",
+            "tag.name",
+            "visit.rating",
+            "visit.type",
+            "note",
+          ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
-      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
+      const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
       let search: ISearch = {
@@ -188,6 +206,11 @@ class VisitNoteController implements IController {
         .status(400)
         .json({ status: 400, msg: "Error, name wajib diisi!" });
     }
+    if (!req.body.note) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, note wajib diisi!" });
+    }
 
     try {
       // Cek visit
@@ -210,21 +233,11 @@ class VisitNoteController implements IController {
       // End
 
       // Cek tag
-      if (!req.body.tagId) {
+      if (!req.body.tag) {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, tagId wajib diisi!" });
       }
-
-      const tag = await TagModel.findById(req.body.tagId);
-
-      if (!tag) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, tag tidak ditemukan!" });
-      }
-
-      req.body.tag = tag;
 
       // End
 
@@ -233,20 +246,22 @@ class VisitNoteController implements IController {
         name: req.user,
       };
 
-      const result = new Db(req.body);
-      const response: any = await result.save();
+      for (let index = 0; index < 1000000; index++) {
+        const result = new Db(req.body);
+        const response: any = await result.save();
+      }
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name,
-          type: redisName,
-        },
-        message: `${req.user} menambahkan visitnote ${response.name} dalam dok ${response.visit.name} `,
-        user: req.userId,
-      });
-      // End
+      // // push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: response._id,
+      //     name: response.name,
+      //     type: redisName,
+      //   },
+      //   message: `${req.user} menambahkan visitnote ${response.name} dalam dok ${response.visit.name} `,
+      //   user: req.userId,
+      // });
+      // // End
 
       return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {

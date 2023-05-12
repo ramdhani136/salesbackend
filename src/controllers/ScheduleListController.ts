@@ -424,12 +424,15 @@ class ScheduleListController implements IController {
               msg: "Error, closing doc wajib diisi!",
             });
           }
-          if (!req.body.closing.user) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, closing user wajib diisi!",
-            });
-          }
+
+          // Mengecek doc apakah tersedia
+
+          // End
+
+          req.body.closing.user = {
+            _id: new ObjectId(req.userId),
+            name: req.user,
+          };
         }
         // End
 

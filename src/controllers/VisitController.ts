@@ -104,9 +104,11 @@ class VistController implements IController {
         : [
             "name",
             "type",
-            "createdBy",
+            "createdBy.name",
             "updatedAt",
-            "customer",
+            "customer.name",
+            "customer.customerGroup.name",
+            "customer.customerGroup.branch.name",
             "status",
             "workflowState",
             "schedule",

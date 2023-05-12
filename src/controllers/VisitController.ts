@@ -669,13 +669,7 @@ class VistController implements IController {
         );
 
         // Ubah semua yang terelasi
-
-        const updateVisitNotes = await VisitNoteModel.updateMany(
-          { "visit._id": req.params.id },
-          { visit: getData }
-        );
-        console.log(updateVisitNotes);
-
+        await this.updateRelatedData(req.params.id, getData);
         // End
 
         return res.status(200).json({ status: 200, data: getData });
@@ -721,6 +715,19 @@ class VistController implements IController {
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
+    }
+  };
+
+  protected updateRelatedData = async (
+    id: ObjectId,
+    data: any
+  ): Promise<any> => {
+    try {
+      // Data visitnote
+      await VisitNoteModel.updateMany({ "visit._id": id }, { visit: data });
+      // End
+    } catch (error) {
+      throw new Error("Gagal memperbarui data terkait");
     }
   };
 }

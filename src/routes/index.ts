@@ -21,6 +21,7 @@ import ContactRoutes from "./ContactRoutes";
 import NamingSeriesRoutes from "./NamingSeriesRoutes";
 import UserGroupListRoutes from "./UserGroupListRoutes";
 import ScheduleListRoutes from "./ScheduleListRoutes";
+import TagRoutes from "./TagRoutes";
 
 export {
   UserRoutes,
@@ -46,4 +47,5 @@ export {
   UserGroupRoutes,
   ScheduleListRoutes,
   UserGroupListRoutes,
+  TagRoutes,
 };

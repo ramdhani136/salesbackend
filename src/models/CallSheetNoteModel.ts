@@ -10,8 +10,6 @@ const CallsheetNoteModel = new mongoose.Schema(
       unique: true,
     },
 
-    callsheet: visitModel,
-    tag: TagModel,
     createdBy: {
       _id: {
         type: Schema.Types.ObjectId,
@@ -25,8 +23,6 @@ const CallsheetNoteModel = new mongoose.Schema(
   }
 );
 
-
 CallsheetNoteModel.index({ name: 1 });
 
 export default mongoose.model("callsheetnote", CallsheetNoteModel);
-

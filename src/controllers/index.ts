@@ -22,6 +22,7 @@ import ScheduleController from "./ScheduleController";
 import UserGroupController from "./UserGroupController";
 import UserGroupListController from "./UserGroupListController";
 import ScheduleListController from "./ScheduleListController";
+import TagController from "./TagController";
 
 export {
   UserController,
@@ -47,4 +48,5 @@ export {
   UserGroupController,
   UserGroupListController,
   ScheduleListController,
+  TagController
 };

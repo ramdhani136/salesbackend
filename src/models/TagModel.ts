@@ -7,7 +7,6 @@ const TagModel = new mongoose.Schema(
       required: true,
       unique: true,
     },
-
     createdBy: {
       _id: {
         type: Schema.Types.ObjectId,

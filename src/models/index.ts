@@ -21,6 +21,9 @@ import namingSeriesModel from "./namingSeriesModel";
 import UserGroupModel from "./UserGroupModel";
 import UserGroupListModel from "./UserGroupListModel";
 import ScheduleListModel from "./ScheduleListModel";
+import TagModel from "./TagModel";
+import VisitNoteModel from "./VisitNoteModel";
+import CallSheetNoteModel from "./CallSheetNoteModel";
 
 export {
   User,
@@ -45,5 +48,8 @@ export {
   namingSeriesModel,
   UserGroupModel,
   UserGroupListModel,
-  ScheduleListModel
+  ScheduleListModel,
+  TagModel,
+  VisitNoteModel,
+  CallSheetNoteModel,
 };

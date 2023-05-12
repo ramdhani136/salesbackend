@@ -32,6 +32,7 @@ import {
   UserGroupRoutes,
   UserGroupListRoutes,
   ScheduleListRoutes,
+  TagRoutes,
 } from "./routes";
 import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -185,6 +186,7 @@ class App {
     );
     this.app.use("/rolelist", AuthMiddleware, RoleListRoutes);
     this.app.use("/roleuser", AuthMiddleware, RoleUserRoutes);
+    this.app.use("/tag", AuthMiddleware, TagRoutes);
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);
     // this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
     // this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);

@@ -13,6 +13,7 @@ import {
   CustomerGroupModel,
   ScheduleModel as Db,
   History,
+  ScheduleListModel,
   ScheduleModel,
   UserGroupModel,
   namingSeriesModel,
@@ -271,7 +272,6 @@ class ScheduleController implements IController {
       // End set name
 
       //Mengecek userGroup
-
       if (!req.body.userGroup) {
         return res
           .status(400)
@@ -303,7 +303,7 @@ class ScheduleController implements IController {
       }
       // End
 
-      // set setCustomerGroup
+      // set setUserGroup
       req.body.userGroup = {
         _id: cekUserGroup._id,
         name: cekUserGroup.name,
@@ -416,13 +416,13 @@ class ScheduleController implements IController {
         msg: "Error, createdby tidak dapat dirubah",
       });
     }
-    // End
-    if (req.body.branch) {
+    if (req.body.name) {
       return res.status(404).json({
         status: 404,
-        msg: "Error, tidak dapat merubah branch!",
+        msg: "Error, tidak dapat merubah name!",
       });
     }
+    // End
 
     try {
       const result: any = await Db.findOne({
@@ -430,44 +430,62 @@ class ScheduleController implements IController {
       });
 
       if (result) {
-        //Mengecek jika Customer Group dirubah
-        if (req.body.customerGroup) {
-          if (typeof req.body.customerGroup !== "string") {
+        // Jika type diedit dan hanya bisa edit ketika belum ada schedulelist yang di close
+
+        const scheduleList = await ScheduleListModel.findOne({
+          $and: [
+            { "schedule._id": req.params.id },
+            {
+              status: { $ne: "0" },
+            },
+          ],
+        });
+
+        if (scheduleList) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error,tidak dapat merubah type karena sudah ada schedulelist yang close!",
+          });
+        }
+
+        // End
+
+        //Mengecek userGroup
+        if (req.body.usergroup) {
+          if (typeof req.body.userGroup !== "string") {
             return res.status(404).json({
               status: 404,
-              msg: "Error, Cek kembali data customerGroup, Data harus berupa string id customerGroup!",
+              msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
             });
           }
 
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
+          const cekUserGroup: any = await UserGroupModel.findOne({
+            $and: [{ _id: req.body.userGroup }],
+          });
 
-          if (!CekCG) {
+          if (!cekUserGroup) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak ditemukan!",
+              msg: "Error, userGroup tidak ditemukan!",
             });
           }
 
-          if (CekCG.status != 1) {
+          if (cekUserGroup.status != 1) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak aktif!",
+              msg: "Error, userGroup tidak aktif!",
             });
           }
           // End
 
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
+          // set setUserGroup
+          req.body.userGroup = {
+            _id: cekUserGroup._id,
+            name: cekUserGroup.name,
           };
           // End
-
-          req.body.customerGroup.branch = CekCG.branch;
-          // End
         }
+
         // End
 
         if (req.body.id_workflow && req.body.id_state) {
@@ -499,6 +517,13 @@ class ScheduleController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         });
+
+        // Update scheduleList
+        await ScheduleListModel.updateMany(
+          { "schedule._id": new ObjectId(req.params.id) },
+          { schedule: getData }
+        );
+        // End
 
         await Redis.client.set(
           `${redisName}-${req.params.id}`,

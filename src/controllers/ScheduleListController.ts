@@ -182,6 +182,11 @@ class ScheduleListController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
+    if (req.body.closing) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, tidak dapat mengisi closing!" });
+    }
     if (!req.body.schedule) {
       return res
         .status(400)
@@ -396,6 +401,38 @@ class ScheduleListController implements IController {
       });
 
       if (result) {
+        // Apabila schedulelist di close
+        if (req.body.closing) {
+          // Cek bisa di close ketika schedule aktif
+          if (result.schedule.status !== "1") {
+            return res.status(404).json({
+              status: 404,
+              msg: `Error, Tidak dapat menutup list ini karena schedule ${result.schedule.name} tidak aktif!`,
+            });
+          }
+          // End
+
+          if (!req.body.closing.date) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, closing date wajib diisi!",
+            });
+          }
+          if (!req.body.closing.doc) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, closing doc wajib diisi!",
+            });
+          }
+          if (!req.body.closing.user) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, closing user wajib diisi!",
+            });
+          }
+        }
+        // End
+
         //Mengecek jika Customer Group dirubah
         if (req.body.customerGroup) {
           if (typeof req.body.customerGroup !== "string") {

@@ -93,6 +93,18 @@ const ScheduleListModel = new mongoose.Schema(
       enum: ["0", "1"],
       default: "0",
     },
+    closing: {
+      date: {
+        type: Date,
+      },
+      user: {
+        _id: {
+          type: Schema.Types.ObjectId,
+        },
+        name: { type: String },
+      },
+      doc: { type: String },
+    },
     createdBy: {
       _id: {
         type: Schema.Types.ObjectId,

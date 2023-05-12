@@ -404,7 +404,6 @@ class ScheduleListController implements IController {
 
       if (result) {
         // Apabila schedulelist di close
-
         if (result.status !== "0") {
           return res.status(404).json({
             status: 404,

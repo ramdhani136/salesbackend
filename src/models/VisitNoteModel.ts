@@ -101,6 +101,18 @@ const VisitNoteModel = new mongoose.Schema(
   }
 );
 
-VisitNoteModel.index({ name: 1, "visit.name": 1, "visit.customer.name": 1, });
+// VisitNoteModel.index({
+//   name: 1,
+//   "visit.name": 1,
+//   "visit.rate": 1,
+//   "visit._id": 1,
+//   "visit.type": 1,
+//   "visit.customer.name": 1,
+//   "visit.customer._id": 1,
+//   "visit.customer.customerGroup._id": 1,
+//   "visit.customer.customerGroup.name": 1,
+//   "visit.customer.customerGroup.branch._id": 1,
+//   "visit.customer.customerGroup.branch.name": 1,
+// });
 
 export default mongoose.model("visitnote", VisitNoteModel);

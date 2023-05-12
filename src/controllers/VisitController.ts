@@ -232,8 +232,21 @@ class VistController implements IController {
     try {
       // Set nama/nomor doc
       // Cek naming series
+      if (!req.body.namingSeries) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, namingSeries wajib diisi!" });
+      }
+
+      if (typeof req.body.namingSeries !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data namingSeries, Data harus berupa string id namingSeries!",
+        });
+      }
+
       const namingSeries: any = await namingSeriesModel.findOne({
-        _id: req.body.namingSeries,
+        $and: [{ _id: req.body.namingSeries }, { doc: "visit" }],
       });
 
       if (!namingSeries) {

@@ -1,7 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import {
+  CekKarakterSama,
+  FilterQuery,
+  HapusKarakter,
+  PaddyData,
+} from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
@@ -10,6 +15,7 @@ import {
   History,
   ScheduleModel,
   UserGroupModel,
+  namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -158,12 +164,6 @@ class ScheduleController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.name) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, name wajib diisi!" });
-    }
-
     if (!req.body.type) {
       return res
         .status(400)
@@ -173,11 +173,6 @@ class ScheduleController implements IController {
       return res
         .status(400)
         .json({ status: 400, msg: "Error, notes wajib diisi!" });
-    }
-    if (!req.body.userGroup) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, _id userGroup wajib diisi!" });
     }
 
     if (!req.body.activeDate) {
@@ -191,15 +186,104 @@ class ScheduleController implements IController {
         .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
     }
 
-    if (typeof req.body.userGroup !== "string") {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
-      });
-    }
-
     try {
-      //Mengecek UsPer Group
+      // Set nama/nomor doc
+      // Cek naming series
+
+      if (!req.body.namingSeries) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, namingSeries wajib diisi!" });
+      }
+
+      if (typeof req.body.namingSeries !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data namingSeries, Data harus berupa string id namingSeries!",
+        });
+      }
+
+      const namingSeries: any = await namingSeriesModel.findOne({
+        $and: [{ _id: req.body.namingSeries }, { doc: "schedule" }],
+      });
+
+      if (!namingSeries) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, namingSeries tidak ditemukan!" });
+      }
+
+      //End
+
+      const split = namingSeries.name.split(".");
+
+      const jumlahKarakter = HapusKarakter(namingSeries.name, ["."]).length;
+
+      let ambilIndex: String = "";
+      const olahKata = split.map((item: any) => {
+        if (item === "YYYY") {
+          return new Date().getFullYear().toString();
+        } else if (item === "MM") {
+          return PaddyData(new Date().getMonth() + 1, 2).toString();
+        } else {
+          if (item.includes("#")) {
+            if (CekKarakterSama(item)) {
+              if (!ambilIndex) {
+                if (item.length > 2) {
+                  ambilIndex = item;
+                }
+              }
+              return "";
+            }
+          }
+
+          return item;
+        }
+      });
+
+      let latest = 0;
+
+      const regex = new RegExp(olahKata.join(""), "i");
+
+      const doc = await Db.findOne({
+        $and: [
+          { name: { $regex: regex } },
+          {
+            $where: `this.name.length === ${
+              ambilIndex ? jumlahKarakter : jumlahKarakter + 4
+            }`,
+          },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .exec();
+
+      if (doc) {
+        latest = parseInt(
+          `${doc.name.slice(ambilIndex ? -ambilIndex.length : -4)}`
+        );
+      }
+
+      req.body.name = ambilIndex
+        ? olahKata.join("") +
+          PaddyData(latest + 1, ambilIndex.length).toString()
+        : olahKata.join("") + PaddyData(latest + 1, 4).toString();
+      // End set name
+
+      //Mengecek userGroup
+
+      if (!req.body.userGroup) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, userGroup wajib diisi!" });
+      }
+      if (typeof req.body.userGroup !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
+        });
+      }
+
       const cekUserGroup: any = await UserGroupModel.findOne({
         $and: [{ _id: req.body.userGroup }],
       });
@@ -445,7 +529,7 @@ class ScheduleController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request, res: Response): Promise<any> => {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
@@ -460,8 +544,6 @@ class ScheduleController implements IController {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
-
-  
 }
 
 export default new ScheduleController();

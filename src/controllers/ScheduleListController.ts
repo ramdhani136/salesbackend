@@ -83,6 +83,22 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.Date,
       },
       {
+        name: "customer.name",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.customerGroup.name",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.customerGroup.branch.name",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.String,
+      },
+
+      {
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -136,6 +152,7 @@ class ScheduleListController implements IController {
 
       const getAll = await Db.find(isFilter.data, setField).count();
 
+      console.log(JSON.stringify(isFilter.data));
       const result = await Db.find(isFilter.data, setField)
         .sort(order_by)
         .limit(limit)

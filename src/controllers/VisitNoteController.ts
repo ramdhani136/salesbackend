@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { VisitNoteModel as Db, History } from "../models";
+import { VisitNoteModel as Db, History, TagModel, visitModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -14,6 +14,7 @@ import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
+import VisitController from "./VisitController";
 
 const redisName = "visitnote";
 
@@ -189,14 +190,42 @@ class VisitNoteController implements IController {
     }
 
     try {
-      // Cek duplicate
-      const dup = await Db.findOne({ name: req.body.name });
-      if (dup) {
-        return res.status(400).json({
-          status: 400,
-          msg: `Error , name ${req.body.name} sudah ada di database!`,
-        });
+      // Cek visit
+      if (!req.body.visitId) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, visitId wajib diisi!" });
       }
+
+      const visit = await visitModel.findById(req.body.visitId);
+
+      if (!visit) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, visit tidak ditemukan!" });
+      }
+
+      req.body.visit = visit;
+
+      // End
+
+      // Cek tag
+      if (!req.body.tagId) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, tagId wajib diisi!" });
+      }
+
+      const tag = await TagModel.findById(req.body.tagId);
+
+      if (!tag) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, tag tidak ditemukan!" });
+      }
+
+      req.body.tag = tag;
+
       // End
 
       req.body.createdBy = {
@@ -214,12 +243,12 @@ class VisitNoteController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan tag ${response.name} `,
+        message: `${req.user} menambahkan visitnote ${response.name} dalam dok ${response.visit.name} `,
         user: req.userId,
       });
       // End
 
-      return res.status(200).json({ status: 200, data: response });
+      return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {
       return res
         .status(400)

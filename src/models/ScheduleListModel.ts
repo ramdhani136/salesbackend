@@ -103,7 +103,12 @@ const ScheduleListModel = new mongoose.Schema(
         },
         name: { type: String },
       },
-      doc: { type: String },
+      doc: {
+        _id: {
+          type: Schema.Types.ObjectId,
+        },
+        name: { type: String },
+      },
     },
     createdBy: {
       _id: {

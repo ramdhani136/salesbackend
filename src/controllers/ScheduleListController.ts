@@ -11,6 +11,7 @@ import {
   History,
   ScheduleModel,
   UserGroupModel,
+  visitModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -21,6 +22,7 @@ import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
+import CallSheetNoteModel from "../models/CallSheetNoteModel";
 
 const redisName = "schedulelist";
 
@@ -402,6 +404,18 @@ class ScheduleListController implements IController {
 
       if (result) {
         // Apabila schedulelist di close
+
+        if (result.status !== "0") {
+          return res.status(404).json({
+            status: 404,
+            msg: `Error, list item ini sudah di close  ${
+              result.closing.doc.name
+                ? ` oleh dok ${result.closing.doc.name}`
+                : ``
+            } !`,
+          });
+        }
+
         if (req.body.closing) {
           // Cek bisa di close ketika schedule aktif
           if (result.schedule.status !== "1") {
@@ -425,7 +439,34 @@ class ScheduleListController implements IController {
             });
           }
 
+          if (!req.body.closing.docId) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, closing docId wajib diisi!",
+            });
+          }
+
           // Mengecek doc apakah tersedia
+          let DBCek: any = visitModel;
+          if (result.schedule.type === "callsheet") {
+            // DBCek = CallSheetModel
+          }
+
+          const cekValidDoc = await DBCek.findOne({
+            _id: new ObjectId(req.body.closing.docId),
+          });
+
+          if (!cekValidDoc) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Closing doc tidak ditemukan!",
+            });
+          }
+
+          req.body.closing.doc = {
+            _id: new ObjectId(cekValidDoc._id),
+            name: cekValidDoc.name,
+          };
 
           // End
 

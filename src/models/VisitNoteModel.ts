@@ -5,62 +5,60 @@ const VisitNoteModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      index: true,
     },
 
     visit: {
-      _id: { type: Schema.Types.ObjectId, index: true },
+      _id: { type: Schema.Types.ObjectId,  },
       name: {
         type: String,
         required: true,
-        index: true,
       },
       type: {
         type: String,
         enum: ["insite", "outsite"],
-        index: true,
+  
       },
       customer: {
         _id: {
           type: Schema.Types.ObjectId,
           required: true,
-          index: true,
+     
         },
-        name: { type: String, required: true, index: true },
+        name: { type: String, required: true},
         customerGroup: {
           _id: {
             type: Schema.Types.ObjectId,
             required: true,
-            index: true,
+           
           },
-          name: { type: String, required: true, index: true },
+          name: { type: String, required: true },
           branch: {
             _id: {
               type: Schema.Types.ObjectId,
               required: true,
-              index: true,
+            
             },
-            name: { type: String, required: true, index: true },
+            name: { type: String, required: true,  },
           },
         },
       },
       rate: {
         type: Number,
-        index: true,
+       
         default: 0,
       },
       createdBy: {
         _id: {
           type: Schema.Types.ObjectId,
           required: true,
-          index: true,
+        
         },
-        name: { type: String, required: true, index: true },
+        name: { type: String, required: true, },
       },
       schedule: [
         {
-          _id: { type: Schema.Types.ObjectId, required: true, index: true },
-          name: { type: String, required: true, index: true },
+          _id: { type: Schema.Types.ObjectId, required: true, },
+          name: { type: String, required: true,  },
           notes: { type: String, required: true },
           scheduleList: {
             _id: { type: Schema.Types.ObjectId, required: true },
@@ -72,13 +70,13 @@ const VisitNoteModel = new mongoose.Schema(
         type: String,
         enum: ["0", "1", "2"],
         default: "0",
-        index: true,
+   
       },
       workflowState: {
         type: String,
         required: true,
         default: "Draft",
-        index: true,
+       
       },
       createdAt: {
         type: Date,
@@ -92,8 +90,8 @@ const VisitNoteModel = new mongoose.Schema(
     tag: {
       type: [
         {
-          _id: { type: Schema.Types.ObjectId, required: true, index: true },
-          name: { type: String, required: true, index: true },
+          _id: { type: Schema.Types.ObjectId, required: true,},
+          name: { type: String, required: true, },
         },
       ],
       required: true,
@@ -113,9 +111,9 @@ const VisitNoteModel = new mongoose.Schema(
       _id: {
         type: Schema.Types.ObjectId,
         required: true,
-        index: true,
+     
       },
-      name: { type: String, index: true },
+      name: { type: String, },
     },
   },
   {

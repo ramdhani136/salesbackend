@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import TagModel from "./TagModel";
 
 const VisitNoteModel = new mongoose.Schema(
   {
@@ -73,6 +72,14 @@ const VisitNoteModel = new mongoose.Schema(
         required: true,
         default: "Draft",
         index: true,
+      },
+      createdAt: {
+        type: Date,
+        required: true,
+      },
+      updatedAt: {
+        type: Date,
+        required: true,
       },
     },
     tag: [

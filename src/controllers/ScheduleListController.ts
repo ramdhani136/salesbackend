@@ -389,13 +389,13 @@ class ScheduleListController implements IController {
         msg: "Error, createdby tidak dapat dirubah",
       });
     }
-    // End
-    if (req.body.branch) {
+    if (req.body.schedule) {
       return res.status(404).json({
         status: 404,
-        msg: "Error, tidak dapat merubah branch!",
+        msg: "Error, schedule tidak dapat dirubah",
       });
     }
+    // End
 
     try {
       const result: any = await Db.findOne({
@@ -403,19 +403,28 @@ class ScheduleListController implements IController {
       });
 
       if (result) {
+        console.log(result.schedule.status);
         // Apabila schedulelist di close
         if (result.status !== "0") {
           return res.status(404).json({
             status: 404,
-            msg: `Error, list item ini sudah di close  ${
+            msg: `Error, list item ini sudah di close ${
               result.closing.doc.name
-                ? ` oleh dok ${result.closing.doc.name}`
+                ? `oleh dok ${result.closing.doc.name}`
                 : ``
             } !`,
           });
         }
+        // End
 
-        if (req.body.closing) {
+        // Cek jika status tidak ada atau bukan 0 tidak boleh update closing
+        if (req.body.status === "1") {
+          if (!req.body.closing) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, closing  wajib diisi!",
+            });
+          }
           // Cek bisa di close ketika schedule aktif
           if (result.schedule.status !== "1") {
             return res.status(404).json({
@@ -429,12 +438,6 @@ class ScheduleListController implements IController {
             return res.status(404).json({
               status: 404,
               msg: "Error, closing date wajib diisi!",
-            });
-          }
-          if (!req.body.closing.doc) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, closing doc wajib diisi!",
             });
           }
 
@@ -473,8 +476,17 @@ class ScheduleListController implements IController {
             _id: new ObjectId(req.userId),
             name: req.user,
           };
+          // End
         }
+
         // End
+
+        if (req.body.closing) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, gagal update closing!",
+          });
+        }
 
         //Mengecek jika Customer Group dirubah
         if (req.body.customerGroup) {

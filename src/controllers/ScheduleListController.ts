@@ -403,7 +403,7 @@ class ScheduleListController implements IController {
       });
 
       if (result) {
-        console.log(result.schedule.status);
+
         // Apabila schedulelist di close
         if (result.status !== "0") {
           return res.status(404).json({

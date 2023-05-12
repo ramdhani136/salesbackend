@@ -15,6 +15,7 @@ import {
   CustomerModel,
   visitModel as Db,
   History,
+  VisitNoteModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -581,102 +582,112 @@ class VistController implements IController {
     }
     // End
 
-    // try {
-    //   const result: any = await Db.findOne({
-    //     _id: req.params.id,
-    //   });
+    try {
+      const result: any = await Db.findOne({
+        _id: req.params.id,
+      });
 
-    //   if (result) {
-    //     //Mengecek jika Customer Group dirubah
-    //     if (req.body.customerGroup) {
-    //       const CekCG: any = await CustomerGroupModel.findOne({
-    //         $and: [{ _id: req.body.customerGroup }],
-    //       }).populate("branch", "name");
+      if (result) {
+        //Mengecek jika Customer Group dirubah
+        if (req.body.customerGroup) {
+          const CekCG: any = await CustomerGroupModel.findOne({
+            $and: [{ _id: req.body.customerGroup }],
+          }).populate("branch", "name");
 
-    //       if (!CekCG) {
-    //         return res.status(404).json({
-    //           status: 404,
-    //           msg: "Error, customerGroup tidak ditemukan!",
-    //         });
-    //       }
+          if (!CekCG) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customerGroup tidak ditemukan!",
+            });
+          }
 
-    //       if (CekCG.status != 1) {
-    //         return res.status(404).json({
-    //           status: 404,
-    //           msg: "Error, customerGroup tidak aktif!",
-    //         });
-    //       }
-    //       // End
+          if (CekCG.status != 1) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customerGroup tidak aktif!",
+            });
+          }
+          // End
 
-    //       // set setCustomerGroup
-    //       req.body.customerGroup = {
-    //         _id: CekCG._id,
-    //         name: CekCG.name,
-    //       };
-    //       // End
+          // set setCustomerGroup
+          req.body.customerGroup = {
+            _id: CekCG._id,
+            name: CekCG.name,
+          };
+          // End
 
-    //       req.body.customerGroup.branch = CekCG.branch;
-    //       // End
-    //     }
-    //     // End
+          req.body.customerGroup.branch = CekCG.branch;
+          // End
+        }
+        // End
 
-    //     if (req.body.id_workflow && req.body.id_state) {
-    //       const checkedWorkflow =
-    //         await WorkflowController.permissionUpdateAction(
-    //           req.body.id_workflow,
-    //           req.userId,
-    //           req.body.id_state,
-    //           result.createdBy._id
-    //         );
+        if (req.body.id_workflow && req.body.id_state) {
+          const checkedWorkflow =
+            await WorkflowController.permissionUpdateAction(
+              req.body.id_workflow,
+              req.userId,
+              req.body.id_state,
+              result.createdBy._id
+            );
 
-    //       if (checkedWorkflow.status) {
-    //         await Db.updateOne(
-    //           { _id: req.params.id },
-    //           checkedWorkflow.data
-    //         ).populate("createdBy", "name");
-    //       } else {
-    //         return res
-    //           .status(403)
-    //           .json({ status: 403, msg: checkedWorkflow.msg });
-    //       }
-    //     } else {
-    //       await Db.updateOne({ _id: req.params.id }, req.body).populate(
-    //         "createdBy",
-    //         "name"
-    //       );
-    //     }
+          if (checkedWorkflow.status) {
+            await Db.updateOne(
+              { _id: req.params.id },
+              checkedWorkflow.data
+            ).populate("createdBy", "name");
+          } else {
+            return res
+              .status(403)
+              .json({ status: 403, msg: checkedWorkflow.msg });
+          }
+        } else {
+          await Db.updateOne({ _id: req.params.id }, req.body).populate(
+            "createdBy",
+            "name"
+          );
+        }
 
-    //     const getData: any = await Db.findOne({
-    //       _id: req.params.id,
-    //     });
+        const getData: any = await Db.findOne({
+          _id: req.params.id,
+        });
 
-    //     await Redis.client.set(
-    //       `${redisName}-${req.params.id}`,
-    //       JSON.stringify(getData),
-    //       {
-    //         EX: 30,
-    //       }
-    //     );
+        await Redis.client.set(
+          `${redisName}-${req.params.id}`,
+          JSON.stringify(getData),
+          {
+            EX: 30,
+          }
+        );
 
-    //     // push history semua field yang di update
-    //     await HistoryController.pushUpdateMany(
-    //       result,
-    //       getData,
-    //       req.user,
-    //       req.userId,
-    //       redisName
-    //     );
+        // push history semua field yang di update
+        await HistoryController.pushUpdateMany(
+          result,
+          getData,
+          req.user,
+          req.userId,
+          redisName
+        );
 
-    //     return res.status(200).json({ status: 200, data: getData });
-    //     // End
-    //   } else {
-    //     return res
-    //       .status(400)
-    //       .json({ status: 404, msg: "Error update, data not found" });
-    //   }
-    // } catch (error: any) {
-    //   return res.status(404).json({ status: 404, data: error });
-    // }
+        // Ubah semua yang terelasi
+
+        const updateVisitNotes = await VisitNoteModel.updateMany(
+          { "visit._id": req.params.id },
+          { visit: getData }
+        );
+        console.log(updateVisitNotes);
+
+        // End
+
+        return res.status(200).json({ status: 200, data: getData });
+        // End
+      } else {
+        return res
+          .status(400)
+          .json({ status: 404, msg: "Error update, data not found" });
+      }
+    } catch (error: any) {
+      return res.status(404).json({ status: 404, data: error });
+    }
   };
 
   delete = async (req: Request, res: Response): Promise<Response> => {

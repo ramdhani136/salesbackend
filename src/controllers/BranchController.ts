@@ -86,7 +86,6 @@ class BranchController implements IController {
             "workflowState",
             "createdBy.name",
             "status",
-            "createdAt",
             "updatedAt",
           ];
       const order_by: any = req.query.order_by

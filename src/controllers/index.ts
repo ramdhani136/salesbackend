@@ -21,6 +21,7 @@ import NamingSeriesController from "./NamingSeriesController";
 import ScheduleController from "./ScheduleController";
 import UserGroupController from "./UserGroupController";
 import UserGroupListController from "./UserGroupListController";
+import ScheduleListController from "./ScheduleListController";
 
 export {
   UserController,
@@ -45,4 +46,5 @@ export {
   ScheduleController,
   UserGroupController,
   UserGroupListController,
+  ScheduleListController,
 };

@@ -31,6 +31,7 @@ import {
   NamingSeriesRoutes,
   UserGroupRoutes,
   UserGroupListRoutes,
+  ScheduleListRoutes,
 } from "./routes";
 import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -175,9 +176,7 @@ class App {
     this.app.use("/usergroup", AuthMiddleware, UserGroupRoutes);
     this.app.use("/usergrouplist", AuthMiddleware, UserGroupListRoutes);
     this.app.use("/schedule", AuthMiddleware, ScheduleRoutes);
-    // this.app.use("/schedule", AuthMiddleware, RoleMiddleware, ScheduleRoutes);
-    // this.app.use("/scheduleitem", AuthMiddleware, ScheduleItemRoutes);
-    // this.app.use("/schedulepacking", AuthMiddleware, ScheduleItemPackingRoutes);
+    this.app.use("/schedulelist", AuthMiddleware, ScheduleListRoutes);
     this.app.use(
       "/roleprofile",
       AuthMiddleware,
@@ -192,9 +191,6 @@ class App {
     // this.app.use("/workflow", AuthMiddleware, WorkflowRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);
-    // this.app.use("/warehouse", WarehouseRoutes);
-    // this.app.use("/packingid", PackingIdRoutes);
-
     // this.app.use(
     //   "/workflowtransition",
     //   AuthMiddleware,

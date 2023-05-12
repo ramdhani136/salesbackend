@@ -20,6 +20,7 @@ import VisitRoutes from "./VisitRoutes";
 import ContactRoutes from "./ContactRoutes";
 import NamingSeriesRoutes from "./NamingSeriesRoutes";
 import UserGroupListRoutes from "./UserGroupListRoutes";
+import ScheduleListRoutes from "./ScheduleListRoutes";
 
 export {
   UserRoutes,
@@ -43,5 +44,6 @@ export {
   ContactRoutes,
   NamingSeriesRoutes,
   UserGroupRoutes,
+  ScheduleListRoutes,
   UserGroupListRoutes,
 };

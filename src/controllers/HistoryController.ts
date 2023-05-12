@@ -169,6 +169,7 @@ class HistoryController implements IController {
 
     const doctype = [
       "schedule",
+      "schedulelist",
       "roleuser",
       "roleprofile",
       "rolelist",
@@ -285,6 +286,7 @@ class HistoryController implements IController {
       "visit",
       "callsheet",
       "namingseries",
+      "schedulelist",
     ];
 
     const cekDocType = doctype.find((item) => item == data.document.type);

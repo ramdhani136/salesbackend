@@ -20,6 +20,7 @@ import ContactModel from "./ContactModel";
 import namingSeriesModel from "./namingSeriesModel";
 import UserGroupModel from "./UserGroupModel";
 import UserGroupListModel from "./UserGroupListModel";
+import ScheduleListModel from "./ScheduleListModel";
 
 export {
   User,
@@ -44,4 +45,5 @@ export {
   namingSeriesModel,
   UserGroupModel,
   UserGroupListModel,
+  ScheduleListModel
 };

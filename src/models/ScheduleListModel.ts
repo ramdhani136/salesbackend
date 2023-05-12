@@ -1,9 +1,69 @@
 import mongoose, { Schema } from "mongoose";
-import ScheduleModel from "./ScheduleModel";
 
 const ScheduleListModel = new mongoose.Schema(
   {
-    schedule: ScheduleModel,
+    schedule: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      type: {
+        type: String,
+        required: true,
+        enum: ["visit", "callsheet"],
+      },
+      notes: {
+        type: String,
+        required: true,
+      },
+      userGroup: {
+        _id: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+      },
+      activeDate: {
+        type: Date,
+        required: true,
+      },
+      closingDate: {
+        type: Date,
+        require: true,
+      },
+      status: {
+        type: String,
+        enum: ["0", "1", "2"],
+        default: "0",
+      },
+      workflowState: {
+        type: String,
+        required: true,
+        default: "Draft",
+      },
+      createdBy: {
+        _id: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        name: { type: String },
+      },
+      createdAt: {
+        type: Date,
+        require: true,
+      },
+      updatedAt: {
+        type: Date,
+        require: true,
+      },
+    },
     customer: {
       _id: {
         type: Schema.Types.ObjectId,
@@ -27,7 +87,6 @@ const ScheduleListModel = new mongoose.Schema(
     },
     notes: {
       type: String,
-      required: true,
     },
     status: {
       type: String,
@@ -47,8 +106,11 @@ const ScheduleListModel = new mongoose.Schema(
   }
 );
 
-ScheduleListModel.index({ schedule: 1, status: 1, customer: 1, workflowState: 1 });
-
+ScheduleListModel.index({
+  schedule: 1,
+  status: 1,
+  customer: 1,
+  workflowState: 1,
+});
 
 export default mongoose.model("schedulelist", ScheduleListModel);
-

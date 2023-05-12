@@ -101,6 +101,6 @@ const VisitNoteModel = new mongoose.Schema(
   }
 );
 
-VisitNoteModel.index({ name: 1 });
+VisitNoteModel.index({ name: 1, "visit.name": 1, "visit.customer.name": 1, });
 
 export default mongoose.model("visitnote", VisitNoteModel);

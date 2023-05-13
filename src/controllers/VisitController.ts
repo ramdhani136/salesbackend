@@ -724,6 +724,7 @@ class VistController implements IController {
   ): Promise<any> => {
     try {
       // Data visitnote
+
       // Menghapus semua data visitnote di redis
       const visitkey = await Redis.client.keys("visitnote*");
       if (visitkey.length > 0) {
@@ -734,6 +735,7 @@ class VistController implements IController {
       // Update visitnote
       await VisitNoteModel.updateMany({ "visit._id": id }, { visit: data });
       // End update visitnote
+
       // End data visitnote
     } catch (error) {
       throw new Error("Gagal memperbarui data terkait");

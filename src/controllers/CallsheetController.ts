@@ -261,7 +261,6 @@ class CallsheetController implements IController {
       // End set name
 
       //Mengecek Customer
-
       if (!req.body.customer) {
         return res
           .status(400)
@@ -434,36 +433,6 @@ class CallsheetController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<any> => {
-    if (req.body.customer) {
-      if (typeof req.body.customer !== "string") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Cek kembali data customer, Data harus berupa string id customer!",
-        });
-      }
-    }
-    if (req.body.contact) {
-      if (typeof req.body.contact !== "string") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Cek kembali data contact, Data harus berupa string id contact!",
-        });
-      }
-    }
-    if (req.body.location) {
-      if (!req.body.location?.lat) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
-      }
-
-      if (!req.body.location?.lng) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-      }
-    }
-
     // Validasi yang tidak boleh di rubah
     if (req.body.createdBy) {
       return res.status(404).json({
@@ -471,22 +440,10 @@ class CallsheetController implements IController {
         msg: "Error, Tidak dapat merubah data createdBy!",
       });
     }
-    if (req.body.type) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, Tidak dapat merubah data type(insite/outsite)!",
-      });
-    }
     if (req.body.name) {
       return res.status(404).json({
         status: 404,
         msg: "Error, Tidak dapat merubah nomor dokumen!",
-      });
-    }
-    if (req.body.img) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, Tidak dapat merubah img name!",
       });
     }
     if (req.body.status) {
@@ -509,37 +466,75 @@ class CallsheetController implements IController {
       });
 
       if (result) {
-        //Mengecek jika Customer Group dirubah
-        if (req.body.customerGroup) {
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
+        //Mengecek Customer
+        if (req.body.customer) {
+          const cekCustomer: any = await CustomerModel.findOne(
+            {
+              $and: [{ _id: req.body.customer }],
+            },
+            ["name", "status", "customerGroup"]
+          );
 
-          if (!CekCG) {
+          if (!cekCustomer) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak ditemukan!",
+              msg: "Error, customer tidak ditemukan!",
             });
           }
 
-          if (CekCG.status != 1) {
+          if (cekCustomer.status != 1) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak aktif!",
+              msg: "Error, customer tidak aktif!",
             });
           }
-          // End
 
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
+          req.body.customer = {
+            _id: new ObjectId(cekCustomer._id),
+            name: cekCustomer.name,
+            customerGroup: cekCustomer.customerGroup,
           };
-          // End
-
-          req.body.customerGroup.branch = CekCG.branch;
-          // End
         }
+        // End
+
+        // Mengecek contact jika terdapat kontak untuk customer
+        if (req.body.contact) {
+          const contact = await ContactModel.findOne(
+            {
+              $and: [
+                { _id: req.body.contact },
+                {
+                  "customer._id": req.body.customer
+                    ? req.body.customer
+                    : result.customer._id,
+                },
+              ],
+            },
+            ["name", "phone", "status"]
+          );
+
+          if (!contact) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, kontak tidak ditemukan!",
+            });
+          }
+
+          if (contact.status !== "1") {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, kontak tidak aktif!",
+            });
+          }
+
+          // set contact
+          req.body.contact = {
+            _id: contact._id,
+            name: contact.name,
+            phone: contact.phone,
+          };
+        }
+
         // End
 
         if (req.body.id_workflow && req.body.id_state) {
@@ -551,7 +546,6 @@ class CallsheetController implements IController {
               result.createdBy._id
             );
 
-          console.log(checkedWorkflow);
           if (checkedWorkflow.status) {
             await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
           } else {

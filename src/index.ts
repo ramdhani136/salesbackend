@@ -34,6 +34,7 @@ import {
   ScheduleListRoutes,
   TagRoutes,
   VisitNoteRoutes,
+  CallsheetRoutes,
 } from "./routes";
 import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -173,6 +174,7 @@ class App {
     this.app.use("/customer", AuthMiddleware, CustomerRoutes);
     this.app.use("/customergroup", AuthMiddleware, CustomerGroupRoutes);
     this.app.use("/visit", AuthMiddleware, VisitRoutes);
+    this.app.use("/callsheet", AuthMiddleware, CallsheetRoutes);
     this.app.use("/contact", AuthMiddleware, ContactRoutes);
     this.app.use("/namingseries", AuthMiddleware, NamingSeriesRoutes);
     this.app.use("/usergroup", AuthMiddleware, UserGroupRoutes);

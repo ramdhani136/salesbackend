@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { VisitNoteModel as Db, History,  visitModel } from "../models";
+import { VisitNoteModel as Db, History, visitModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -245,24 +245,22 @@ class VisitNoteController implements IController {
         name: req.user,
       };
 
-      for (let index = 0; index < 1000000; index++) {
-        const result = new Db(req.body);
-        const response: any = await result.save();
-      }
+      const result = new Db(req.body);
+      const response: any = await result.save();
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan visitnote ${response.name} dalam dok ${response.visit.name} `,
-      //   user: req.userId,
-      // });
-      // // End
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan visitnote ${response.name} dalam dok ${response.visit.name} `,
+        user: req.userId,
+      });
+      // End
 
-      return res.status(200).json({ status: 200, data: "d" });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)

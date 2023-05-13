@@ -394,6 +394,7 @@ class CallsheetController implements IController {
           workflow: buttonActions,
         });
       }
+      
       const result: any = await Db.findOne({
         _id: req.params.id,
       });

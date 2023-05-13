@@ -1,4 +1,4 @@
-import { CallsheetNoteController as Controller } from "../controllers";
+import { CallsheetController as Controller } from "../controllers";
 import { CheckExpiredScheduleMiddleWare, DeleteValid } from "../middleware";
 import RouteBase from "./RouteBase";
 

@@ -724,6 +724,11 @@ class VistController implements IController {
   ): Promise<any> => {
     try {
       // Data visitnote
+
+      const visitkey = await Redis.client.keys("visitnote*");
+      if (visitkey.length > 0) {
+        await Redis.client.del(visitkey);
+      }
       await VisitNoteModel.updateMany({ "visit._id": id }, { visit: data });
       // End
     } catch (error) {

@@ -8,7 +8,7 @@ const VisitNoteModel = new mongoose.Schema(
     },
 
     visit: {
-      _id: { type: Schema.Types.ObjectId,  },
+      _id: { type: Schema.Types.ObjectId },
       name: {
         type: String,
         required: true,
@@ -16,49 +16,44 @@ const VisitNoteModel = new mongoose.Schema(
       type: {
         type: String,
         enum: ["insite", "outsite"],
-  
       },
       customer: {
         _id: {
           type: Schema.Types.ObjectId,
           required: true,
-     
         },
-        name: { type: String, required: true},
+        name: { type: String, required: true },
         customerGroup: {
           _id: {
             type: Schema.Types.ObjectId,
             required: true,
-           
           },
           name: { type: String, required: true },
           branch: {
             _id: {
               type: Schema.Types.ObjectId,
               required: true,
-            
             },
-            name: { type: String, required: true,  },
+            name: { type: String, required: true },
           },
         },
       },
       rate: {
         type: Number,
-       
+
         default: 0,
       },
       createdBy: {
         _id: {
           type: Schema.Types.ObjectId,
           required: true,
-        
         },
-        name: { type: String, required: true, },
+        name: { type: String, required: true },
       },
       schedule: [
         {
-          _id: { type: Schema.Types.ObjectId, required: true, },
-          name: { type: String, required: true,  },
+          _id: { type: Schema.Types.ObjectId, required: true },
+          name: { type: String, required: true },
           notes: { type: String, required: true },
           scheduleList: {
             _id: { type: Schema.Types.ObjectId, required: true },
@@ -70,13 +65,11 @@ const VisitNoteModel = new mongoose.Schema(
         type: String,
         enum: ["0", "1", "2"],
         default: "0",
-   
       },
       workflowState: {
         type: String,
         required: true,
         default: "Draft",
-       
       },
       createdAt: {
         type: Date,
@@ -90,8 +83,8 @@ const VisitNoteModel = new mongoose.Schema(
     tag: {
       type: [
         {
-          _id: { type: Schema.Types.ObjectId, required: true,},
-          name: { type: String, required: true, },
+          _id: { type: Schema.Types.ObjectId, required: true },
+          name: { type: String, required: true },
         },
       ],
       required: true,
@@ -111,14 +104,21 @@ const VisitNoteModel = new mongoose.Schema(
       _id: {
         type: Schema.Types.ObjectId,
         required: true,
-     
       },
-      name: { type: String, },
+      name: { type: String },
     },
   },
   {
     timestamps: true,
   }
 );
+
+// VisitNoteModel.index({
+//   name: 1,
+//   visit: 1,
+//   rate: 1,
+//   createdBy: 1,
+//   tag: 1,
+// });
 
 export default mongoose.model("visitnote", VisitNoteModel);

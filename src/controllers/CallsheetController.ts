@@ -13,7 +13,7 @@ import {
   ContactModel,
   CustomerGroupModel,
   CustomerModel,
-  visitModel as Db,
+  CallsheetModel as Db,
   History,
   VisitNoteModel,
   namingSeriesModel,
@@ -30,9 +30,9 @@ import fs from "fs";
 import sharp from "sharp";
 import path from "path";
 
-const redisName = "visit";
+const redisName = "callsheet";
 
-class VistController implements IController {
+class CallsheetController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -113,7 +113,6 @@ class VistController implements IController {
             "status",
             "workflowState",
             "schedule",
-            "img",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -186,52 +185,12 @@ class VistController implements IController {
         .status(400)
         .json({ status: 400, msg: "Error, type wajib diisi!" });
     } else {
-      if (req.body.type !== "insite" && req.body.type !== "outsite") {
+      if (req.body.type !== "in" && req.body.type !== "out") {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, pilih insite atau outsite !" });
       }
     }
-
-    if (!req.body.signature) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, signature wajib diisi!" });
-    }
-
-    if (!req.body.location?.lat) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
-    }
-
-    if (!req.body.location?.lng) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-    }
-
-    // Jika ada checkout
-    if (req.body.checkOut) {
-      if (!req.body.checkOut.lng) {
-        return res.status(400).json({
-          status: 400,
-          msg: "Error, lokasi lng checkout wajib diisi!",
-        });
-      }
-      if (!req.body.checkOut.lat) {
-        return res.status(400).json({
-          status: 400,
-          msg: "Error, lokasi lat checkout wajib diisi!",
-        });
-      }
-      if (!req.body.checkOut.createdAt) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, waktu checkout wajib diisi!" });
-      }
-    }
-    // End
 
     try {
       // Set nama/nomor doc
@@ -250,7 +209,7 @@ class VistController implements IController {
       }
 
       const namingSeries: any = await namingSeriesModel.findOne({
-        $and: [{ _id: req.body.namingSeries }, { doc: "visit" }],
+        $and: [{ _id: req.body.namingSeries }, { doc: "callsheet" }],
       });
 
       if (!namingSeries) {
@@ -291,7 +250,7 @@ class VistController implements IController {
 
       const regex = new RegExp(olahKata.join(""), "i");
 
-      const visit = await Db.findOne({
+      const callsheet = await Db.findOne({
         $and: [
           { name: { $regex: regex } },
           {
@@ -304,9 +263,9 @@ class VistController implements IController {
         .sort({ createdAt: -1 })
         .exec();
 
-      if (visit) {
+      if (callsheet) {
         latest = parseInt(
-          `${visit.name.slice(ambilIndex ? -ambilIndex.length : -4)}`
+          `${callsheet.name.slice(ambilIndex ? -ambilIndex.length : -4)}`
         );
       }
 
@@ -386,48 +345,8 @@ class VistController implements IController {
         name: req.user,
       };
 
-      // Menset img ketika terdapat gambar
-      if (req.body.type === "outsite") {
-        if (!req.file) {
-          return res.status(404).json({
-            status: 404,
-            msg: "Error, img wajib diisi!",
-          });
-        }
-        req.body.img = req.body.name + ".jpg";
-      }
-      // End
-
       const result = new Db(req.body);
       const response: any = await result.save({});
-
-      // Upload data ketika outsite
-      if (req.body.type === "outsite") {
-        const compressedImage = path.join(
-          __dirname,
-          "../public/images",
-          req.body.img
-        );
-        sharp(req.file.path)
-          .resize(640, 480, {
-            fit: sharp.fit.inside,
-            withoutEnlargement: true,
-          })
-          .jpeg({
-            quality: 100,
-            progressive: true,
-            chromaSubsampling: "4:4:4",
-          })
-          .withMetadata()
-          .toFile(compressedImage, (err, info) => {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log(info);
-            }
-          });
-      }
-      // End
 
       //push history
       await HistoryController.pushHistory({
@@ -436,21 +355,13 @@ class VistController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan visit ${response.name} `,
+        message: `${req.user} menambahkan callsheet ${response.name} `,
         user: req.userId,
       });
       //End
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
-      if (req.file) {
-        // Jika pembuatan visit gagal, hapus foto yang telah di-upload
-        fs.unlinkSync(req.file.path);
-        if (fs.existsSync(path.join(__dirname, req.file.path))) {
-          fs.unlinkSync(req.file.path);
-        }
-        // End
-      }
       return res
         .status(400)
         .json({ status: 400, msg: error ?? "Error Connection!" });
@@ -751,4 +662,4 @@ class VistController implements IController {
   };
 }
 
-export default new VistController();
+export default new CallsheetController();

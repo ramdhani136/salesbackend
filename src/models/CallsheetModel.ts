@@ -9,7 +9,7 @@ const CallsheetModel = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["incoming", "outcoming"],
+      enum: ["in", "out"],
     },
     customer: {
       _id: {

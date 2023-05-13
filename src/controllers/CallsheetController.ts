@@ -466,6 +466,14 @@ class CallsheetController implements IController {
       });
 
       if (result) {
+        if (req.body.type) {
+          if (req.body.type !== "in" && req.body.type !== "out") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, Type pilih in atau out !" });
+          }
+        }
+
         //Mengecek Customer
         if (req.body.customer) {
           const cekCustomer: any = await CustomerModel.findOne(

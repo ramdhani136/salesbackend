@@ -26,9 +26,6 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
-import fs from "fs";
-import sharp from "sharp";
-import path from "path";
 
 const redisName = "callsheet";
 
@@ -370,34 +367,34 @@ class CallsheetController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const result: any = await Db.findOne({
         _id: req.params.id,
       });
@@ -612,24 +609,6 @@ class CallsheetController implements IController {
       }
 
       const result: any = await Db.deleteOne({ _id: req.params.id });
-      if (
-        fs.existsSync(path.join(__dirname, "../public/images/" + getData.img))
-      ) {
-        fs.unlink(
-          path.join(__dirname, "../public/images/" + getData.img),
-          function (err) {
-            if (err && err.code == "ENOENT") {
-              // file doens't exist
-              console.log(err);
-            } else if (err) {
-              // other errors, e.g. maybe we don't have enough permission
-              console.log("Error occurred while trying to remove file");
-            } else {
-              console.log(`removed`);
-            }
-          }
-        );
-      }
       await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {

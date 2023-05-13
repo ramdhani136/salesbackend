@@ -61,16 +61,6 @@ const VisitNoteModel = new mongoose.Schema(
           },
         },
       ],
-      status: {
-        type: String,
-        enum: ["0", "1", "2"],
-        default: "0",
-      },
-      workflowState: {
-        type: String,
-        required: true,
-        default: "Draft",
-      },
       createdAt: {
         type: Date,
         required: true,

@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { VisitNoteModel as Db, History, visitModel } from "../models";
+import { CallSheetNoteModel as Db, History, CallsheetModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -15,9 +15,9 @@ import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
 
-const redisName = "visitnote";
+const redisName = "callsheetnote";
 
-class VisitNoteController implements IController {
+class CallsheetNoteController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -52,57 +52,57 @@ class VisitNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit._id",
+        name: "callsheet._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.name",
+        name: "callsheet.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.type",
+        name: "callsheet.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.rate",
+        name: "callsheet.rate",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.status",
+        name: "callsheet.status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.customer._id",
+        name: "callsheet.customer._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.customer.name",
+        name: "callsheet.customer.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.customer.customerGroup._id",
+        name: "callsheet.customer.customerGroup._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.customer.customerGroup.name",
+        name: "callsheet.customer.customerGroup.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.customer.customerGroup.branch._id",
+        name: "callsheet.customer.customerGroup.branch._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "visit.customer.customerGroup.branch.name",
+        name: "callsheet.customer.customerGroup.branch.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -130,16 +130,16 @@ class VisitNoteController implements IController {
         ? JSON.parse(`${req.query.fields}`)
         : [
             "name",
-            "visit.name",
-            "visit.customer.name",
-            "visit.customer.customerGroup.name",
-            "visit.customer.customerGroup.branch.name",
+            "callsheet.name",
+            "callsheet.customer.name",
+            "callsheet.customer.customerGroup.name",
+            "callsheet.customer.customerGroup.branch.name",
             "createdBy.name",
             "updatedAt",
             "schedule.name",
             "tag.name",
-            "visit.rating",
-            "visit.type",
+            "callsheet.rating",
+            "callsheet.type",
             "note",
           ];
       const order_by: any = req.query.order_by
@@ -212,22 +212,22 @@ class VisitNoteController implements IController {
     }
 
     try {
-      // Cek visit
-      if (!req.body.visitId) {
+      // Cek callsheet
+      if (!req.body.callsheetId) {
         return res
           .status(400)
-          .json({ status: 400, msg: "Error, visitId wajib diisi!" });
+          .json({ status: 400, msg: "Error, callsheetId wajib diisi!" });
       }
 
-      const visit = await visitModel.findById(req.body.visitId);
+      const callsheet = await CallsheetModel.findById(req.body.callsheetId);
 
-      if (!visit) {
+      if (!callsheet) {
         return res
           .status(400)
-          .json({ status: 400, msg: "Error, visit tidak ditemukan!" });
+          .json({ status: 400, msg: "Error, callsheet tidak ditemukan!" });
       }
 
-      req.body.visit = visit;
+      req.body.callsheet = callsheet;
 
       // End
 
@@ -255,7 +255,7 @@ class VisitNoteController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan visitnote ${response.name} dalam dok ${response.visit.name} `,
+        message: `${req.user} menambahkan callsheetnote ${response.name} dalam dok ${response.callsheet.name} `,
         user: req.userId,
       });
       // End
@@ -344,12 +344,13 @@ class VisitNoteController implements IController {
         msg: "Error, createdby tidak dapat dirubah",
       });
     }
-    if (req.body.visit) {
+    if (req.body.callsheet) {
       return res.status(404).json({
         status: 404,
-        msg: "Error, visit tidak dapat dirubah",
+        msg: "Error, callsheet tidak dapat dirubah",
       });
     }
+
     // End
 
     // Jika nama dirubah
@@ -451,4 +452,4 @@ class VisitNoteController implements IController {
   };
 }
 
-export default new VisitNoteController();
+export default new CallsheetNoteController();

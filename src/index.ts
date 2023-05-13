@@ -191,6 +191,7 @@ class App {
     this.app.use("/roleuser", AuthMiddleware, RoleUserRoutes);
     this.app.use("/tag", AuthMiddleware, TagRoutes);
     this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
+    this.app.use("/callsheetnote", AuthMiddleware, CallsheetRoutes);
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);
     // this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
     // this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);

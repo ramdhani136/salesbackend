@@ -112,13 +112,6 @@ const CallsheetNoteModel = new mongoose.Schema(
       type: String,
       required: true,
     },
-    createdBy: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String },
-    },
   },
   {
     timestamps: true,

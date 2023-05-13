@@ -25,6 +25,7 @@ import ScheduleListController from "./ScheduleListController";
 import TagController from "./TagController";
 import VisitNoteController from "./VisitNoteController";
 import CallsheetController from "./CallsheetController";
+import CallsheetNoteController from "./CallsheetNoteController";
 
 export {
   UserController,
@@ -52,5 +53,6 @@ export {
   ScheduleListController,
   TagController,
   VisitNoteController,
-  CallsheetController
+  CallsheetController,
+  CallsheetNoteController,
 };

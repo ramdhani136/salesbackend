@@ -10,12 +10,12 @@ import {
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  CallSheetNoteModel,
   ContactModel,
   CustomerGroupModel,
   CustomerModel,
   CallsheetModel as Db,
   History,
-  VisitNoteModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -621,20 +621,23 @@ class CallsheetController implements IController {
     data: any
   ): Promise<any> => {
     try {
-      // Data visitnote
+      // Data callsheetnote
 
-      // Menghapus semua data visitnote di redis
-      const visitkey = await Redis.client.keys("visitnote*");
-      if (visitkey.length > 0) {
-        await Redis.client.del(visitkey);
+      // Menghapus semua data callsheetnote di redis
+      const callsheetKey = await Redis.client.keys("callsheetnote*");
+      if (callsheetKey.length > 0) {
+        await Redis.client.del(callsheetKey);
       }
       // End hapus redis
 
-      // Update visitnote
-      await VisitNoteModel.updateMany({ "visit._id": id }, { visit: data });
-      // End update visitnote
+      // Update callsheetnote
+      await CallSheetNoteModel.updateMany(
+        { "callsheet._id": id },
+        { callsheet: data }
+      );
+      // End update callsheetnote
 
-      // End data visitnote
+      // End data callsheetnote
     } catch (error) {
       throw new Error("Gagal memperbarui data terkait");
     }

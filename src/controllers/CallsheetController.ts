@@ -168,18 +168,6 @@ class CallsheetController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.customer) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, customer wajib diisi!" });
-    }
-
-    if (!req.body.contact) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, contact wajib diisi!" });
-    }
-
     if (!req.body.type) {
       return res
         .status(400)
@@ -188,7 +176,7 @@ class CallsheetController implements IController {
       if (req.body.type !== "in" && req.body.type !== "out") {
         return res
           .status(400)
-          .json({ status: 400, msg: "Error, pilih insite atau outsite !" });
+          .json({ status: 400, msg: "Error, pilih in atau out !" });
       }
     }
 
@@ -276,6 +264,13 @@ class CallsheetController implements IController {
       // End set name
 
       //Mengecek Customer
+
+      if (!req.body.customer) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, customer wajib diisi!" });
+      }
+
       const cekCustomer: any = await CustomerModel.findOne(
         {
           $and: [{ _id: req.body.customer }],
@@ -304,7 +299,12 @@ class CallsheetController implements IController {
       };
       // End
 
-      // Mengecek contact jika terdapat kontak untuk customer tersebut
+      // Mengecek contact jika terdapat kontak untuk customer
+      if (!req.body.contact) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, contact wajib diisi!" });
+      }
       const contact = await ContactModel.findOne(
         {
           $and: [

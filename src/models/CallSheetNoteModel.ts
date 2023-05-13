@@ -93,7 +93,25 @@ const CallsheetNoteModel = new mongoose.Schema(
         required: true,
       },
     },
-
+    tag: {
+      type: [
+        {
+          _id: { type: Schema.Types.ObjectId, required: true },
+          name: { type: String, required: true },
+        },
+      ],
+      required: true,
+      validate: {
+        validator: function (arr: any) {
+          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
+        },
+        message: "Array harus diisi setidaknya dengan satu tag.",
+      },
+    },
+    note: {
+      type: String,
+      required: true,
+    },
     createdBy: {
       _id: {
         type: Schema.Types.ObjectId,

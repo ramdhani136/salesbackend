@@ -344,6 +344,7 @@ class VisitNoteController implements IController {
         msg: "Error, createdby tidak dapat dirubah",
       });
     }
+ 
     // End
 
     // Jika nama dirubah
@@ -392,10 +393,7 @@ class VisitNoteController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          await Db.updateOne({ _id: req.params.id }, req.body).populate(
-            "createdBy",
-            "name"
-          );
+          await Db.updateOne({ _id: req.params.id }, req.body);
         }
 
         const getData: any = await Db.findOne({

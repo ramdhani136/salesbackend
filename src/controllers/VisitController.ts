@@ -580,6 +580,18 @@ class VistController implements IController {
         msg: "Error, Tidak dapat merubah img name!",
       });
     }
+    if (req.body.status) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, status tidak dapat dirubah",
+      });
+    }
+    if (req.body.workflowState) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, workflowState tidak dapat dirubah",
+      });
+    }
     // End
 
     try {
@@ -630,21 +642,16 @@ class VistController implements IController {
               result.createdBy._id
             );
 
+          console.log(checkedWorkflow);
           if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
+            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
           } else {
             return res
               .status(403)
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          await Db.updateOne({ _id: req.params.id }, req.body).populate(
-            "createdBy",
-            "name"
-          );
+          await Db.updateOne({ _id: req.params.id }, req.body);
         }
 
         const getData: any = await Db.findOne({

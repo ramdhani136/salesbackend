@@ -1,5 +1,5 @@
 import { UserController } from "../controllers";
-import { DeleteValid } from "../middleware";
+import { DeleteValid, RoleMiddleware } from "../middleware";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
 import RouteBase from "./RouteBase";
 import multer from "multer";
@@ -19,26 +19,37 @@ const upload = multer({ storage: storage });
 
 class UserRoutes extends RouteBase {
   routes(): void {
-    this.router.get("/",
-     AuthMiddleware,
-      UserController.index);
+    this.router.get("/", AuthMiddleware, RoleMiddleware, UserController.index);
     this.router.post(
       "/",
       upload.single("img"),
       AuthMiddleware,
+      RoleMiddleware,
       UserController.create
     );
     this.router.post("/login", UserController.login);
     this.router.get("/token", UserController.refreshToken);
     this.router.delete("/logout", UserController.logout);
-    this.router.get("/:id", AuthMiddleware, UserController.show);
+    this.router.get(
+      "/:id",
+      AuthMiddleware,
+      RoleMiddleware,
+      UserController.show
+    );
     this.router.delete(
       "/:id",
       AuthMiddleware,
-      DeleteValid,
+      RoleMiddleware,
+      // DeleteValid,
       UserController.delete
     );
-    this.router.put("/:id",AuthMiddleware, upload.single("img"), UserController.update);
+    this.router.put(
+      "/:id",
+      AuthMiddleware,
+      RoleMiddleware,
+      upload.single("img"),
+      UserController.update
+    );
   }
 }
 

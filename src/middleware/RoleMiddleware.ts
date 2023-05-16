@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { RoleList, RoleUser } from "../models";
+import { RoleListModel, RoleUserModel } from "../models";
 
 export const RoleMiddleware = async (
   req: Request | any,
@@ -8,24 +8,14 @@ export const RoleMiddleware = async (
   next: NextFunction
 ): Promise<any> => {
   let doc: string = req.baseUrl.substring(1);
-  // const authHeader = req.header("authorization");
-  // const token = authHeader && authHeader.split(" ")[1];
-  // jwt.verify(
-  //   token,
-  //   `${process.env.ACCESS_TOKEN_SECRET}`,
-  //   async (err: any, decoded: any): Promise<any> => {
-  //     if (err)
-  //       return res.status(403).json({
-  //         status: 403,
-  //         msg: "Forbiden, you have to login to access the data!",
-  //       });
 
-  const roleUser = await RoleUser.find({ user: req.userId });
+  const roleUser = await RoleUserModel.find({ user: req.userId });
   const relate = [];
   if (roleUser.length > 0) {
     for (const role of roleUser) {
       const id = role.roleprofile;
-      const data = await RoleList.findOne({
+    
+      const data = await RoleListModel.findOne({
         $and: [{ roleprofile: id }, { doc: doc }],
       });
       if (data) {

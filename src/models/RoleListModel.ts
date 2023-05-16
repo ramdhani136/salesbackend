@@ -10,6 +10,28 @@ const RoleListModel = new mongoose.Schema(
     },
     doc: {
       type: String,
+      enum: [
+        "users",
+        "branch",
+        "permission",
+        "customer",
+        "customergroup",
+        "visit",
+        "callsheet",
+        "contact",
+        "namingseries",
+        "usergroup",
+        "usergrouplist",
+        "schedule",
+        "schedulelist",
+        "roleprofile",
+        "rolelist",
+        "roleuser",
+        "tag",
+        "visitnote",
+        "callsheetnote",
+        "memo",
+      ],
       require: true,
       index: true,
     },
@@ -73,8 +95,6 @@ const RoleListModel = new mongoose.Schema(
   }
 );
 
-RoleListModel.index({doc:1})
-
+RoleListModel.index({ doc: 1 });
 
 export default mongoose.model("RoleLists", RoleListModel);
-

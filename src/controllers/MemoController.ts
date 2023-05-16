@@ -165,17 +165,17 @@ class MemoController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (
-      !Array.isArray(req.body.display) ||
-      req.body.display.some(
-        (tag: any) =>
-          !["visit", "callsheet", "dashboard", "alert"].includes(tag)
-      )
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Display harus array dengan data yang ditentukan!." });
-    }
+    // if (
+    //   !Array.isArray(req.body.display) ||
+    //   req.body.display.some(
+    //     (tag: any) =>
+    //       !["visit", "callsheet", "dashboard", "alert"].includes(tag)
+    //   )
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ error: "Display harus array dengan data yang ditentukan!." });
+    // }
 
     if (!req.body.notes) {
       return res
@@ -291,7 +291,7 @@ class MemoController implements IController {
         const compressedImage = path.join(
           __dirname,
           "../public/memo",
-          response.name
+          `${response.name}.jpg`
         );
         sharp(req.file.path)
           .resize(640, 480, {
@@ -304,11 +304,14 @@ class MemoController implements IController {
             chromaSubsampling: "4:4:4",
           })
           .withMetadata()
-          .toFile(compressedImage, (err, info) => {
+          .toFile(compressedImage, async (err, info): Promise<any> => {
             if (err) {
               console.log(err);
             } else {
-              console.log(info);
+              await Db.updateOne(
+                { _id: response._id },
+                { img: `${response.name}.jpg` }
+              );
             }
           });
       }
@@ -328,6 +331,14 @@ class MemoController implements IController {
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
+      if (req.file) {
+        // Jika pembuatan memo gagal, hapus foto yang telah di-upload
+        fs.unlinkSync(req.file.path);
+        if (fs.existsSync(path.join(__dirname, req.file.path))) {
+          fs.unlinkSync(req.file.path);
+        }
+        // End
+      }
       return res
         .status(400)
         .json({ status: 400, msg: error ?? "Error Connection!" });

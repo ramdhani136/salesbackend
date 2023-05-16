@@ -82,6 +82,10 @@ class App {
       express.static(path.join(__dirname, "public/images"))
     );
     this.app.use(
+      "/public",
+      express.static(path.join(__dirname, "public/memo"))
+    );
+    this.app.use(
       "/images/users",
       express.static(path.join(__dirname, "public/users"))
     );

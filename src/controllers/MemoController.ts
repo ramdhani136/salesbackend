@@ -25,6 +25,9 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
+import fs from "fs";
+import sharp from "sharp";
+import path from "path";
 
 const redisName = "memo";
 
@@ -283,6 +286,34 @@ class MemoController implements IController {
 
       const response: any = await result.save({});
 
+      // Upload data ketika outsite
+      if (req.file) {
+        const compressedImage = path.join(
+          __dirname,
+          "../public/memo",
+          response.name
+        );
+        sharp(req.file.path)
+          .resize(640, 480, {
+            fit: sharp.fit.inside,
+            withoutEnlargement: true,
+          })
+          .jpeg({
+            quality: 100,
+            progressive: true,
+            chromaSubsampling: "4:4:4",
+          })
+          .withMetadata()
+          .toFile(compressedImage, (err, info) => {
+            if (err) {
+              console.log(err);
+            } else {
+              console.log(info);
+            }
+          });
+      }
+      // End
+
       //push history
       await HistoryController.pushHistory({
         document: {
@@ -415,7 +446,7 @@ class MemoController implements IController {
     }
 
     if (req.body.notes) {
-      if (req.body.notes == "" || req.body.notes == null) {
+      if (req.body.notes === "") {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, notes wajib diisi!" });
@@ -428,6 +459,15 @@ class MemoController implements IController {
       });
 
       if (result) {
+        let update: any = {
+          display: req.body.display,
+          activeDate: req.body.activeDate,
+          closingDate: req.body.closingDate,
+        };
+
+        if (req.body.notes) {
+          update.notes = req.body.notes;
+        }
         if (req.body.id_workflow && req.body.id_state) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -445,7 +485,7 @@ class MemoController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          await Db.updateOne({ _id: req.params.id }, req.body);
+          await Db.updateOne({ _id: req.params.id }, update);
         }
 
         const getData: any = await Db.findOne({

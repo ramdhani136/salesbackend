@@ -162,7 +162,6 @@ class MemoController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    // Pengecekan khusus untuk tags
     if (
       !Array.isArray(req.body.display) ||
       req.body.display.some(
@@ -401,91 +400,34 @@ class MemoController implements IController {
     }
     // End
 
+    if (req.body.display) {
+      if (
+        !Array.isArray(req.body.display) ||
+        req.body.display.some(
+          (tag: any) =>
+            !["visit", "callsheet", "dashboard", "alert"].includes(tag)
+        )
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Display harus array dengan data yang ditentukan!." });
+      }
+    }
+
+    if (req.body.notes) {
+      if (req.body.notes == "" || req.body.notes == null) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, notes wajib diisi!" });
+      }
+    }
+
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
       });
 
       if (result) {
-        if (req.body.type) {
-          if (req.body.type !== "in" && req.body.type !== "out") {
-            return res
-              .status(400)
-              .json({ status: 400, msg: "Error, Type pilih in atau out !" });
-          }
-        }
-
-        //Mengecek Customer
-        if (req.body.customer) {
-          const cekCustomer: any = await CustomerModel.findOne(
-            {
-              $and: [{ _id: req.body.customer }],
-            },
-            ["name", "status", "customerGroup"]
-          );
-
-          if (!cekCustomer) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customer tidak ditemukan!",
-            });
-          }
-
-          if (cekCustomer.status != 1) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customer tidak aktif!",
-            });
-          }
-
-          req.body.customer = {
-            _id: new ObjectId(cekCustomer._id),
-            name: cekCustomer.name,
-            customerGroup: cekCustomer.customerGroup,
-          };
-        }
-        // End
-
-        // Mengecek contact jika terdapat kontak untuk customer
-        if (req.body.contact) {
-          const contact = await ContactModel.findOne(
-            {
-              $and: [
-                { _id: req.body.contact },
-                {
-                  "customer._id": req.body.customer
-                    ? req.body.customer
-                    : result.customer._id,
-                },
-              ],
-            },
-            ["name", "phone", "status"]
-          );
-
-          if (!contact) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, kontak tidak ditemukan!",
-            });
-          }
-
-          if (contact.status !== "1") {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, kontak tidak aktif!",
-            });
-          }
-
-          // set contact
-          req.body.contact = {
-            _id: contact._id,
-            name: contact.name,
-            phone: contact.phone,
-          };
-        }
-
-        // End
-
         if (req.body.id_workflow && req.body.id_state) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -527,10 +469,6 @@ class MemoController implements IController {
           redisName
         );
 
-        // Ubah semua yang terelasi
-        await this.updateRelatedData(req.params.id, getData);
-        // End
-
         return res.status(200).json({ status: 200, data: getData });
         // End
       } else {
@@ -556,33 +494,6 @@ class MemoController implements IController {
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
-    }
-  };
-
-  protected updateRelatedData = async (
-    id: ObjectId,
-    data: any
-  ): Promise<any> => {
-    try {
-      // Data callsheetnote
-
-      // Menghapus semua data callsheetnote di redis
-      const callsheetKey = await Redis.client.keys("callsheetnote*");
-      if (callsheetKey.length > 0) {
-        await Redis.client.del(callsheetKey);
-      }
-      // End hapus redis
-
-      // Update callsheetnote
-      await CallSheetNoteModel.updateMany(
-        { "callsheet._id": id },
-        { callsheet: data }
-      );
-      // End update callsheetnote
-
-      // End data callsheetnote
-    } catch (error) {
-      throw new Error("Gagal memperbarui data terkait");
     }
   };
 }

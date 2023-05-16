@@ -25,6 +25,7 @@ import TagModel from "./TagModel";
 import VisitNoteModel from "./VisitNoteModel";
 import CallSheetNoteModel from "./CallSheetNoteModel";
 import CallsheetModel from "./CallsheetModel";
+import MemoModel from "./MemoModel";
 
 export {
   User,
@@ -54,4 +55,5 @@ export {
   VisitNoteModel,
   CallSheetNoteModel,
   CallsheetModel,
+  MemoModel,
 };

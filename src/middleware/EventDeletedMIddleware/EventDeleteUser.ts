@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { BranchModel, CallSheetNoteModel, CallsheetModel } from "../../models";
+import { BranchModel, CallSheetNoteModel, CallsheetModel, VisitNoteModel, visitModel } from "../../models";
 import { ObjectId } from "mongodb";
 import UserModel from "../../models/UserModel";
 
@@ -9,19 +9,6 @@ export const EventDeleteUser = async (
   next: NextFunction,
   id: String
 ): Promise<any> => {
-  // relasi data
-  const relasi = await BranchModel.countDocuments(id);
-  console.log(relasi);
-  return;
-  if (relasi) {
-    return res.status(400).json({
-      status: 404,
-      data: "Error , User terelasi dengan dokumen lain",
-    });
-  }
-
-  //   End relasi data
-
   // Cek branch
   const branch = await BranchModel.findOne({
     "createdBy._id": new ObjectId(`${id}`),
@@ -29,7 +16,7 @@ export const EventDeleteUser = async (
   if (branch) {
     return res.status(400).json({
       status: 404,
-      data: "Error , User terelasi kedalam data branch",
+      data: "Error , User terelasi dengan data branch",
     });
   }
   // End Cek branch
@@ -41,7 +28,7 @@ export const EventDeleteUser = async (
   if (callsheet) {
     return res.status(400).json({
       status: 404,
-      data: "Error , User terelasi kedalam data callsheet",
+      data: "Error , User terelasi dengan data callsheet",
     });
   }
   // End Cek Callsheet
@@ -53,10 +40,33 @@ export const EventDeleteUser = async (
   if (CallsheetNote) {
     return res.status(400).json({
       status: 404,
-      data: "Error , User terelasi kedalam data CallsheetNote",
+      data: "Error , User terelasi dengan data CallsheetNote",
     });
   }
-  // End Cek CallsheetNote
+
+  // Cek visit
+  const visit = await visitModel.findOne({
+    "createdBy._id": new ObjectId(`${id}`),
+  });
+  if (visit) {
+    return res.status(400).json({
+      status: 404,
+      data: "Error , User terelasi dengan data visit",
+    });
+  }
+  // End Cek visit
+
+  // Cek visitNote
+  const visitNote = await VisitNoteModel.findOne({
+    "createdBy._id": new ObjectId(`${id}`),
+  });
+  if (visitNote) {
+    return res.status(400).json({
+      status: 404,
+      data: "Error , User terelasi dengan data visitNote",
+    });
+  }
+  // End Cek visit
 
   return next();
 };

@@ -8,6 +8,12 @@ export const EventDeleteUser = async (
   next: NextFunction,
   id: String
 ): Promise<any> => {
+  const coba = await BranchModel.countDocuments(id);
+  return res.status(400).json({
+    status: 404,
+    data: `${coba}`,
+  });
+
   // Cek branch
   const branch = await BranchModel.findOne({
     "createdBy._id": new ObjectId(`${id}`),

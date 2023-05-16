@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { EventDeleteUser } from "./EventDeletedMIddleware";
 
 const DeletedValidMiddleware = async (
   req: Request,
@@ -11,7 +12,7 @@ const DeletedValidMiddleware = async (
 
     switch (doc) {
       case "users":
-        console.log(req.baseUrl);
+        EventDeleteUser(req, res, next, path);
         break;
 
       default:

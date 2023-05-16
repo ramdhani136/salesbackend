@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { CallSheetNoteModel, CallsheetModel } from "../../models";
+import { BranchModel, CallSheetNoteModel, CallsheetModel } from "../../models";
 import { ObjectId } from "mongodb";
 
 export const EventDeleteUser = async (
@@ -8,6 +8,18 @@ export const EventDeleteUser = async (
   next: NextFunction,
   id: String
 ): Promise<any> => {
+  // Cek branch
+  const branch = await BranchModel.findOne({
+    "createdBy._id": new ObjectId(`${id}`),
+  });
+  if (branch) {
+    return res.status(400).json({
+      status: 404,
+      data: "Error , User terelasi kedalam data branch",
+    });
+  }
+  // End Cek branch
+
   // Cek Callsheet
   const callsheet = await CallsheetModel.findOne({
     "createdBy._id": new ObjectId(`${id}`),

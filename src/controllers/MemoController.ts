@@ -57,7 +57,7 @@ class MemoController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-    
+
       {
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
@@ -68,7 +68,7 @@ class MemoController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-     
+
       {
         name: "activeDate",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
@@ -100,11 +100,11 @@ class MemoController implements IController {
             "name",
             "display",
             "createdBy.name",
-            "updatedAt",    
-            "notes",    
-            "img",    
-            "activeDate",    
-            "closingDate",    
+            "updatedAt",
+            "notes",
+            "img",
+            "activeDate",
+            "closingDate",
             "status",
             "workflowState",
           ];
@@ -162,16 +162,21 @@ class MemoController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.type) {
+    if (!req.body.notes) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, type wajib diisi!" });
-    } else {
-      if (req.body.type !== "in" && req.body.type !== "out") {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, pilih in atau out !" });
-      }
+        .json({ status: 400, msg: "Error, notes wajib diisi!" });
+    }
+
+    if (!req.body.activeDate) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
+    }
+    if (!req.body.closingDate) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
     }
 
     try {
@@ -191,7 +196,7 @@ class MemoController implements IController {
       }
 
       const namingSeries: any = await namingSeriesModel.findOne({
-        $and: [{ _id: req.body.namingSeries }, { doc: "callsheet" }],
+        $and: [{ _id: req.body.namingSeries }, { doc: "memo" }],
       });
 
       if (!namingSeries) {
@@ -232,7 +237,7 @@ class MemoController implements IController {
 
       const regex = new RegExp(olahKata.join(""), "i");
 
-      const callsheet = await Db.findOne({
+      const memo = await Db.findOne({
         $and: [
           { name: { $regex: regex } },
           {
@@ -245,9 +250,9 @@ class MemoController implements IController {
         .sort({ createdAt: -1 })
         .exec();
 
-      if (callsheet) {
+      if (memo) {
         latest = parseInt(
-          `${callsheet.name.slice(ambilIndex ? -ambilIndex.length : -4)}`
+          `${memo.name.slice(ambilIndex ? -ambilIndex.length : -4)}`
         );
       }
 
@@ -256,82 +261,6 @@ class MemoController implements IController {
           PaddyData(latest + 1, ambilIndex.length).toString()
         : olahKata.join("") + PaddyData(latest + 1, 4).toString();
       // End set name
-
-      //Mengecek Customer
-      if (!req.body.customer) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, customer wajib diisi!" });
-      }
-
-      const cekCustomer: any = await CustomerModel.findOne(
-        {
-          $and: [{ _id: req.body.customer }],
-        },
-        ["name", "status", "customerGroup"]
-      );
-
-      if (!cekCustomer) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, customer tidak ditemukan!",
-        });
-      }
-
-      if (cekCustomer.status != 1) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, customer tidak aktif!",
-        });
-      }
-
-      req.body.customer = {
-        _id: new ObjectId(cekCustomer._id),
-        name: cekCustomer.name,
-        customerGroup: cekCustomer.customerGroup,
-      };
-      // End
-
-      // Mengecek contact jika terdapat kontak untuk customer
-      if (!req.body.contact) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, contact wajib diisi!" });
-      }
-      const contact = await ContactModel.findOne(
-        {
-          $and: [
-            { _id: req.body.contact },
-            {
-              "customer._id": req.body.customer,
-            },
-          ],
-        },
-        ["name", "phone", "status"]
-      );
-
-      if (!contact) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, kontak tidak ditemukan!",
-        });
-      }
-
-      if (contact.status !== "1") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, kontak tidak aktif!",
-        });
-      }
-
-      // set contact
-      req.body.contact = {
-        _id: contact._id,
-        name: contact.name,
-        phone: contact.phone,
-      };
-
-      // End
 
       req.body.createdBy = {
         _id: new ObjectId(req.userId),
@@ -391,7 +320,7 @@ class MemoController implements IController {
           workflow: buttonActions,
         });
       }
-      
+
       const result: any = await Db.findOne({
         _id: req.params.id,
       });

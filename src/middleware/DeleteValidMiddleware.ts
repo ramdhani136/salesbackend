@@ -1,5 +1,40 @@
 import { Request, Response, NextFunction } from "express";
 import { EventDeleteUser } from "./EventDeletedMIddleware";
+import { ObjectId } from "mongodb";
+
+const CheckData = async (
+  req: Request,
+  res: Response,
+  Db: any,
+  doc: string,
+  filter: String[]
+): Promise<any> => {
+  const path = req.path.replace(/\//g, "");
+  if (filter.length > 0) {
+    const isFilter = filter.map((item) => {
+      let tempt: any = {};
+      tempt[`${item}`] = new ObjectId(`${path}`);
+      return tempt;
+    });
+
+    const data = await Db.findOne({ $or: isFilter });
+    if (data) {
+      res.status(400).json({
+        status: 404,
+        data: `Error , User terelasi dengan data ${doc}`,
+      });
+      return true;
+    }
+  } else {
+    res.status(400).json({
+      status: 404,
+      data: `filters harus diisi!`,
+    });
+    return true;
+  }
+
+  return false;
+};
 
 const DeletedValidMiddleware = async (
   req: Request,
@@ -24,4 +59,4 @@ const DeletedValidMiddleware = async (
   }
 };
 
-export default DeletedValidMiddleware;
+export { DeletedValidMiddleware, CheckData };

@@ -1,9 +1,10 @@
 import { UserController } from "../controllers";
-import { DeleteValidMiddleware, RoleMiddleware } from "../middleware";
+import {  RoleMiddleware } from "../middleware";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
 import RouteBase from "./RouteBase";
 import multer from "multer";
 import path from "path";
+import { DeletedValidMiddleware } from "../middleware/DeleteValidMiddleware";
 
 const uploadPath = path.join(__dirname, "../assets/images");
 const storage = multer.diskStorage({
@@ -40,7 +41,7 @@ class UserRoutes extends RouteBase {
       "/:id",
       AuthMiddleware,
       RoleMiddleware,
-      DeleteValidMiddleware,
+      DeletedValidMiddleware,
       UserController.delete
     );
     this.router.put(

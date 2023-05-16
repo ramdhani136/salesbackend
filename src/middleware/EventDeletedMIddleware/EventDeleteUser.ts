@@ -6,9 +6,8 @@ import {
   VisitNoteModel,
   visitModel,
 } from "../../models";
-import { ObjectId } from "mongodb";
-import UserModel from "../../models/UserModel";
-import { Models } from "mongoose";
+
+import { CheckData } from "../DeleteValidMiddleware";
 
 export const EventDeleteUser = async (
   req: Request,
@@ -16,83 +15,44 @@ export const EventDeleteUser = async (
   next: NextFunction,
   id: String
 ): Promise<any> => {
-  const CheckData = async (Db: any, doc: string): Promise<any> => {
-    const data = await Db.findOne({ createdBy: new ObjectId(`${id}`) });
-    console.log(data);
-    if (data) {
-      res.status(400).json({
-        status: 404,
-        data: "Error , User terelasi dengan data branch",
-      });
-      return true;
-    }
-    return false;
-  };
-
-  // Cek branch
-  // CheckData(BranchModel, "Branch");
-
-  if (await CheckData(BranchModel, "Branch")) {
+  // Branch
+  if (await CheckData(req, res, BranchModel, "Branch", ["createdBy"])) {
     return;
   }
-  console.log('ddd')
-  // const branch = await BranchModel.findOne({
-  //   "createdBy._id": new ObjectId(`${id}`),
-  // });
-  // if (branch) {
-  //   return res.status(400).json({
-  //     status: 404,
-  //     data: "Error , User terelasi dengan data branch",
-  //   });
-  // }
-  // End Cek branch
+  // End branch
 
-  // Cek Callsheet
-  const callsheet = await CallsheetModel.findOne({
-    "createdBy._id": new ObjectId(`${id}`),
-  });
-  if (callsheet) {
-    return res.status(400).json({
-      status: 404,
-      data: "Error , User terelasi dengan data callsheet",
-    });
-  }
-  // End Cek Callsheet
-
-  // Cek CallsheetNote
-  const CallsheetNote = await CallSheetNoteModel.findOne({
-    "createdBy._id": new ObjectId(`${id}`),
-  });
-  if (CallsheetNote) {
-    return res.status(400).json({
-      status: 404,
-      data: "Error , User terelasi dengan data CallsheetNote",
-    });
+  // Callsheet
+  if (
+    await CheckData(req, res, CallsheetModel, "Callsheet", ["createdBy._id"])
+  ) {
+    return;
   }
 
-  // Cek visit
-  const visit = await visitModel.findOne({
-    "createdBy._id": new ObjectId(`${id}`),
-  });
-  if (visit) {
-    return res.status(400).json({
-      status: 404,
-      data: "Error , User terelasi dengan data visit",
-    });
-  }
-  // End Cek visit
+  // End Callsheet
 
-  // Cek visitNote
-  const visitNote = await VisitNoteModel.findOne({
-    "createdBy._id": new ObjectId(`${id}`),
-  });
-  if (visitNote) {
-    return res.status(400).json({
-      status: 404,
-      data: "Error , User terelasi dengan data visitNote",
-    });
+  // CallsheetNote
+  if (
+    await CheckData(req, res, CallSheetNoteModel, "CallsheetNote", [
+      "createdBy._id",
+    ])
+  ) {
+    return;
   }
-  // End Cek visit
+  // End CallsheetNote
+
+  // Visit
+  if (await CheckData(req, res, visitModel, "Visit", ["createdBy._id"])) {
+    return;
+  }
+  // End Visit
+
+  //  VisitNote
+  if (
+    await CheckData(req, res, VisitNoteModel, "VisitNote", ["createdBy._id"])
+  ) {
+    return;
+  }
+  // End  VisitNote
 
   // return next();
 };

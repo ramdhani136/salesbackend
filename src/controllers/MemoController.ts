@@ -314,8 +314,6 @@ class MemoController implements IController {
               );
             }
           });
-
-          
       }
       // End
 
@@ -436,6 +434,12 @@ class MemoController implements IController {
         msg: "Error, status tidak dapat dirubah",
       });
     }
+    if (req.body.img) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Tidak dapat merubah img name!",
+      });
+    }
     if (req.body.workflowState) {
       return res.status(404).json({
         status: 404,
@@ -543,6 +547,25 @@ class MemoController implements IController {
       }
 
       const result: any = await Db.deleteOne({ _id: req.params.id });
+
+      if (
+        fs.existsSync(path.join(__dirname, "../public/memo/" + getData.img))
+      ) {
+        fs.unlink(
+          path.join(__dirname, "../public/memo/" + getData.img),
+          function (err) {
+            if (err && err.code == "ENOENT") {
+              // file doens't exist
+              console.log(err);
+            } else if (err) {
+              // other errors, e.g. maybe we don't have enough permission
+              console.log("Error occurred while trying to remove file");
+            } else {
+              console.log(`removed`);
+            }
+          }
+        );
+      }
       await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {

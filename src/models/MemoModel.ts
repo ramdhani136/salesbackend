@@ -64,4 +64,4 @@ const MemoModel = new mongoose.Schema(
 
 MemoModel.index({ name: 1, display: 1, status: 1, createdBy: 1 });
 
-export default mongoose.model("tag", MemoModel);
+export default mongoose.model("memo", MemoModel);

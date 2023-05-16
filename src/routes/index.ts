@@ -25,6 +25,7 @@ import TagRoutes from "./TagRoutes";
 import VisitNoteRoutes from "./VisitNoteRoutes";
 import CallsheetRoutes from "./CallsheetRoutes";
 import CallsheetNoteRoutes from "./CallsheetNoteRoutes";
+import MemoRoutes from "./MemoRoutes";
 
 export {
   UserRoutes,
@@ -53,5 +54,6 @@ export {
   TagRoutes,
   VisitNoteRoutes,
   CallsheetRoutes,
-  CallsheetNoteRoutes
+  CallsheetNoteRoutes,
+  MemoRoutes,
 };

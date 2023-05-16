@@ -26,6 +26,7 @@ import TagController from "./TagController";
 import VisitNoteController from "./VisitNoteController";
 import CallsheetController from "./CallsheetController";
 import CallsheetNoteController from "./CallsheetNoteController";
+import MemoController from "./MemoController";
 
 export {
   UserController,
@@ -55,4 +56,5 @@ export {
   VisitNoteController,
   CallsheetController,
   CallsheetNoteController,
+  MemoController,
 };

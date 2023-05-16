@@ -162,6 +162,19 @@ class MemoController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
+    // Pengecekan khusus untuk tags
+    if (
+      !Array.isArray(req.body.display) ||
+      req.body.display.some(
+        (tag: any) =>
+          !["visit", "callsheet", "dashboard", "alert"].includes(tag)
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Display harus array dengan data yang ditentukan!." });
+    }
+
     if (!req.body.notes) {
       return res
         .status(400)
@@ -268,6 +281,7 @@ class MemoController implements IController {
       };
 
       const result = new Db(req.body);
+
       const response: any = await result.save({});
 
       //push history
@@ -277,7 +291,7 @@ class MemoController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan callsheet ${response.name} `,
+        message: `${req.user} menambahkan memo ${response.name} `,
         user: req.userId,
       });
       //End

@@ -36,6 +36,7 @@ import {
   VisitNoteRoutes,
   CallsheetRoutes,
   CallsheetNoteRoutes,
+  MemoRoutes,
 } from "./routes";
 import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -193,6 +194,7 @@ class App {
     this.app.use("/tag", AuthMiddleware, TagRoutes);
     this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
     this.app.use("/callsheetnote", AuthMiddleware, CallsheetNoteRoutes);
+    this.app.use("/memo", AuthMiddleware, MemoRoutes);
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);
     // this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
     // this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);

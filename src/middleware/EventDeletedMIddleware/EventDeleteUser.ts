@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { BranchModel, CallSheetNoteModel, CallsheetModel } from "../../models";
 import { ObjectId } from "mongodb";
+import UserModel from "../../models/UserModel";
 
 export const EventDeleteUser = async (
   req: Request,
@@ -8,11 +9,18 @@ export const EventDeleteUser = async (
   next: NextFunction,
   id: String
 ): Promise<any> => {
-  const coba = await BranchModel.countDocuments(id);
-  return res.status(400).json({
-    status: 404,
-    data: `${coba}`,
-  });
+  // relasi data
+  const relasi = await BranchModel.countDocuments(id);
+  console.log(relasi);
+  return;
+  if (relasi) {
+    return res.status(400).json({
+      status: 404,
+      data: "Error , User terelasi dengan dokumen lain",
+    });
+  }
+
+  //   End relasi data
 
   // Cek branch
   const branch = await BranchModel.findOne({

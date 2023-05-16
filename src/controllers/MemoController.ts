@@ -509,6 +509,34 @@ class MemoController implements IController {
           _id: req.params.id,
         });
 
+        // Upload data ketika outsite
+        if (req.file) {
+          const compressedImage = path.join(
+            __dirname,
+            "../public/memo",
+            getData.img
+          );
+          sharp(req.file.path)
+            .resize(640, 480, {
+              fit: sharp.fit.inside,
+              withoutEnlargement: true,
+            })
+            .jpeg({
+              quality: 100,
+              progressive: true,
+              chromaSubsampling: "4:4:4",
+            })
+            .withMetadata()
+            .toFile(compressedImage, async (err, info): Promise<any> => {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log(info);
+              }
+            });
+        }
+        // End
+
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
           JSON.stringify(getData),

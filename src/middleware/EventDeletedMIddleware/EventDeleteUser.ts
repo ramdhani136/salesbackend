@@ -1,0 +1,5 @@
+
+
+const EventDeleteUser = (id:String) =>{
+
+}

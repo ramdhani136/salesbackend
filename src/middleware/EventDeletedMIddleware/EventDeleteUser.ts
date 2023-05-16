@@ -1,7 +1,14 @@
 import { NextFunction, Request, Response } from "express";
-import { BranchModel, CallSheetNoteModel, CallsheetModel, VisitNoteModel, visitModel } from "../../models";
+import {
+  BranchModel,
+  CallSheetNoteModel,
+  CallsheetModel,
+  VisitNoteModel,
+  visitModel,
+} from "../../models";
 import { ObjectId } from "mongodb";
 import UserModel from "../../models/UserModel";
+import { Models } from "mongoose";
 
 export const EventDeleteUser = async (
   req: Request,
@@ -9,16 +16,35 @@ export const EventDeleteUser = async (
   next: NextFunction,
   id: String
 ): Promise<any> => {
+  const CheckData = async (Db: any, doc: string): Promise<any> => {
+    const data = await Db.findOne({ createdBy: new ObjectId(`${id}`) });
+    console.log(data);
+    if (data) {
+      res.status(400).json({
+        status: 404,
+        data: "Error , User terelasi dengan data branch",
+      });
+      return true;
+    }
+    return false;
+  };
+
   // Cek branch
-  const branch = await BranchModel.findOne({
-    "createdBy._id": new ObjectId(`${id}`),
-  });
-  if (branch) {
-    return res.status(400).json({
-      status: 404,
-      data: "Error , User terelasi dengan data branch",
-    });
+  // CheckData(BranchModel, "Branch");
+
+  if (await CheckData(BranchModel, "Branch")) {
+    return;
   }
+  console.log('ddd')
+  // const branch = await BranchModel.findOne({
+  //   "createdBy._id": new ObjectId(`${id}`),
+  // });
+  // if (branch) {
+  //   return res.status(400).json({
+  //     status: 404,
+  //     data: "Error , User terelasi dengan data branch",
+  //   });
+  // }
   // End Cek branch
 
   // Cek Callsheet
@@ -68,5 +94,5 @@ export const EventDeleteUser = async (
   }
   // End Cek visit
 
-  return next();
+  // return next();
 };

@@ -1,5 +1,4 @@
 import { MemoController as Controller } from "../controllers";
-import { DeleteValid } from "../middleware";
 import { CheckExpireMemoMiddleware } from "../middleware/CekExpiredMemoMiddleware";
 import RouteBase from "./RouteBase";
 import multer from "multer";
@@ -22,7 +21,7 @@ class MemoRoutes extends RouteBase {
     this.router.get("/", CheckExpireMemoMiddleware, Controller.index);
     this.router.post("/", upload.single("img"), Controller.create);
     this.router.get("/:id", CheckExpireMemoMiddleware, Controller.show);
-    this.router.delete("/:id", DeleteValid, Controller.delete);
+    this.router.delete("/:id", Controller.delete);
     this.router.put("/:id", upload.single("img"), Controller.update);
   }
 }

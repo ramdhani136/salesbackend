@@ -1,5 +1,4 @@
 import { TagController as Controller } from "../controllers";
-import { DeleteValid } from "../middleware";
 import RouteBase from "./RouteBase";
 
 class TagRoutes extends RouteBase {

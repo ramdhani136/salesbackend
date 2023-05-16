@@ -1,5 +1,5 @@
 import { ScheduleController } from "../controllers";
-import { CheckExpiredScheduleMiddleWare, DeleteValid } from "../middleware";
+import { CheckExpiredScheduleMiddleWare } from "../middleware";
 import RouteBase from "./RouteBase";
 
 class ScheduleRoutes extends RouteBase {

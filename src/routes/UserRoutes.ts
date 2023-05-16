@@ -1,5 +1,5 @@
 import { UserController } from "../controllers";
-import { DeleteValid, RoleMiddleware } from "../middleware";
+import { DeleteValidMiddleware, RoleMiddleware } from "../middleware";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
 import RouteBase from "./RouteBase";
 import multer from "multer";
@@ -40,7 +40,7 @@ class UserRoutes extends RouteBase {
       "/:id",
       AuthMiddleware,
       RoleMiddleware,
-      // DeleteValid,
+      DeleteValidMiddleware.validUser,
       UserController.delete
     );
     this.router.put(

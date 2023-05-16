@@ -1,5 +1,4 @@
 import { RoleProfileController } from "../controllers";
-import { DeleteValid } from "../middleware";
 import RouteBase from "./RouteBase";
 
 const Controller = RoleProfileController;
@@ -9,7 +8,7 @@ class RoleProfileRoutes extends RouteBase {
     this.router.get("/", Controller.index);
     this.router.post("/", Controller.create);
     this.router.get("/:id", Controller.show);
-    this.router.delete("/:id", DeleteValid, Controller.delete);
+    this.router.delete("/:id", Controller.delete);
     this.router.put("/:id", Controller.update);
   }
 }

@@ -2,7 +2,7 @@ import {
   VisitController as Controller,
   ScheduleController,
 } from "../controllers";
-import { CheckExpiredScheduleMiddleWare, DeleteValid } from "../middleware";
+import { CheckExpiredScheduleMiddleWare } from "../middleware";
 import RouteBase from "./RouteBase";
 import multer from "multer";
 import path from "path";
@@ -32,7 +32,7 @@ class VisitRoutes extends RouteBase {
       CheckExpiredScheduleMiddleWare,
       Controller.show
     );
-    this.router.delete("/:id", DeleteValid, Controller.delete);
+    this.router.delete("/:id", Controller.delete);
     this.router.put("/:id", upload.single("img"), Controller.update);
   }
 }

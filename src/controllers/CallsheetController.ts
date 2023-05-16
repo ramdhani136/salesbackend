@@ -12,7 +12,6 @@ import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   CallSheetNoteModel,
   ContactModel,
-  CustomerGroupModel,
   CustomerModel,
   CallsheetModel as Db,
   History,

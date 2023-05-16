@@ -314,6 +314,8 @@ class MemoController implements IController {
               );
             }
           });
+
+          
       }
       // End
 

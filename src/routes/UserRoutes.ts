@@ -40,7 +40,7 @@ class UserRoutes extends RouteBase {
       "/:id",
       AuthMiddleware,
       RoleMiddleware,
-      DeleteValidMiddleware.validUser,
+      DeleteValidMiddleware,
       UserController.delete
     );
     this.router.put(

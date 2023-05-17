@@ -3,11 +3,13 @@ import {
   BranchModel,
   CallSheetNoteModel,
   CallsheetModel,
+  ChatModel,
   ContactModel,
   CustomerGroupModel,
   CustomerModel,
   History,
   MemoModel,
+  MessageModel,
   PermissionModel,
   RoleListModel,
   RoleProfileModel,
@@ -148,6 +150,16 @@ export const EventDeleteUser = async (
       doc: "workflowTransition",
       filters: ["user"],
       model: WorkflowTransition,
+    },
+    {
+      doc: "Message",
+      filters: ["sender"],
+      model: MessageModel,
+    },
+    {
+      doc: "Chat",
+      filters: ["users", "groupAdmin"],
+      model: ChatModel,
     },
   ];
 

@@ -12,6 +12,7 @@ import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
 import path from "path";
+import mongoose from "mongoose";
 
 class UserController implements IController {
   protected prosesUpload = (req: Request | any, name: string) => {
@@ -174,8 +175,8 @@ class UserController implements IController {
       // push history
       await HistoryController.pushHistory({
         document: {
-          _id: users._id,
-          name: users.name,
+          _id: req.userId,
+          name: req.user,
           type: "user",
         },
         message: `${req.user} membuat user baru ${users.name}`,
@@ -228,11 +229,17 @@ class UserController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    // Mulai transaksi;
     try {
+      if (req.body.name) {
+        req.body.img = `${req.body.name}.jpg`;
+      }
+
       const result = await User.findOneAndUpdate(
         { _id: req.params.id },
         req.body
       );
+
       if (result) {
         const users: any = await User.findOne({ _id: req.params.id });
 
@@ -252,6 +259,10 @@ class UserController implements IController {
           req.userId,
           "user"
         );
+        // End
+
+        // Update Related
+
         // End
 
         return res.status(200).json({ status: 200, data: users });
@@ -420,6 +431,13 @@ class UserController implements IController {
       return false;
     } catch (error) {
       return false;
+    }
+  };
+
+  protected UpdateRelatedUser = async (): Promise<any> => {
+    try {
+    } catch (error) {
+      throw error;
     }
   };
 }

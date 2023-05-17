@@ -3,7 +3,7 @@ import { EventDeleteBranch } from "./EventDeleteBranch";
 import { EventDeleteCGt } from "./EventDeleteCG";
 import { EventDeleteContact } from "./EventDeleteContact";
 import { EventDeleteCustomer } from "./EventDeleteCustomer";
-import { EventDeleteScheduleItem } from "./EventDeleteScheduleItem";
+import { EventDeleteScheduleList } from "./EventDeleteScheduleList";
 
 
 export {
@@ -11,6 +11,6 @@ export {
   EventDeleteBranch,
   EventDeleteContact,
   EventDeleteCGt,
-  EventDeleteScheduleItem,
+  EventDeleteScheduleList,
   EventDeleteCustomer
 };

@@ -17,7 +17,7 @@ interface IData {
   filters: string[];
 }
 
-export const EventDeleteScheduleItem = async (
+export const EventDeleteScheduleList = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -25,33 +25,8 @@ export const EventDeleteScheduleItem = async (
   const data: IData[] = [
     {
       doc: "Callsheet",
-      filters: ["customer._id"],
+      filters: ["schedule.scheduleList._id"],
       model: CallsheetModel,
-    },
-    {
-      doc: "CallsheetNote",
-      filters: ["callsheet.customer._id"],
-      model: CallSheetNoteModel,
-    },
-    {
-      doc: "Contact",
-      filters: ["customer._id"],
-      model: ContactModel,
-    },
-    {
-      doc: "ScheduleList",
-      filters: ["customer._id"],
-      model: ScheduleListModel,
-    },
-    {
-      doc: "Visit",
-      filters: ["customer._id"],
-      model: visitModel,
-    },
-    {
-      doc: "VisitNote",
-      filters: ["visit.customer._id"],
-      model: VisitNoteModel,
     },
   ];
 

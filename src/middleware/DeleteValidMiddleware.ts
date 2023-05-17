@@ -4,7 +4,7 @@ import {
   EventDeleteCGt,
   EventDeleteContact,
   EventDeleteCustomer,
-  EventDeleteScheduleItem,
+  EventDeleteScheduleList,
   EventDeleteUser,
 } from "./EventDeletedMIddleware";
 import { ObjectId } from "mongodb";
@@ -69,7 +69,7 @@ const DeletedValidMiddleware = async (
         EventDeleteCustomer(req, res, next);
         break;
       case "scheduleitem":
-        EventDeleteScheduleItem(req, res, next);
+        EventDeleteScheduleList(req, res, next);
         break;
 
       default:

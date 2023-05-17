@@ -14,7 +14,7 @@ interface IData {
   filters: string[];
 }
 
-export const EventDeleteContact = async (
+export const EventDeleteCGt = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -25,21 +25,6 @@ export const EventDeleteContact = async (
       filters: ["contact._id"],
       model: CallsheetModel,
     },
-    {
-      doc: "CallsheetNote",
-      filters: ["callsheet.contact._id"],
-      model: CallSheetNoteModel,
-    },
-    {
-      doc: "Visit",
-      filters: ["contact._id"],
-      model: visitModel,
-    },
-    {
-      doc: "VisitNote",
-      filters: ["callsheet.contact._id"],
-      model: VisitNoteModel,
-    },
   ];
 
   for (const i of data) {
@@ -48,5 +33,5 @@ export const EventDeleteContact = async (
     }
   }
 
-  return next();
+  // return next();
 };

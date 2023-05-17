@@ -44,16 +44,24 @@ export const EventDeleteUser = async (
 ): Promise<any> => {
   const data: IData[] = [
     { doc: "Branch", filters: ["createdBy"], model: BranchModel },
-    { doc: "Callsheet", filters: ["createdBy._id"], model: CallsheetModel },
+    {
+      doc: "Callsheet",
+      filters: ["createdBy._id", "schedule.createdBy._id"],
+      model: CallsheetModel,
+    },
     {
       doc: "CallsheetNote",
-      filters: ["callsheet.createdBy._id"],
+      filters: ["callsheet.createdBy._id", "callsheet.schedule.createdBy._id"],
       model: CallSheetNoteModel,
     },
-    { doc: "Visit", filters: ["createdBy._id"], model: visitModel },
+    {
+      doc: "Visit",
+      filters: ["createdBy._id", "schedule.createdBy._id"],
+      model: visitModel,
+    },
     {
       doc: "VisitNote",
-      filters: ["visit.createdBy._id"],
+      filters: ["visit.createdBy._id", "visit.schedule.createdBy._id"],
       model: VisitNoteModel,
     },
     {

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { EventDeleteUser } from "./EventDeletedMIddleware";
+import { EventDeleteBranch, EventDeleteUser } from "./EventDeletedMIddleware";
 import { ObjectId } from "mongodb";
 
 const CheckData = async (
@@ -48,6 +48,9 @@ const DeletedValidMiddleware = async (
     switch (doc) {
       case "users":
         EventDeleteUser(req, res, next, path);
+        break;
+      case "branch":
+        EventDeleteBranch(req, res, next, path);
         break;
 
       default:

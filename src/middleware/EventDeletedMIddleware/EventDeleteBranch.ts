@@ -1,32 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  BranchModel,
-  CallSheetNoteModel,
-  CallsheetModel,
-  ChatModel,
-  ContactModel,
-  CustomerGroupModel,
-  CustomerModel,
-  History,
-  MemoModel,
-  MessageModel,
-  PermissionModel,
-  RoleListModel,
-  RoleProfileModel,
-  RoleUserModel,
-  ScheduleListModel,
-  ScheduleModel,
-  TagModel,
-  UserGroupListModel,
-  UserGroupModel,
-  VisitNoteModel,
-  Workflow,
-  WorkflowAction,
-  WorkflowChanger,
-  WorkflowState,
-  WorkflowTransition,
-  visitModel,
-} from "../../models";
+import { CallsheetModel } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
 
@@ -40,10 +13,13 @@ export const EventDeleteBranch = async (
   req: Request,
   res: Response,
   next: NextFunction,
-  id: String
 ): Promise<any> => {
   const data: IData[] = [
-    { doc: "Branch", filters: ["createdBy"], model: BranchModel },
+    {
+      doc: "Callsheet",
+      filters: ["createdBy._id", "schedule.createdBy._id"],
+      model: CallsheetModel,
+    },
   ];
 
   for (const i of data) {

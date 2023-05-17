@@ -40,7 +40,6 @@ export const EventDeleteUser = async (
   req: Request,
   res: Response,
   next: NextFunction,
-  id: String
 ): Promise<any> => {
   const data: IData[] = [
     { doc: "Branch", filters: ["createdBy"], model: BranchModel },

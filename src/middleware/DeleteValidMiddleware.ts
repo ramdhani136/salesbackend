@@ -47,10 +47,10 @@ const DeletedValidMiddleware = async (
 
     switch (doc) {
       case "users":
-        EventDeleteUser(req, res, next, path);
+        EventDeleteUser(req, res, next);
         break;
       case "branch":
-        EventDeleteBranch(req, res, next, path);
+        EventDeleteBranch(req, res, next);
         break;
 
       default:

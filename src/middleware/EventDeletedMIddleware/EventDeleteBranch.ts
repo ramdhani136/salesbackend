@@ -12,12 +12,12 @@ interface IData {
 export const EventDeleteBranch = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
     {
       doc: "Callsheet",
-      filters: ["createdBy._id", "schedule.createdBy._id"],
+      filters: ["customer.customerGroup.branch._id"],
       model: CallsheetModel,
     },
   ];
@@ -28,5 +28,5 @@ export const EventDeleteBranch = async (
     }
   }
 
-  return next();
+  // return next();
 };

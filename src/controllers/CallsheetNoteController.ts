@@ -235,7 +235,7 @@ class CallsheetNoteController implements IController {
       if (!req.body.tag) {
         return res
           .status(400)
-          .json({ status: 400, msg: "Error, tagId wajib diisi!" });
+          .json({ status: 400, msg: "Error, tag wajib diisi!" });
       }
 
       // End

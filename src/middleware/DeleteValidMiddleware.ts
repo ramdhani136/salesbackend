@@ -21,7 +21,7 @@ const CheckData = async (
     if (data) {
       res.status(400).json({
         status: 404,
-        data: `Error , User terelasi dengan data ${doc}`,
+        data: `Error , Data terelasi dengan data ${doc}`,
       });
       return true;
     }

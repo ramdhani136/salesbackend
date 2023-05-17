@@ -1,5 +1,15 @@
 import { NextFunction, Request, Response } from "express";
-import { CallsheetModel } from "../../models";
+import {
+  CallSheetNoteModel,
+  CallsheetModel,
+  ContactModel,
+  CustomerGroupModel,
+  CustomerModel,
+  ScheduleListModel,
+  VisitNoteModel,
+  namingSeriesModel,
+  visitModel,
+} from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
 
@@ -20,6 +30,46 @@ export const EventDeleteBranch = async (
       filters: ["customer.customerGroup.branch._id"],
       model: CallsheetModel,
     },
+    {
+      doc: "CallsheetNote",
+      filters: ["callsheet.customer.customerGroup.branch._id"],
+      model: CallSheetNoteModel,
+    },
+    {
+      doc: "Contact",
+      filters: ["customer.customerGroup.branch._id"],
+      model: ContactModel,
+    },
+    {
+      doc: "CustomerGroup",
+      filters: ["branch"],
+      model: CustomerGroupModel,
+    },
+    {
+      doc: "Customer",
+      filters: ["customerGroup.branch._id"],
+      model: CustomerModel,
+    },
+    {
+      doc: "NamingSeries",
+      filters: ["branch"],
+      model: namingSeriesModel,
+    },
+    {
+      doc: "ScheduleList",
+      filters: ["customer.customerGroup.branch._id"],
+      model: ScheduleListModel,
+    },
+    {
+      doc: "Visit",
+      filters: ["customer.customerGroup.branch._id"],
+      model: visitModel,
+    },
+    {
+      doc: "VisitNote",
+      filters: ["visit.customer.customerGroup.branch._id"],
+      model: VisitNoteModel,
+    },
   ];
 
   for (const i of data) {
@@ -28,5 +78,5 @@ export const EventDeleteBranch = async (
     }
   }
 
-  // return next();
+  return next();
 };

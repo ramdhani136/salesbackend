@@ -262,7 +262,7 @@ class UserController implements IController {
         // End
 
         // Update Related
-
+        await this.UpdateRelatedUser();
         // End
 
         return res.status(200).json({ status: 200, data: users });
@@ -436,6 +436,7 @@ class UserController implements IController {
 
   protected UpdateRelatedUser = async (): Promise<any> => {
     try {
+      console.log('dd')
     } catch (error) {
       throw error;
     }

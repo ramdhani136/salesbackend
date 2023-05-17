@@ -157,5 +157,5 @@ export const EventDeleteUser = async (
     }
   }
 
-  // return next();
+  return next();
 };

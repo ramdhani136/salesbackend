@@ -15,11 +15,20 @@ const CustomerModel = new mongoose.Schema(
       index: true,
     },
     customerGroup: {
-      type: Schema.Types.ObjectId,
-      ref: "customergroup",
-      required: true,
-      index: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
+      branch: {
+        _id: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        name: { type: String, required: true },
+      },
     },
+
     img: {
       type: String,
     },
@@ -30,10 +39,11 @@ const CustomerModel = new mongoose.Schema(
       type: String,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
-      index: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
     },
     status: {
       type: String,
@@ -62,4 +72,6 @@ CustomerModel.index({
   branch: 1,
 });
 
+
 export default mongoose.model("customer", CustomerModel);
+

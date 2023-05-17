@@ -7,7 +7,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { History } from "../models";
+import { CallsheetModel, History } from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
@@ -262,7 +262,7 @@ class UserController implements IController {
         // End
 
         // Update Related
-        await this.UpdateRelatedUser();
+        await this.UpdateRelatedUser(req.params.id);
         // End
 
         return res.status(200).json({ status: 200, data: users });
@@ -434,9 +434,16 @@ class UserController implements IController {
     }
   };
 
-  protected UpdateRelatedUser = async (): Promise<any> => {
+  protected UpdateRelatedUser = async (id: string): Promise<any> => {
     try {
-      console.log('dd')
+      const callsheet = await CallsheetModel.find({
+        $or: [
+          {
+            "createdBy._id": new Object(id),
+          },
+          { "schedule.createdBy._id": new Object(id) },
+        ],
+      });
     } catch (error) {
       throw error;
     }

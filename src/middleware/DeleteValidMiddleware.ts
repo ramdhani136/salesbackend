@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { EventDeleteBranch, EventDeleteUser } from "./EventDeletedMIddleware";
+import { EventDeleteBranch, EventDeleteContact, EventDeleteUser } from "./EventDeletedMIddleware";
 import { ObjectId } from "mongodb";
 
 const CheckData = async (
@@ -51,6 +51,9 @@ const DeletedValidMiddleware = async (
         break;
       case "branch":
         EventDeleteBranch(req, res, next);
+        break;
+      case "contact":
+        EventDeleteContact(req, res, next);
         break;
 
       default:

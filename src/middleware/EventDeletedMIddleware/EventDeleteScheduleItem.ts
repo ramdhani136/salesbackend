@@ -17,7 +17,7 @@ interface IData {
   filters: string[];
 }
 
-export const EventDeleteCustomer = async (
+export const EventDeleteScheduleItem = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -61,5 +61,5 @@ export const EventDeleteCustomer = async (
     }
   }
 
-  return next();
+  // return next();
 };

@@ -59,57 +59,59 @@ const CallsheetNoteModel = new mongoose.Schema(
         },
         name: { type: String, required: true },
       },
-      schedule: [
-        {
-          _id: { type: Schema.Types.ObjectId, required: true },
-          name: { type: String, required: true },
-          notes: { type: String, required: true },
-          scheduleList: {
+      schedule: {
+        type: [
+          {
             _id: { type: Schema.Types.ObjectId, required: true },
+            name: { type: String, required: true },
             notes: { type: String, required: true },
-          },
-          type: {
-            type: String,
-            required: true,
-            enum: ["visit", "callsheet"],
-          },
-          userGroup: {
-            _id: {
-              type: Schema.Types.ObjectId,
-              required: true,
+            scheduleList: {
+              _id: { type: Schema.Types.ObjectId, required: true },
+              notes: { type: String, required: true },
             },
-            name: {
+            type: {
               type: String,
               required: true,
+              enum: ["visit", "callsheet"],
             },
-          },
-          activeDate: {
-            type: Date,
-            required: true,
-          },
-          closingDate: {
-            type: Date,
-            require: true,
-          },
-          status: {
-            type: String,
-            enum: ["0", "1", "2"],
-            default: "0",
-          },
-          workflowState: {
-            type: String,
-            required: true,
-            default: "Draft",
-          },
-          createdBy: {
-            _id: {
-              type: Schema.Types.ObjectId,
+            userGroup: {
+              _id: {
+                type: Schema.Types.ObjectId,
+                required: true,
+              },
+              name: {
+                type: String,
+                required: true,
+              },
+            },
+            activeDate: {
+              type: Date,
               required: true,
             },
-            name: { type: String },
+            closingDate: {
+              type: Date,
+              require: true,
+            },
+            status: {
+              type: String,
+              enum: ["0", "1", "2"],
+              default: "0",
+            },
+            workflowState: {
+              type: String,
+              required: true,
+              default: "Draft",
+            },
+            createdBy: {
+              _id: {
+                type: Schema.Types.ObjectId,
+                required: true,
+              },
+              name: { type: String },
+            },
           },
-        },
-      ],
+        ],
+      },
       status: {
         type: String,
         enum: ["0", "1", "2"],

@@ -50,10 +50,11 @@ const MemoModel = new mongoose.Schema(
       require: true,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
-      index: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String },
     },
   },
   {

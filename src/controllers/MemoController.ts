@@ -28,6 +28,7 @@ import WorkflowController from "./WorkflowController";
 import fs from "fs";
 import sharp from "sharp";
 import path from "path";
+import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "memo";
 
@@ -97,8 +98,6 @@ class MemoController implements IController {
         : [
             "name",
             "display",
-            "createdBy.id",
-            "createdBy.name",
             "updatedAt",
             "notes",
             "img",
@@ -113,7 +112,14 @@ class MemoController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let search: ISearch = {
+        filter: ["name"],
+        value: req.query.search || "",
+      };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "createdBy",
+        "_id",
+      ]);
 
       // Mengambil rincian permission user
       const userPermission = await PermissionMiddleware.getPermission(
@@ -135,7 +141,8 @@ class MemoController implements IController {
       const result = await Db.find(isFilter.data, setField)
         .sort(order_by)
         .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0);
+        .skip(limit > 0 ? page * limit - limit : 0)
+        .populate("createdBy", "name");
 
       if (result.length > 0) {
         return res.status(200).json({

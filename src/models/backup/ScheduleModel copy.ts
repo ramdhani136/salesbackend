@@ -1,10 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 
-const SchemaScheduleModel = {
+ const SchemaScheduleModel = {
   name: {
     type: String,
     required: true,
-    // unique: true,
+    unique: true,
   },
   type: {
     type: String,
@@ -16,9 +16,14 @@ const SchemaScheduleModel = {
     required: true,
   },
   userGroup: {
-    type: Schema.Types.ObjectId,
-    ref: "usergroup",
-    required: true,
+    _id: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
   },
   activeDate: {
     type: Date,
@@ -39,9 +44,11 @@ const SchemaScheduleModel = {
     default: "Draft",
   },
   createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: "Users",
-    required: true,
+    _id: {
+      type: Schema.Types.ObjectId,
+      required: true,
+    },
+    name: { type: String },
   },
 };
 
@@ -49,12 +56,6 @@ const ScheduleModel = new mongoose.Schema(SchemaScheduleModel, {
   timestamps: true,
 });
 
-ScheduleModel.index({
-  name: 1,
-  status: 1,
-  type: 1,
-  workflowState: 1,
-  createdBy: 1,
-});
+ScheduleModel.index({ name: 1, status: 1, type: 1, workflowState: 1 });
 
 export default mongoose.model("schedule", ScheduleModel);

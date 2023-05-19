@@ -49,13 +49,13 @@ class ScheduleController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "userGroup",
-        operator: ["=", "!="],
+        name: "userGroup.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy",
-        operator: ["=", "!="],
+        name: "createdBy.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
@@ -117,18 +117,14 @@ class ScheduleController implements IController {
         filter: ["name", "type"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
-        "createdBy",
-        "_id",
-        "userGroup",
-      ]);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
 
       // Mengambil rincian permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.SCHEDULE
-      );
+      // const userPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.USER,
+      //   selPermissionType.CUSTOMER
+      // );
       // End
 
       if (!isFilter.status) {
@@ -138,23 +134,12 @@ class ScheduleController implements IController {
       }
       // End
 
-      let FinalFIlter: any = {};
-      FinalFIlter[`$and`] = [isFilter.data];
+      const getAll = await Db.find(isFilter.data, setField).count();
 
-      if (userPermission.length > 0) {
-        FinalFIlter[`$and`].push({
-          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-        });
-      }
-
-      const getAll = await Db.find(FinalFIlter, setField).count();
-
-      const result = await Db.find(FinalFIlter, setField)
+      const result = await Db.find(isFilter.data, setField)
         .sort(order_by)
         .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0)
-        .populate("userGroup", "name")
-        .populate("createdBy", "name");
+        .skip(limit > 0 ? page * limit - limit : 0);
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -318,9 +303,20 @@ class ScheduleController implements IController {
       }
       // End
 
+      // set setUserGroup
+      req.body.userGroup = {
+        _id: cekUserGroup._id,
+        name: cekUserGroup.name,
+      };
       // End
 
-      req.body.createdBy = req.userId;
+      // End
+
+      req.body.createdBy = {
+        _id: new ObjectId(req.userId),
+        name: req.user,
+      };
+
       const result = new Db(req.body);
       const response: any = await result.save();
 
@@ -376,15 +372,14 @@ class ScheduleController implements IController {
       }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      })
-        .populate("userGroup", "name")
-        .populate("createdBy", "name");
+      });
 
       if (!result) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -439,9 +434,7 @@ class ScheduleController implements IController {
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      })
-        .populate("userGroup", "name")
-        .populate("createdBy", "name");
+      });
 
       if (result) {
         // Jika type diedit dan hanya bisa edit ketika belum ada schedulelist yang di close
@@ -530,9 +523,7 @@ class ScheduleController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        })
-          .populate("userGroup", "name")
-          .populate("createdBy", "name");
+        });
 
         // Update scheduleList
         await ScheduleListModel.updateMany(
@@ -563,7 +554,7 @@ class ScheduleController implements IController {
       } else {
         return res
           .status(400)
-          .json({ status: 404, msg: "Error update, Tidak ditemukan!" });
+          .json({ status: 404, msg: "Error update, data not found" });
       }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
@@ -575,9 +566,7 @@ class ScheduleController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res.status(404).json({ status: 404, msg: "Not found!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

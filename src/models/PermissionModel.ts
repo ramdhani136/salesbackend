@@ -65,6 +65,6 @@ const Permission = new mongoose.Schema(
   }
 );
 
-Permission.index({ allow: 1, doc: 1, allDoc: 1, status: 1, workflowState: 1 });
+// Permission.index({ allow: 1, doc: 1, allDoc: 1, status: 1, workflowState: 1 });
 
 export default mongoose.model("Permissions", Permission);

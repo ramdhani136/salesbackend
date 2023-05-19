@@ -469,14 +469,6 @@ class ContactController implements IController {
             });
           }
           // End
-
-          // set customer
-          req.body.customer = {
-            _id: cekCustomer._id,
-            name: cekCustomer.name,
-            customerGroup: cekCustomer.customerGroup,
-          };
-          // End
         }
 
         // End

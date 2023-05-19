@@ -4,7 +4,12 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { CustomerGroupModel, CustomerModel as Db, History } from "../models";
+import {
+  CustomerGroupModel,
+  CustomerModel,
+  CustomerModel as Db,
+  History,
+} from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -231,6 +236,13 @@ class CustomerController implements IController {
         .json({ status: 400, msg: "Error, customerGroup wajib diisi!" });
     }
 
+    if (req.body.lat && req.body.lng) {
+      req.body.location = {
+        type: "Point",
+        coordinates: [req.body.lng, req.body.lat],
+      };
+    }
+
     try {
       //Mengecek Customer Group
       const CekCG: any = await CustomerGroupModel.findOne({
@@ -372,6 +384,13 @@ class CustomerController implements IController {
       });
     }
 
+    if (req.body.lat && req.body.lng) {
+      req.body.location = {
+        type: "Point",
+        coordinates: [req.body.lng, req.body.lat],
+      };
+    }
+
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
@@ -475,11 +494,55 @@ class CustomerController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);
+      return res.status(200).json({ status: 200, data: result });
+    } catch (error) {
+      return res.status(404).json({ status: 404, msg: error });
+    }
+  };
+
+  getLocatonNearby = async (req: Request, res: Response): Promise<any> => {
+    if (!req.query.lat) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Parameter lat wajib diisi!",
+      });
+    }
+    if (!req.query.lng) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Parameter lng wajib diisi!",
+      });
+    }
+    if (!req.query.maxDistance) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, Parameter maxDistance wajib diisi!",
+      });
+    }
+
+    const targetLatitude = parseFloat(`${req.query.lat}`);
+    const targetLongitude = parseFloat(`${req.query.lng}`);
+    const maxDistance = parseInt(`${req.query.maxDistance}`);
+    try {
+      const result: any = await CustomerModel.find({
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [targetLongitude, targetLatitude],
+            },
+            $maxDistance: maxDistance,
+          },
+        },
+      });
+
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

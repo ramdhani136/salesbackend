@@ -26,11 +26,17 @@ const CustomerModel = new mongoose.Schema(
     img: {
       type: String,
     },
-    lat: {
-      type: String,
-    },
-    lng: {
-      type: String,
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: true,
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -52,6 +58,8 @@ const CustomerModel = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+CustomerModel.index({ location: "2dsphere" });
 
 CustomerModel.index({
   name: 1,

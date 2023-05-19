@@ -32,6 +32,11 @@ class RoleProfileController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "createdBy._d",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "createdBy.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
@@ -82,7 +87,10 @@ class RoleProfileController implements IController {
       );
       // End
 
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "createdBy._id",
+      ]);
 
       if (!isFilter.status) {
         return res
@@ -376,7 +384,9 @@ class RoleProfileController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

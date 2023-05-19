@@ -13,6 +13,7 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
+import { ISearch } from "../utils/FilterQuery";
 
 const Db = RoleUserModel;
 const redisName = "roleuser";
@@ -26,13 +27,28 @@ class RoleUserController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "roleprofile._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "roleprofile.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        name: "user._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "user.name",
         operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "createdBy._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -71,7 +87,16 @@ class RoleUserController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let search: ISearch = {
+        filter: ["user.name"],
+        value: req.query.search || "",
+      };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "createdBy._id",
+        "user._id",
+        "roleprofile._id",
+      ]);
 
       // Mengambil rincian permission user
       const userPermission = await PermissionMiddleware.getPermission(
@@ -514,7 +539,9 @@ class RoleUserController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

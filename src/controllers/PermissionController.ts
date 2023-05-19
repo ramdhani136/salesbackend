@@ -22,7 +22,7 @@ class PermissionController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=", ],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -46,8 +46,18 @@ class PermissionController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "user._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "user.name",
         operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "createdBy._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -110,14 +120,18 @@ class PermissionController implements IController {
       // End
 
       // Mengambil hasil filter
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "createdBy._id",
+        "user._id",
+      ]);
       // End
 
       // Mengecek permission user
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
-        selPermissionType.BRANCH
+        selPermissionType.PERMISSION
       );
       // End
 

@@ -36,6 +36,11 @@ class workflowStateController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "user._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "user.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
@@ -68,7 +73,10 @@ class workflowStateController implements IController {
         filter: ["name", "doc"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "user._id",
+      ]);
 
       if (!isFilter.status) {
         return res
@@ -202,7 +210,9 @@ class workflowStateController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

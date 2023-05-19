@@ -11,6 +11,7 @@ import {
   WorkflowState,
   WorkflowTransition,
 } from "../models";
+import { ISearch } from "../utils/FilterQuery";
 
 const Db = WorkflowTransition;
 const redisName = "workflowtransition";
@@ -23,6 +24,7 @@ class WorkflowTransitionController implements IController {
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+
       {
         name: "user.name",
         operator: ["=", "!=", "like", "notlike"],
@@ -91,7 +93,13 @@ class WorkflowTransitionController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let search: ISearch = {
+        filter: ["workflow.name"],
+        value: req.query.search || "",
+      };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+      ]);
 
       if (!isFilter.status) {
         return res
@@ -295,7 +303,9 @@ class WorkflowTransitionController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

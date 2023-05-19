@@ -5,6 +5,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { WorkflowState } from "../models";
+import { ISearch } from "../utils/FilterQuery";
 
 const Db = WorkflowState;
 const redisName = "workflowstate";
@@ -20,6 +21,11 @@ class workflowStateController implements IController {
       {
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "user._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -61,7 +67,14 @@ class workflowStateController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let search: ISearch = {
+        filter: ["name"],
+        value: req.query.search || "",
+      };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "user._id",
+      ]);
 
       if (!isFilter.status) {
         return res
@@ -182,7 +195,9 @@ class workflowStateController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

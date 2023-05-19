@@ -116,7 +116,10 @@ class BranchController implements IController {
       // End
 
       // Mengambil hasil filter
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "createdBy",
+        "_id",
+      ]);
       // End
 
       // Validasi apakah filter valid

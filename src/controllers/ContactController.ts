@@ -551,7 +551,7 @@ class ContactController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Not found!" });
+        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

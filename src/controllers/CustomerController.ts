@@ -463,7 +463,7 @@ class CustomerController implements IController {
       } else {
         return res
           .status(400)
-          .json({ status: 404, msg: "Error update, data not found" });
+          .json({ status: 404, msg: "Error update, data tidak ditemukan!" });
       }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
@@ -475,7 +475,7 @@ class CustomerController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Not found!" });
+        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

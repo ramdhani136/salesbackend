@@ -426,7 +426,7 @@ class BranchController implements IController {
         // End
         return res.status(200).json({ status: 200, data: result });
       }
-      return res.status(404).json({ status: 404, msg: "Error Delete!" });
+      return res.status(404).json({ status: 404, msg: "Error, Gagal menghapus data!" });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

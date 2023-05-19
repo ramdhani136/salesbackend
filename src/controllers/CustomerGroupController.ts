@@ -374,6 +374,10 @@ class CustomerGroupController implements IController {
       let data: any = {};
       if (result.length > 0) {
         data = result[0];
+      } else {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Data tidak ditemukan!" });
       }
 
       const buttonActions = await WorkflowController.getButtonAction(

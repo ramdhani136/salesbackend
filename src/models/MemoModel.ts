@@ -53,7 +53,6 @@ const MemoModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
     },
   },
   {

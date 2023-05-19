@@ -51,13 +51,8 @@ class MemoController implements IController {
       },
 
       {
-        name: "createdBy._id",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "createdBy",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
@@ -102,6 +97,7 @@ class MemoController implements IController {
         : [
             "name",
             "display",
+            "createdBy.id",
             "createdBy.name",
             "updatedAt",
             "notes",
@@ -120,11 +116,11 @@ class MemoController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter);
 
       // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.MEMO
+      );
       // End
 
       if (!isFilter.status) {
@@ -375,7 +371,7 @@ class MemoController implements IController {
 
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      }).populate("createdBy", "name");
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -568,7 +564,9 @@ class MemoController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Not found!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result: any = await Db.deleteOne({ _id: req.params.id });

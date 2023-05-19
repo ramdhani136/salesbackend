@@ -398,6 +398,13 @@ class CallsheetController implements IController {
         _id: req.params.id,
       });
 
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,

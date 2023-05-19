@@ -190,6 +190,11 @@ class TagController implements IController {
       const result: any = await Db.findOne({
         _id: req.params.id,
       });
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

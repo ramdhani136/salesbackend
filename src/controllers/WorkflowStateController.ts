@@ -62,7 +62,7 @@ class workflowStateController implements IController {
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
       let isFilter = FilterQuery.getFilter(filters, stateFilter);
-    
+
       if (!isFilter.status) {
         return res
           .status(400)
@@ -147,6 +147,12 @@ class workflowStateController implements IController {
         "user",
         "name"
       );
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)

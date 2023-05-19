@@ -5,8 +5,8 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
-  RoleProfile,
-  RoleUser,
+  RoleProfileModel,
+  RoleUserModel,
   Workflow,
   WorkflowChanger,
   WorkflowTransition,
@@ -166,6 +166,13 @@ class workflowStateController implements IController {
         "user",
         "name"
       );
+
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
@@ -236,7 +243,7 @@ class workflowStateController implements IController {
             allData.push(transition);
           }
         } else {
-          const validAccessRole = await RoleUser.findOne({
+          const validAccessRole = await RoleUserModel.findOne({
             $and: [
               { user: new mongoose.Types.ObjectId(`${user}`) },
               { roleprofile: transition.roleprofile },
@@ -296,7 +303,7 @@ class workflowStateController implements IController {
         }
       } else {
         const roleId = changer.roleprofile;
-        const validAccessRole = await RoleUser.findOne({
+        const validAccessRole = await RoleUserModel.findOne({
           $and: [
             { user: new mongoose.Types.ObjectId(`${user}`) },
             { roleprofile: roleId },

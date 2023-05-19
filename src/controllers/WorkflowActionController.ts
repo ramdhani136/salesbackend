@@ -137,6 +137,13 @@ class workflowActionController implements IController {
         "user",
         "name"
       );
+
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)

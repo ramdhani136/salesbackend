@@ -5,7 +5,7 @@ const UserGroupModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      // unique: true,
+      unique: true,
     },
     status: {
       type: String,
@@ -18,9 +18,11 @@ const UserGroupModel = new mongoose.Schema(
       default: "Draft",
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String ,required:true},
     },
   },
   {

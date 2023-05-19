@@ -5,7 +5,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
-  RoleProfile,
+  RoleProfileModel,
   Workflow,
   WorkflowAction,
   WorkflowState,
@@ -234,7 +234,7 @@ class WorkflowTransitionController implements IController {
       await WorkflowAction.findById(`${req.body.action}`);
       await WorkflowState.findById(`${req.body.stateActive}`);
       await WorkflowState.findById(`${req.body.nextState}`);
-      await RoleProfile.findById(`${req.body.roleprofile}`);
+      await RoleProfileModel.findById(`${req.body.roleprofile}`);
       const result = new Db(req.body);
       const response = await result.save();
       return res.status(200).json({ status: 200, data: response });
@@ -259,6 +259,13 @@ class WorkflowTransitionController implements IController {
         .populate("action", "name")
         .populate("nextState", "name")
         .populate("roleprofile", "name");
+
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)

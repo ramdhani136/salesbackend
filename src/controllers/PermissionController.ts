@@ -369,6 +369,12 @@ class PermissionController implements IController {
         _id: req.params.id,
       }).populate("createdBy", "name");
 
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,

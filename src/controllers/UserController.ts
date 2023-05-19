@@ -211,6 +211,13 @@ class UserController implements IController {
           .json({ status: 200, data: JSON.parse(cache), history: getHistory });
       }
       const users: any = await User.findOne({ _id: req.params.id });
+
+      if (!users) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
       const getHistory = await History.find(
         {
           $and: [{ "document._id": users._id }, { "document.type": "user" }],

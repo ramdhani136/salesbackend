@@ -5,7 +5,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
-  RoleProfile,
+  RoleProfileModel,
   Workflow,
   WorkflowAction,
   WorkflowChanger,
@@ -72,7 +72,7 @@ class WorkflowChangerController implements IController {
             "state.name",
             "roleprofile._id",
             "roleprofile.name",
-            "status"
+            "status",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -179,9 +179,7 @@ class WorkflowChangerController implements IController {
       return res.status(400).json({ status: 400, msg: "workflow Required!" });
     }
     if (!req.body.state) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "state Required!" });
+      return res.status(400).json({ status: 400, msg: "state Required!" });
     }
     if (!req.body.roleprofile) {
       return res
@@ -189,16 +187,14 @@ class WorkflowChangerController implements IController {
         .json({ status: 400, msg: "roleprofile Required!" });
     }
     if (!req.body.status) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "status Required!" });
+      return res.status(400).json({ status: 400, msg: "status Required!" });
     }
     req.body.user = req.userId;
 
     try {
       await Workflow.findById(`${req.body.workflow}`);
       await WorkflowState.findById(`${req.body.state}`);
-      await RoleProfile.findById(`${req.body.roleprofile}`);
+      await RoleProfileModel.findById(`${req.body.roleprofile}`);
       const result = new Db(req.body);
       const response = await result.save();
       return res.status(200).json({ status: 200, data: response });
@@ -219,7 +215,14 @@ class WorkflowChangerController implements IController {
       const result = await Db.findOne({ _id: req.params.id })
         .populate("user", "name")
         .populate("workflow", "name")
-        .populate("state", "name")
+        .populate("state", "name");
+
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)

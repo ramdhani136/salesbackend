@@ -10,11 +10,9 @@ import {
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
-  CustomerGroupModel,
   ScheduleModel as Db,
   History,
   ScheduleListModel,
-  ScheduleModel,
   UserGroupModel,
   namingSeriesModel,
 } from "../models";

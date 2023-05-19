@@ -84,6 +84,7 @@ class CustomerController implements IController {
         "customerGroup",
         "createdBy",
         "branch",
+        "_id",
       ]);
 
       if (!isFilter.status) {
@@ -282,37 +283,40 @@ class CustomerController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      })
+        .populate("createdBy", "name")
+        .populate("customerGroup", "name")
+        .populate("branch", "name");
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -396,16 +400,9 @@ class CustomerController implements IController {
               msg: "Error, customerGroup tidak aktif!",
             });
           }
-          // End
 
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
-          };
-          // End
+          req.body.branch = CekCG.branch._id;
 
-          req.body.customerGroup.branch = CekCG.branch;
           // End
         }
         // End

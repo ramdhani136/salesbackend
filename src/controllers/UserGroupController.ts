@@ -22,13 +22,18 @@ class UserGroupController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "createdBy",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -65,18 +70,22 @@ class UserGroupController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
+
       let search: ISearch = {
         filter: ["name"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "createdBy",
+        "_id",
+      ]);
 
       // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.USERGROUP
+      );
       // End
 
       if (!isFilter.status) {
@@ -86,12 +95,22 @@ class UserGroupController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data, setField).count();
+      let FinalFIlter: any = {};
+      FinalFIlter[`$and`] = [isFilter.data];
 
-      const result = await Db.find(isFilter.data, setField)
+      if (userPermission.length > 0) {
+        FinalFIlter[`$and`].push({
+          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+        });
+      }
+
+      const getAll = await Db.find(FinalFIlter, setField).count();
+
+      const result = await Db.find(FinalFIlter, setField)
         .sort(order_by)
         .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0);
+        .skip(limit > 0 ? page * limit - limit : 0)
+        .populate("createdBy", "name");
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -161,37 +180,43 @@ class UserGroupController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      }).populate("createdBy", "name");
+
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -327,7 +352,9 @@ class UserGroupController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Not found!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tida ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

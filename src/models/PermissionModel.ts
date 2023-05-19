@@ -28,6 +28,7 @@ const Permission = new mongoose.Schema(
         "permission",
         "memo",
         "contact",
+        "usergroup"
       ],
       default: "",
       index: true,

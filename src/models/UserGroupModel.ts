@@ -5,7 +5,7 @@ const UserGroupModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      // unique: true,
+      unique: true,
     },
     status: {
       type: String,
@@ -28,8 +28,6 @@ const UserGroupModel = new mongoose.Schema(
   }
 );
 
-UserGroupModel.index({ name: 1, status: 1, workflowState: 1 });
+UserGroupModel.index({ name: 1, status: 1, workflowState: 1, createdBy: 1 });
 
 export default mongoose.model("usergroup", UserGroupModel);
-
-

@@ -22,12 +22,17 @@ class BranchController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "createdBy._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -426,7 +431,9 @@ class BranchController implements IController {
         // End
         return res.status(200).json({ status: 200, data: result });
       }
-      return res.status(404).json({ status: 404, msg: "Error, Gagal menghapus data!" });
+      return res
+        .status(404)
+        .json({ status: 404, msg: "Error, Gagal menghapus data!" });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

@@ -22,7 +22,7 @@ class PermissionController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!=", ],
         typeOf: TypeOfState.String,
       },
       {

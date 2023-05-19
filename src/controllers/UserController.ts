@@ -215,7 +215,7 @@ class UserController implements IController {
       if (!users) {
         return res
           .status(404)
-          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          .json({ status: 404, msg: "Error, User tidak ditemukan!" });
       }
 
       const getHistory = await History.find(

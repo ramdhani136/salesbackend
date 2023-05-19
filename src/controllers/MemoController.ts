@@ -9,14 +9,7 @@ import {
 } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import {
-  CallSheetNoteModel,
-  ContactModel,
-  CustomerModel,
-  MemoModel as Db,
-  History,
-  namingSeriesModel,
-} from "../models";
+import { MemoModel as Db, History, namingSeriesModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -37,7 +30,7 @@ class MemoController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -394,7 +387,6 @@ class MemoController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

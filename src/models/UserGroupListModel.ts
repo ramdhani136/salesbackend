@@ -3,25 +3,19 @@ import mongoose, { Schema } from "mongoose";
 const UserGroupListModel = new mongoose.Schema(
   {
     user: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
     },
     userGroup: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
+      type: Schema.Types.ObjectId,
+      ref: "usergroup",
+      required: true,
     },
     createdBy: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
     },
   },
   {
@@ -29,8 +23,10 @@ const UserGroupListModel = new mongoose.Schema(
   }
 );
 
-
-UserGroupListModel.index({ name: 1, status: 1, workflowState: 1 });
-
+UserGroupListModel.index({
+  user: 1,
+  userGroup: 1,
+  createdBy: 1,
+});
 
 export default mongoose.model("usergrouplist", UserGroupListModel);

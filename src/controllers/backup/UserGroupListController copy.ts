@@ -33,21 +33,15 @@ class UserGroupListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "user",
-        operator: ["=", "!="],
+        name: "status",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "userGroup",
-        operator: ["=", "!="],
+        name: "workflowState",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-      {
-        name: "createdBy",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-
       {
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
@@ -72,20 +66,15 @@ class UserGroupListController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      // let search: ISearch = {
-      //   filter: ["user.name"],
-      //   value: req.query.search || "",
-      // };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
-        "_id",
-      ]);
+
+      let isFilter = FilterQuery.getFilter(filters, stateFilter);
 
       // Mengambil rincian permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.USERGROUP
-      );
+      // const userPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.USER,
+      //   selPermissionType.CUSTOMER
+      // );
       // End
 
       if (!isFilter.status) {
@@ -95,25 +84,12 @@ class UserGroupListController implements IController {
       }
       // End
 
-      let FinalFIlter: any = {};
-      FinalFIlter[`$and`] = [isFilter.data];
+      const getAll = await Db.find(isFilter.data, setField).count();
 
-      if (userPermission.length > 0) {
-        FinalFIlter[`$and`].push({
-          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-        });
-      }
-
-      const getAll = await Db.find(FinalFIlter, setField).count();
-
-      const result = await Db.find(FinalFIlter, setField)
-
+      const result = await Db.find(isFilter.data, setField)
         .sort(order_by)
         .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0)
-        .populate("createdBy", "name")
-        .populate("userGroup", "name")
-        .populate("user", "name");
+        .skip(limit > 0 ? page * limit - limit : 0);
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -172,6 +148,10 @@ class UserGroupListController implements IController {
         });
       }
 
+      req.body.userGroup = {
+        _id: cekUG._id,
+        name: cekUG.name,
+      };
       // End
 
       // Cek User
@@ -206,11 +186,15 @@ class UserGroupListController implements IController {
         });
       }
 
+      req.body.user = {
+        _id: cekUser._id,
+        name: cekUser.name,
+      };
       // End
 
       // Cek duplicate
       const dup = await Db.findOne({
-        $and: [{ userGroup: cekUG._id }, { user: cekUser._id }],
+        $and: [{ "userGroup._id": cekUG._id }, { "user._id": cekUser._id }],
       });
 
       if (dup) {
@@ -221,7 +205,11 @@ class UserGroupListController implements IController {
       }
       // End
 
-      req.body.createdBy = req.userId;
+      req.body.createdBy = {
+        _id: new ObjectId(req.userId),
+        name: req.user,
+      };
+
       const result = new Db(req.body);
       const response: any = await result.save();
 
@@ -229,10 +217,10 @@ class UserGroupListController implements IController {
       await HistoryController.pushHistory({
         document: {
           _id: response._id,
-          name: cekUG.name,
+          name: response.userGroup.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan user ${cekUser.name} ke group ${cekUG.name} `,
+        message: `${req.user} menambahkan user ${response.user.name} ke group ${response.userGroup.name} `,
         user: req.userId,
       });
       // End
@@ -277,16 +265,14 @@ class UserGroupListController implements IController {
       }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      })
-        .populate("createdBy", "name")
-        .populate("userGroup", "name")
-        .populate("user", "name");
+      });
 
       if (!result) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

@@ -6,6 +6,7 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { History, RoleListModel, RoleProfileModel } from "../models";
 import HistoryController from "./HistoryController";
+import { ISearch } from "../utils/FilterQuery";
 
 const Db = RoleListModel;
 const redisName = "rolelist";
@@ -19,8 +20,18 @@ class RoleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "roleprofile._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "roleprofile.name",
         operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "createdBy._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -109,7 +120,16 @@ class RoleListController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let search: ISearch = {
+        filter: ["roleprofile.name"],
+        value: req.query.search || "",
+      };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "roleprofile._id",
+        "createdBy._id",
+        "user._id",
+      ]);
 
       if (!isFilter.status) {
         return res
@@ -445,7 +465,9 @@ class RoleListController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

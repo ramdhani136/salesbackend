@@ -26,6 +26,8 @@ const Permission = new mongoose.Schema(
         "roleuser",
         "rolelist",
         "permission",
+        "memo",
+        "contact",
       ],
       default: "",
       index: true,

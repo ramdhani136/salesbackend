@@ -136,9 +136,18 @@ class MemoController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data, setField).count();
+      let FinalFIlter: any = {};
+      FinalFIlter[`$and`] = [isFilter.data];
 
-      const result = await Db.find(isFilter.data, setField)
+      if (userPermission.length > 0) {
+        FinalFIlter[`$and`].push({
+          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+        });
+      }
+
+      const getAll = await Db.find(FinalFIlter, setField).count();
+
+      const result = await Db.find(FinalFIlter, setField)
         .sort(order_by)
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0)

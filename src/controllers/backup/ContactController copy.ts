@@ -189,8 +189,19 @@ class ContactController implements IController {
       }
       // End
 
+      // set customer
+      req.body.customer = {
+        _id: cekCustomer._id,
+        name: cekCustomer.name,
+        customerGroup: cekCustomer.customerGroup,
+      };
+      // End
+
       // set CreatedAt
-      req.body.createdBy = req.userId;
+      req.body.createdBy = {
+        _id: new ObjectId(req.userId),
+        name: req.user,
+      };
       // End
 
       // Cek valid contact
@@ -270,15 +281,7 @@ class ContactController implements IController {
       }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      })
-        .populate("createdBy", "name")
-        .populate("customer", ["name", "branch"]);
-
-      if (!result) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Data tidak ditemukan!" });
-      }
+      });
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

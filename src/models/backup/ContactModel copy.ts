@@ -5,7 +5,7 @@ const ContactModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      // unique: true,
+      unique: true,
       index: true,
     },
     phone: {
@@ -16,17 +16,35 @@ const ContactModel = new mongoose.Schema(
       type: Number,
     },
     customer: {
-      type: Schema.Types.ObjectId,
-      ref: "customer",
-      required: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
+      customerGroup: {
+        _id: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        name: { type: String, required: true },
+        branch: {
+          _id: {
+            type: Schema.Types.ObjectId,
+            required: true,
+          },
+          name: { type: String, required: true },
+        },
+      },
     },
     desc: {
       type: String,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
     },
     status: {
       type: String,
@@ -50,8 +68,9 @@ ContactModel.index({
   email: 1,
   customer: 1,
   status: 1,
-  createdBy: 1,
   workflowState: 1,
 });
 
+
 export default mongoose.model("contact", ContactModel);
+

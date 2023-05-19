@@ -5,22 +5,28 @@ const CustomerModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      // unique: true,
+      unique: true,
+      index: true,
     },
     type: {
       type: String,
       enum: ["Individual", "Company"],
       default: "Company",
+      index: true,
     },
     customerGroup: {
-      type: Schema.Types.ObjectId,
-      ref: "customergroup",
-      required: true,
-    },
-    branch: {
-      type: Schema.Types.ObjectId,
-      ref: "branch",
-      required: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
+      branch: {
+        _id: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        name: { type: String, required: true },
+      },
     },
 
     img: {
@@ -33,19 +39,23 @@ const CustomerModel = new mongoose.Schema(
       type: String,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
     },
     status: {
       type: String,
       enum: ["0", "1", "2"],
       default: "1",
+      index: true,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Submitted",
+      index: true,
     },
   },
   {
@@ -60,7 +70,8 @@ CustomerModel.index({
   workflowState: 1,
   customerGroup: 1,
   branch: 1,
-  createdBy: 1,
 });
 
+
 export default mongoose.model("customer", CustomerModel);
+

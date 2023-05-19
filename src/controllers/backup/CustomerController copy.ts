@@ -13,7 +13,6 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
-import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "customer";
 
@@ -31,18 +30,18 @@ class CustomerController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "customerGroup",
-        operator: ["=", "!="],
+        name: "customerGroup.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "branch",
-        operator: ["=", "!="],
+        name: "branch.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy",
-        operator: ["=", "!="],
+        name: "createdBy.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
@@ -60,31 +59,24 @@ class CustomerController implements IController {
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
-
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : [
-            "name",
-            "createdBy.name",
-            "updatedAt",
-            "customerGroup.name",
-            "branch.name",
-          ];
+        : ["name", "branch", "createdBy", "updatedAt", "customerGroup"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let search: ISearch = {
-        filter: ["name"],
-        value: req.query.search || "",
-      };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
-        "customerGroup",
-        "createdBy",
-        "branch",
-      ]);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+
+      // Mengambil rincian permission user
+      // const userPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.USER,
+      //   selPermissionType.CUSTOMER
+      // );
+      // End
 
       if (!isFilter.status) {
         return res
@@ -93,106 +85,12 @@ class CustomerController implements IController {
       }
       // End
 
-      // Mengecek permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.CUSTOMER
-      );
-      // End
+      const getAll = await Db.find(isFilter.data, setField).count();
 
-      let pipelineTotal: any = [
-        {
-          $match: isFilter.data,
-        },
-        {
-          $project: { _id: 1, createdBy: 1, customerGroup: 1 },
-        },
-        {
-          $count: "total_orders",
-        },
-      ];
-
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineTotal.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
-
-      const totalData = await Db.aggregate(pipelineTotal);
-
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
-
-      let pipelineResult: any = [
-        {
-          $match: isFilter.data,
-        },
-        {
-          $skip: limit > 0 ? page * limit - limit : 0,
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-          },
-        },
-        {
-          $unwind: "$createdBy",
-        },
-        {
-          $lookup: {
-            from: "customergroups",
-            localField: "customerGroup",
-            foreignField: "_id",
-            as: "customerGroup",
-          },
-        },
-        {
-          $unwind: "$customerGroup",
-        },
-        {
-          $lookup: {
-            from: "branches",
-            localField: "branch",
-            foreignField: "_id",
-            as: "branch",
-          },
-        },
-        {
-          $unwind: "$branch",
-        },
-
-        {
-          $project: setField,
-        },
-        {
-          $sort: order_by,
-        },
-      ];
-
-      // Menambahkan limit ketika terdapat limit
-      if (limit > 0) {
-        pipelineResult.splice(2, 0, { $limit: limit });
-      }
-      // End
-
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineResult.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
-
-      const result = await Db.aggregate(pipelineResult);
+      const result = await Db.find(isFilter.data, setField)
+        .sort(order_by)
+        .limit(limit)
+        .skip(limit > 0 ? page * limit - limit : 0);
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -251,28 +149,37 @@ class CustomerController implements IController {
       }
       // End
 
-      req.body.branch = CekCG.branch._id;
+      // set setCustomerGroup
+      req.body.customerGroup = {
+        _id: CekCG._id,
+        name: CekCG.name,
+      };
+      // End
 
-      req.body.createdBy = req.userId;
+      req.body.customerGroup.branch = CekCG.branch;
+      // End
 
-      for (let index = 0; index < 3000; index++) {
-        const result = new Db(req.body);
-        const response: any = await result.save();
-      }
+      req.body.createdBy = {
+        _id: new ObjectId(req.userId),
+        name: req.user,
+      };
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan customer ${response.name} `,
-      //   user: req.userId,
-      // });
-      // // End
+      const result = new Db(req.body);
+      const response: any = await result.save();
 
-      return res.status(200).json({ status: 200, data: "d" });
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan customer ${response.name} `,
+        user: req.userId,
+      });
+      // End
+
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)
@@ -282,34 +189,34 @@ class CustomerController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const result: any = await Db.findOne({
         _id: req.params.id,
       });

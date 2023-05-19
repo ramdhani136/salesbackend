@@ -18,7 +18,8 @@ class FilterQuery {
   public getFilter(
     filters: any,
     stateFilter: IStateFilter[],
-    search?: ISearch
+    search?: ISearch,
+    objectList?: string[]
   ): IFilterQuery {
     let genSearch: any[] = [];
     if (search) {
@@ -50,12 +51,24 @@ class FilterQuery {
           valid = false;
         }
         let typeOf = validFilter[0].typeOf;
+
+        let exist = false;
+        if (objectList) {
+          if (objectList.length > 0) {
+            exist = objectList.includes(filter[0]);
+          }
+        }
+
         let valueFilter =
           typeOf == "number"
             ? filter[2]
             : typeOf == "date"
             ? new Date(filter[2])
+            : exist
+            ? new ObjectId(`${filter[2]}`)
             : `${filter[2]}`;
+
+        exist = false;
         // End
         let field: any = {};
         let child: any = {};
@@ -122,6 +135,7 @@ class FilterQuery {
       } else {
         simpan = ismerge[0];
       }
+
       finalFilter.push(simpan);
     }
 

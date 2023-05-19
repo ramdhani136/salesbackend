@@ -165,17 +165,17 @@ class MemoController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (
-      !Array.isArray(req.body.display) ||
-      req.body.display.some(
-        (tag: any) =>
-          !["visit", "callsheet", "dashboard", "alert"].includes(tag)
-      )
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Display harus array dengan data yang ditentukan!." });
-    }
+    // if (
+    //   !Array.isArray(req.body.display) ||
+    //   req.body.display.some(
+    //     (tag: any) =>
+    //       !["visit", "callsheet", "dashboard", "alert"].includes(tag)
+    //   )
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ error: "Display harus array dengan data yang ditentukan!." });
+    // }
 
     if (!req.body.notes) {
       return res
@@ -277,7 +277,10 @@ class MemoController implements IController {
         : olahKata.join("") + PaddyData(latest + 1, 4).toString();
       // End set name
 
-      req.body.createdBy = req.userId;
+      req.body.createdBy = {
+        _id: new ObjectId(req.userId),
+        name: req.user,
+      };
 
       const result = new Db(req.body);
 

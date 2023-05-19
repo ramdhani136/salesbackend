@@ -6,7 +6,6 @@ const Branch = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
     },
     lat: {
       type: String,
@@ -21,19 +20,16 @@ const Branch = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
     },
     status: {
       type: String,
       enum: ["0", "1", "2"],
       default: "0",
-      index: true,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Draft",
-      index: true,
     },
   },
   {
@@ -41,7 +37,6 @@ const Branch = new mongoose.Schema(
   }
 );
 
-Branch.index({ name: 1, status: 1 });
+Branch.index({ name: 1, status: 1, workflowState: 1, createdBy: 1 });
 
 export default mongoose.model("branch", Branch);
-

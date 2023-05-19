@@ -10,7 +10,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-
+import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
@@ -32,8 +32,8 @@ class TagController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy",
-        operator: ["=", "!="],
+        name: "createdBy.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
@@ -53,7 +53,7 @@ class TagController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "updatedAt"];
+        : ["name", "createdBy.name", "updatedAt"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -64,10 +64,15 @@ class TagController implements IController {
         filter: ["name"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
-        "_id",
-        "createdBy",
-      ]);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+
+      // Mengambil rincian permission user
+      // const userPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.USER,
+      //   selPermissionType.CUSTOMER
+      // );
+      // End
 
       if (!isFilter.status) {
         return res
@@ -81,8 +86,7 @@ class TagController implements IController {
       const result = await Db.find(isFilter.data, setField)
         .sort(order_by)
         .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0)
-        .populate("createdBy", "name");
+        .skip(limit > 0 ? page * limit - limit : 0);
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -125,7 +129,10 @@ class TagController implements IController {
       }
       // End
 
-      req.body.createdBy = req.userId;
+      req.body.createdBy = {
+        _id: new ObjectId(req.userId),
+        name: req.user,
+      };
 
       const result = new Db(req.body);
       const response: any = await result.save();
@@ -182,7 +189,7 @@ class TagController implements IController {
       }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      }).populate("createdBy", "name");
+      });
       if (!result) {
         return res
           .status(404)
@@ -311,7 +318,7 @@ class TagController implements IController {
       } else {
         return res
           .status(400)
-          .json({ status: 404, msg: "Error update, Tidak ditemukan!" });
+          .json({ status: 404, msg: "Error update, data not found" });
       }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
@@ -323,9 +330,7 @@ class TagController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res.status(404).json({ status: 404, msg: "Not found!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

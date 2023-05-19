@@ -8,9 +8,11 @@ const TagModel = new mongoose.Schema(
       unique: true,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String },
     },
   },
   {
@@ -18,6 +20,8 @@ const TagModel = new mongoose.Schema(
   }
 );
 
-TagModel.index({ name: 1, createdBy: 1 });
+
+TagModel.index({ name: 1 });
+
 
 export default mongoose.model("tag", TagModel);

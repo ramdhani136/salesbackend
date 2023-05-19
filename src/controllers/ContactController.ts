@@ -19,6 +19,7 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
+import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "contact";
 
@@ -46,18 +47,8 @@ class ContactController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "customer.customerGroup.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "customer.customerGroup.branch.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "customer",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -71,8 +62,8 @@ class ContactController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "createdBy",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -92,21 +83,39 @@ class ContactController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : [];
+        : [
+            "name",
+            "phone",
+            "customer._id",
+            "customer.name",
+            "createdBy._id",
+            "createdBy.name",
+            "status",
+            "workflowState",
+            "updatedAt",
+          ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let search: ISearch = {
+        filter: ["name", "phone"],
+        value: req.query.search || "",
+      };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "customer",
+        "createdBy",
+        "_id",
+      ]);
 
       // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CONTACT
+      );
       // End
 
       if (!isFilter.status) {
@@ -116,12 +125,93 @@ class ContactController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data, setField).count();
+      let pipelineTotal: any = [
+        {
+          $match: isFilter.data,
+        },
+        {
+          $project: { _id: 1, createdBy: 1, customer: 1 },
+        },
+        {
+          $count: "total_orders",
+        },
+      ];
 
-      const result = await Db.find(isFilter.data, setField)
-        .sort(order_by)
-        .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0);
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const totalData = await Db.aggregate(pipelineTotal);
+
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
+
+      let pipelineResult: any = [
+        {
+          $match: isFilter.data,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+
+        {
+          $sort: order_by,
+        },
+      ];
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.splice(2, 0, { $limit: limit });
+      }
+      // End
+
+      // Menambahkan fieldset ketika terdapat setfield
+
+      if (Object.keys(setField).length > 0) {
+        pipelineResult.push({
+          $project: setField,
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({

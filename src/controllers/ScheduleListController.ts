@@ -31,7 +31,12 @@ class ScheduleListController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "schedule._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -42,6 +47,11 @@ class ScheduleListController implements IController {
       {
         name: "schedule.type",
         operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "schedule.userGroup._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -85,13 +95,28 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.Date,
       },
       {
+        name: "customer._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "customer.name",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.String,
       },
       {
+        name: "customer.customerGroup._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "customer.customerGroup.name",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.customerGroup.branch._id",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -132,10 +157,17 @@ class ScheduleListController implements IController {
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
       let search: ISearch = {
-        filter: ["schedule.name"],
+        filter: ["schedule.name,customer.name"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "schedule._id",
+        "schedule.userGroup._id",
+        "customer._id",
+        "customer.customerGroup._id",
+        "customer.customerGroup.branch._id",
+      ]);
 
       // Mengambil rincian permission user
       // const userPermission = await PermissionMiddleware.getPermission(
@@ -352,7 +384,6 @@ class ScheduleListController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

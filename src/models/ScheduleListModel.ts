@@ -70,20 +70,20 @@ const ScheduleListModel = new mongoose.Schema(
         required: true,
       },
       name: { type: String, required: true },
-      customerGroup: {
-        _id: {
-          type: Schema.Types.ObjectId,
-          required: true,
-        },
-        name: { type: String, required: true },
-        branch: {
-          _id: {
-            type: Schema.Types.ObjectId,
-            required: true,
-          },
-          name: { type: String, required: true },
-        },
+    },
+    customerGroup: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
       },
+      name: { type: String, required: true },
+    },
+    branch: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+      },
+      name: { type: String, required: true },
     },
     notes: {
       type: String,

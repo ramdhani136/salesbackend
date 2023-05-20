@@ -267,7 +267,9 @@ class ScheduleListController implements IController {
       //Mengecek Schedule
       const cekSchedule: any = await ScheduleModel.findOne({
         $and: [{ _id: req.body.schedule }],
-      });
+      })
+        .populate("userGroup", "name")
+        .populate("createdBy", "name");
 
       if (!cekSchedule) {
         return res.status(404).json({
@@ -285,6 +287,7 @@ class ScheduleListController implements IController {
       // End
 
       // set setSchedule
+
       req.body.schedule = cekSchedule;
       // End
 
@@ -293,7 +296,9 @@ class ScheduleListController implements IController {
       //Mengecek customer
       const cekCustomer: any = await CustomerModel.findOne({
         $and: [{ _id: req.body.customer }],
-      });
+      })
+        .populate("customerGroup", "name")
+        .populate("branch", "name");
 
       if (!cekCustomer) {
         return res.status(404).json({
@@ -311,8 +316,15 @@ class ScheduleListController implements IController {
       // End
 
       // set customer
-      req.body.customer = cekCustomer;
-      // End
+      req.body.customer = {
+        _id: cekCustomer._id,
+        name: cekCustomer.name,
+      };
+      // set customerGroup
+      req.body.customerGroup = cekCustomer.customerGroup;
+
+      // set customerGroup
+      req.body.branch = cekCustomer.branch;
 
       // End
 
@@ -321,6 +333,7 @@ class ScheduleListController implements IController {
         name: req.user,
       };
 
+    
       const result = new Db(req.body);
       const response: any = await result.save();
 

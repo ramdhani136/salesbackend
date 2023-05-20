@@ -237,10 +237,8 @@ class CustomerController implements IController {
             maxDistance: maxDistance,
             spherical: true,
           },
-        },);
+        });
       }
-
-      console.log(JSON.stringify(pipelineResult));
 
       // End
       const result = await Db.aggregate(pipelineResult);

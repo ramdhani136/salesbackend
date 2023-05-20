@@ -62,6 +62,10 @@ class CustomerController implements IController {
       },
     ];
     try {
+      const nearby: any = req.query.nearby
+        ? JSON.parse(`${req.query.nearby}`)
+        : [];
+
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
@@ -127,6 +131,26 @@ class CustomerController implements IController {
           },
         });
       }
+      // End
+
+      // Menambahkan filter nearby gps
+      if (nearby.length === 3) {
+        const targetLatitude = parseFloat(`${nearby[0]}`);
+        const targetLongitude = parseFloat(`${nearby[1]}`);
+        const maxDistance = parseInt(`${nearby[2]}`);
+        pipelineTotal.unshift({
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [targetLongitude, targetLatitude],
+            },
+            distanceField: "distance",
+            maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
+            spherical: true,
+          },
+        });
+      }
+
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
@@ -198,6 +222,27 @@ class CustomerController implements IController {
       }
       // End
 
+      // Menambahkan filter nearby gps
+      if (nearby.length === 3) {
+        const targetLatitude = parseFloat(`${nearby[0]}`);
+        const targetLongitude = parseFloat(`${nearby[1]}`);
+        const maxDistance = parseInt(`${nearby[2]}`);
+        pipelineResult.unshift({
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [targetLongitude, targetLatitude],
+            },
+            distanceField: "distance",
+            maxDistance: maxDistance,
+            spherical: true,
+          },
+        },);
+      }
+
+      console.log(JSON.stringify(pipelineResult));
+
+      // End
       const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {

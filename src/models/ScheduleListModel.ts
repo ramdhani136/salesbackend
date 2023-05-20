@@ -128,6 +128,7 @@ ScheduleListModel.index({
   status: 1,
   customer: 1,
   workflowState: 1,
+  createdBy: 1,
 });
 
 export default mongoose.model("schedulelist", ScheduleListModel);

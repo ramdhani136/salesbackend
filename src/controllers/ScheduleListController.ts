@@ -10,19 +10,13 @@ import {
   ScheduleListModel as Db,
   History,
   ScheduleModel,
-  UserGroupModel,
   visitModel,
 } from "../models";
-import { PermissionMiddleware } from "../middleware";
-import {
-  selPermissionAllow,
-  selPermissionType,
-} from "../middleware/PermissionMiddleware";
+
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
-import CallSheetNoteModel from "../models/CallSheetNoteModel";
 
 const redisName = "schedulelist";
 
@@ -169,14 +163,6 @@ class ScheduleListController implements IController {
         "customer.customerGroup.branch._id",
       ]);
 
-      // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
-      // End
-
       if (!isFilter.status) {
         return res
           .status(400)
@@ -289,6 +275,9 @@ class ScheduleListController implements IController {
       // set setSchedule
 
       req.body.schedule = cekSchedule;
+      req.body.schedule = cekSchedule;
+
+      console.log(req.body.schedule)
       // End
 
       // End
@@ -332,8 +321,8 @@ class ScheduleListController implements IController {
         _id: new ObjectId(req.userId),
         name: req.user,
       };
+      
 
-    
       const result = new Db(req.body);
       const response: any = await result.save();
 

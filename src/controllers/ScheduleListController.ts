@@ -186,7 +186,6 @@ class ScheduleListController implements IController {
 
       const getAll = await Db.find(isFilter.data, setField).count();
 
-      console.log(JSON.stringify(isFilter.data));
       const result = await Db.find(isFilter.data, setField)
         .sort(order_by)
         .limit(limit)
@@ -311,7 +310,7 @@ class ScheduleListController implements IController {
       }
       // End
 
-      // set setSchedule
+      // set customer
       req.body.customer = cekCustomer;
       // End
 

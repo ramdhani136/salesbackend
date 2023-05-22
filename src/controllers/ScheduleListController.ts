@@ -180,7 +180,23 @@ class ScheduleListController implements IController {
 
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : [];
+        : [
+            "_id",
+            "schedule._id",
+            "schedule.name",
+            "customer._id",
+            "customer.name",
+            "customerGroup._id",
+            "customerGroup.name",
+            "branch._id",
+            "branch.name",
+            "createdBy._id",
+            "createdBy.name",
+            "userGroup._id",
+            "userGroup.name",
+            "createdAt",
+            "updatedAt",
+          ];
 
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -203,7 +219,7 @@ class ScheduleListController implements IController {
 
       const getAll = await Db.find(isFilter.data).count();
 
-      let pipeline = [
+      let pipeline: any = [
         { $match: isFilter.data },
 
         {
@@ -269,11 +285,10 @@ class ScheduleListController implements IController {
         },
       ];
 
-      if (setField) {
-        console.log("tes");
-        // pipeline.push({
-        //   $project: setField,
-        // });
+      if (Object.keys(setField).length > 0) {
+        pipeline.push({
+          $project: setField,
+        });
       }
       const result = await Db.aggregate(pipeline);
 

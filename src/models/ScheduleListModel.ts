@@ -3,90 +3,26 @@ import mongoose, { Schema } from "mongoose";
 const ScheduleListModel = new mongoose.Schema(
   {
     schedule: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: {
-        type: String,
-        required: true,
-      },
-      type: {
-        type: String,
-        required: true,
-        enum: ["visit", "callsheet"],
-      },
-      notes: {
-        type: String,
-        required: true,
-      },
-      userGroup: {
-        _id: {
-          type: Schema.Types.ObjectId,
-          required: true,
-        },
-        name: {
-          type: String,
-          required: true,
-        },
-      },
-      activeDate: {
-        type: Date,
-        required: true,
-      },
-      closingDate: {
-        type: Date,
-        require: true,
-      },
-      status: {
-        type: String,
-        enum: ["0", "1", "2"],
-        default: "0",
-      },
-      workflowState: {
-        type: String,
-        required: true,
-        default: "Draft",
-      },
-      createdBy: {
-        _id: {
-          type: Schema.Types.ObjectId,
-          required: true,
-        },
-        name: {
-          type: String,
-          required: true
-        },
-      },
-      createdAt: {
-        type: Date,
-        require: true,
-      },
-      updatedAt: {
-        type: Date,
-        require: true,
-      },
+      type: Schema.Types.ObjectId,
+      ref: "schedule",
+      required: true,
     },
     customer: {
       _id: {
         type: Schema.Types.ObjectId,
+        ref: "customer",
         required: true,
       },
-      name: { type: String, required: true },
-    },
-    customerGroup: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
+      customerGroup: {
+        _id: {
+          type: Schema.Types.ObjectId,
+          ref: "customergroup",
+          required: true,
+        },
+        branch: {
+          _id: { type: Schema.Types.ObjectId, ref: "branch", required: true },
+        },
       },
-      name: { type: String, required: true },
-    },
-    branch: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
     },
     notes: {
       type: String,
@@ -114,11 +50,9 @@ const ScheduleListModel = new mongoose.Schema(
       },
     },
     createdBy: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String },
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
     },
   },
   {

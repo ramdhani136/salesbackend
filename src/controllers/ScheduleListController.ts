@@ -274,10 +274,8 @@ class ScheduleListController implements IController {
 
       // set setSchedule
 
-      req.body.schedule = cekSchedule;
-      req.body.schedule = cekSchedule;
+      req.body.schedule = cekSchedule._id;
 
-      console.log(req.body.schedule)
       // End
 
       // End
@@ -304,25 +302,19 @@ class ScheduleListController implements IController {
       }
       // End
 
-      // set customer
       req.body.customer = {
         _id: cekCustomer._id,
-        name: cekCustomer.name,
+        customerGroup: {
+          _id: cekCustomer.customerGroup._id,
+          branch: {
+            _id: cekCustomer.branch._id,
+          },
+        },
       };
-      // set customerGroup
-      req.body.customerGroup = cekCustomer.customerGroup;
-
-      // set customerGroup
-      req.body.branch = cekCustomer.branch;
 
       // End
 
-      req.body.createdBy = {
-        _id: new ObjectId(req.userId),
-        name: req.user,
-      };
-      
-
+      req.body.createdBy = req.userId;
       const result = new Db(req.body);
       const response: any = await result.save();
 
@@ -330,7 +322,7 @@ class ScheduleListController implements IController {
       await HistoryController.pushHistory({
         document: {
           _id: response._id,
-          name: response.name,
+          name: `schedulelist`,
           type: redisName,
         },
         message: `${req.user} menambahkan customer ${cekCustomer.name} pada schedule  ${cekSchedule.name} `,
@@ -378,7 +370,12 @@ class ScheduleListController implements IController {
       }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      })
+        .populate("createdBy", "name")
+        .populate("customer._id", "name")
+        .populate("customer.customerGroup._id", "name")
+        .populate("customer.customerGroup.branch._id", "name")
+        .populate("schedule", "name");
 
       if (!result) {
         return res

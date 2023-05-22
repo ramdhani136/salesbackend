@@ -201,7 +201,7 @@ class ScheduleListController implements IController {
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
-      const limit: number | string = parseInt(`${req.query.limit}`) || 0;
+      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
 
@@ -284,10 +284,10 @@ class ScheduleListController implements IController {
         },
       ];
 
-      // Menambahkan limit ketika terdapat limit
-      // if (limit > 0) {
-      //   pipeline.push({ $limit: limit });
-      // }
+      //Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipeline.splice(3, 0, { $limit: limit });
+      }
 
       // End
       if (Object.keys(setField).length > 0) {
@@ -295,6 +295,7 @@ class ScheduleListController implements IController {
           $project: setField,
         });
       }
+
       const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {

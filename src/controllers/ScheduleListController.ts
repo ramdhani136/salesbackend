@@ -147,13 +147,13 @@ class ScheduleListController implements IController {
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
 
-      const notScheduleFIlte: any = filters.filter((item: any) => {
+      const notScheduleFIlter: any = filters.filter((item: any) => {
         const key = item[0]; // Ambil kunci pada indeks 0
         return !key.startsWith("schedule."); // Kembalikan true jika kunci diawali dengan "schedule."
       });
 
       let isFilter = FilterQuery.getFilter(
-        notScheduleFIlte,
+        notScheduleFIlter,
         stateFilter,
         undefined,
         ["_id", "createdBy", "customer", "customerGroup", "branch"]
@@ -243,7 +243,7 @@ class ScheduleListController implements IController {
         });
       }
 
-      let isFilterScheduleId: any = [];
+      let pipelineTotal: any = [isFilter.data];
 
       // Mencari data id schedule
       const scheduleFIlter = filters
@@ -292,7 +292,10 @@ class ScheduleListController implements IController {
               schedule: { $in: finalFilterSchedule },
             },
           });
-          isFilterScheduleId = finalFilterSchedule;
+
+          pipelineTotal.unshift({
+            schedule: { $in: finalFilterSchedule },
+          });
         } else {
           return res.status(400).json({
             status: 404,
@@ -303,13 +306,9 @@ class ScheduleListController implements IController {
 
       // End
 
+      console.log(pipelineTotal);
       const getAll = await Db.find({
-        $and: [
-          isFilter.data,
-          {
-            schedule: { $in: isFilterScheduleId },
-          },
-        ],
+        $and: pipelineTotal,
       }).count();
       const result = await Db.aggregate(pipeline);
 

@@ -306,7 +306,6 @@ class ScheduleListController implements IController {
 
       // End
 
-      console.log(pipelineTotal);
       const getAll = await Db.find({
         $and: pipelineTotal,
       }).count();

@@ -162,8 +162,6 @@ class ScheduleListController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data).count();
-
       let pipeline: any = [
         {
           $sort: order_by,
@@ -299,6 +297,7 @@ class ScheduleListController implements IController {
 
       console.log(JSON.stringify(pipeline));
 
+      const getAll = await Db.find({}).count();
       const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {

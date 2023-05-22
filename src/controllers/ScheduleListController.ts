@@ -74,6 +74,11 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.Date,
       },
       {
+        name: "schedule.userGroup",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "customer._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
@@ -84,17 +89,7 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
 
-      {
-        name: "userGroup._id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "userGroup.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-
+  
       {
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
@@ -167,13 +162,15 @@ class ScheduleListController implements IController {
           scheduleFIlter,
           stateSchedule,
           search,
-          ["_id"]
+          ["_id", "userGroup"]
         );
 
         const schedulesData = await ScheduleModel.find(
           validScheduleFIlter.data,
           ["_id"]
         );
+
+        console.log(schedulesData);
       }
 
       // End

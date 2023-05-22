@@ -89,7 +89,6 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
 
-  
       {
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
@@ -116,7 +115,11 @@ class ScheduleListController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-
+      {
+        name: "createdBy",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
       {
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
@@ -192,13 +195,10 @@ class ScheduleListController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      // let search: ISearch = {
-      //   filter: ["schedule.name,customer.name"],
-      //   value: req.query.search || "",
-      // };
 
       let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
         "_id",
+        "createdBy",
       ]);
 
       if (!isFilter.status) {
@@ -208,9 +208,9 @@ class ScheduleListController implements IController {
       }
       // End
 
-      const getAll = await Db.find().count();
+      const getAll = await Db.find(isFilter.data).count();
 
-      const result = await Db.find();
+      const result = await Db.find(isFilter.data);
 
       if (result.length > 0) {
         return res.status(200).json({

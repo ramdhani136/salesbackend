@@ -147,13 +147,17 @@ class ScheduleListController implements IController {
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
 
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
-        "_id",
-        "createdBy",
-        "customer",
-        "customerGroup",
-        "branch",
-      ]);
+      const notScheduleFIlte: any = filters.filter((item: any) => {
+        const key = item[0]; // Ambil kunci pada indeks 0
+        return !key.startsWith("schedule."); // Kembalikan true jika kunci diawali dengan "schedule."
+      });
+
+      let isFilter = FilterQuery.getFilter(
+        notScheduleFIlte,
+        stateFilter,
+        undefined,
+        ["_id", "createdBy", "customer", "customerGroup", "branch"]
+      );
 
       if (!isFilter.status) {
         return res
@@ -163,6 +167,7 @@ class ScheduleListController implements IController {
       // End
 
       let pipeline: any = [
+        { $match: isFilter.data },
         {
           $sort: order_by,
         },
@@ -298,10 +303,9 @@ class ScheduleListController implements IController {
 
       // End
 
-      console.log(JSON.stringify(pipeline));
-
       const getAll = await Db.find({
         $and: [
+          isFilter.data,
           {
             schedule: { $in: isFilterScheduleId },
           },
@@ -596,7 +600,6 @@ class ScheduleListController implements IController {
         result.workflowState
       );
 
-      console.log(result);
       const getHistory = await History.find(
         {
           $and: [

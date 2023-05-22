@@ -285,6 +285,12 @@ class ScheduleListController implements IController {
         },
       ];
 
+      // Menambahkan limit ketika terdapat limit
+      // if (limit > 0) {
+      //   pipeline.push({ $limit: limit });
+      // }
+
+      // End
       if (Object.keys(setField).length > 0) {
         pipeline.push({
           $project: setField,

@@ -180,14 +180,7 @@ class ScheduleListController implements IController {
 
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : [
-            // "schedule.name",
-            // "customer.name",
-            // "notes",
-            // "status",
-            // "createdBy",
-            // "updatedAt",
-          ];
+        : [];
 
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -210,8 +203,15 @@ class ScheduleListController implements IController {
 
       const getAll = await Db.find(isFilter.data).count();
 
-      const result = await Db.aggregate([
+      let pipeline = [
         { $match: isFilter.data },
+
+        {
+          $sort: order_by,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
         {
           $lookup: {
             from: "users",
@@ -267,7 +267,15 @@ class ScheduleListController implements IController {
         {
           $unwind: "$userGroup",
         },
-      ]);
+      ];
+
+      if (setField) {
+        console.log("tes");
+        // pipeline.push({
+        //   $project: setField,
+        // });
+      }
+      const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {
         return res.status(200).json({

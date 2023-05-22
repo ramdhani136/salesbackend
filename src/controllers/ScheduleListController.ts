@@ -287,6 +287,11 @@ class ScheduleListController implements IController {
               schedule: { $in: finalFilterSchedule },
             },
           });
+        } else {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data Not found!",
+          });
         }
       }
 

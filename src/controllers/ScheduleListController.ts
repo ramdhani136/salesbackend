@@ -150,6 +150,9 @@ class ScheduleListController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
         "_id",
         "createdBy",
+        "customer",
+        "customerGroup",
+        "branch",
       ]);
 
       if (!isFilter.status) {
@@ -396,40 +399,42 @@ class ScheduleListController implements IController {
 
       // End
 
-      // Cek Duplikat data
-      const dupl: any = await Db.findOne({
-        $and: [
-          { schedule: new ObjectId(req.body.schedule) },
-          { customer: new ObjectId(req.body.customer) },
-        ],
-      });
+      // // Cek Duplikat data
+      // const dupl: any = await Db.findOne({
+      //   $and: [
+      //     { schedule: new ObjectId(req.body.schedule) },
+      //     { customer: new ObjectId(req.body.customer) },
+      //   ],
+      // });
 
-      if (dupl) {
-        return res.status(404).json({
-          status: 404,
-          msg: `Error, customer ${cekCustomer.name} sudah ada di dalam schedule ${cekSchedule.name}!`,
-        });
-      }
+      // if (dupl) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: `Error, customer ${cekCustomer.name} sudah ada di dalam schedule ${cekSchedule.name}!`,
+      //   });
+      // }
 
-      // End
+      // // End
 
       req.body.createdBy = req.userId;
-      const result = new Db(req.body);
-      const response: any = await result.save();
+      for (let index = 0; index < 1000000; index++) {
+        const result = new Db(req.body);
+        const response: any = await result.save();
+      }
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: `schedulelist`,
-          type: redisName,
-        },
-        message: `${req.user} menambahkan customer ${cekCustomer.name} pada schedule  ${cekSchedule.name} `,
-        user: req.userId,
-      });
-      // End
+      // // push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: response._id,
+      //     name: `schedulelist`,
+      //     type: redisName,
+      //   },
+      //   message: `${req.user} menambahkan customer ${cekCustomer.name} pada schedule  ${cekSchedule.name} `,
+      //   user: req.userId,
+      // });
+      // // End
 
-      return res.status(200).json({ status: 200, data: response });
+      return res.status(200).json({ status: 200, data: "dd" });
     } catch (error) {
       return res
         .status(400)

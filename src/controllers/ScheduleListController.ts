@@ -165,7 +165,6 @@ class ScheduleListController implements IController {
       const getAll = await Db.find(isFilter.data).count();
 
       let pipeline: any = [
-        { $match: isFilter.data },
         {
           $sort: order_by,
         },
@@ -282,11 +281,18 @@ class ScheduleListController implements IController {
           const finalFilterSchedule = schedulesData.map((item) => {
             return item._id;
           });
-          console.log(finalFilterSchedule);
+
+          pipeline.unshift({
+            $match: {
+              schedule: { $in: finalFilterSchedule },
+            },
+          });
         }
       }
 
       // End
+
+      console.log(JSON.stringify(pipeline));
 
       const result = await Db.aggregate(pipeline);
 

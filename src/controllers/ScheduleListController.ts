@@ -79,16 +79,10 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer._id",
+        name: "customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-      {
-        name: "customer.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-
       {
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
@@ -96,23 +90,13 @@ class ScheduleListController implements IController {
       },
 
       {
-        name: "customerGroup._id",
+        name: "customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customerGroup.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "branch._id",
+        name: "branch",
         operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "branch.name",
-        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
@@ -135,48 +119,6 @@ class ScheduleListController implements IController {
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
-
-      // Mencari data id schedule
-      const scheduleFIlter = filters
-        .filter((item: any) => {
-          const key = item[0]; // Ambil kunci pada indeks 0
-          return key.startsWith("schedule."); // Kembalikan true jika kunci diawali dengan "schedule."
-        })
-        .map((item: any) => {
-          const key = item[0];
-          const value = item[2];
-          return [key.replace("schedule.", ""), item[1], value]; // Hapus "schedule." dari kunci
-        });
-
-      const stateSchedule = stateFilter
-        .filter((item) => item.name.startsWith("schedule.")) // Filter objek yang terkait dengan "schedule"
-        .map((item) => {
-          const newItem = { ...item }; // Salin objek menggunakan spread operator
-          newItem.name = newItem.name.replace("schedule.", ""); // Hapus "schedule." dari properti nama pada salinan objek
-          return newItem;
-        });
-
-      if (scheduleFIlter.length > 0 || req.query.search) {
-        let search: ISearch = {
-          filter: ["name"],
-          value: req.query.search || "",
-        };
-        const validScheduleFIlter = FilterQuery.getFilter(
-          scheduleFIlter,
-          stateSchedule,
-          search,
-          ["_id", "userGroup"]
-        );
-
-        const schedulesData = await ScheduleModel.find(
-          validScheduleFIlter.data,
-          ["_id"]
-        );
-
-        console.log(schedulesData);
-      }
-
-      // End
 
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
@@ -295,6 +237,48 @@ class ScheduleListController implements IController {
           $project: setField,
         });
       }
+
+      // Mencari data id schedule
+      const scheduleFIlter = filters
+        .filter((item: any) => {
+          const key = item[0]; // Ambil kunci pada indeks 0
+          return key.startsWith("schedule."); // Kembalikan true jika kunci diawali dengan "schedule."
+        })
+        .map((item: any) => {
+          const key = item[0];
+          const value = item[2];
+          return [key.replace("schedule.", ""), item[1], value]; // Hapus "schedule." dari kunci
+        });
+
+      const stateSchedule = stateFilter
+        .filter((item) => item.name.startsWith("schedule.")) // Filter objek yang terkait dengan "schedule"
+        .map((item) => {
+          const newItem = { ...item }; // Salin objek menggunakan spread operator
+          newItem.name = newItem.name.replace("schedule.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          return newItem;
+        });
+
+      if (scheduleFIlter.length > 0 || req.query.search) {
+        let search: ISearch = {
+          filter: ["name"],
+          value: req.query.search || "",
+        };
+        const validScheduleFIlter = FilterQuery.getFilter(
+          scheduleFIlter,
+          stateSchedule,
+          search,
+          ["_id", "userGroup"]
+        );
+
+        const schedulesData = await ScheduleModel.find(
+          validScheduleFIlter.data,
+          ["_id"]
+        );
+
+        console.log(schedulesData);
+      }
+
+      // End
 
       const result = await Db.aggregate(pipeline);
 

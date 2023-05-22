@@ -210,7 +210,64 @@ class ScheduleListController implements IController {
 
       const getAll = await Db.find(isFilter.data).count();
 
-      const result = await Db.find(isFilter.data);
+      const result = await Db.aggregate([
+        { $match: isFilter.data },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedule",
+            foreignField: "_id",
+            as: "schedule",
+          },
+        },
+        {
+          $unwind: "$schedule",
+        },
+        {
+          $lookup: {
+            from: "usergroups",
+            localField: "schedule.userGroup",
+            foreignField: "_id",
+            as: "userGroup",
+          },
+        },
+        {
+          $unwind: "$userGroup",
+        },
+      ]);
 
       if (result.length > 0) {
         return res.status(200).json({

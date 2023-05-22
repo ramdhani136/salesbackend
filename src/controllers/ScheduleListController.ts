@@ -221,7 +221,6 @@ class ScheduleListController implements IController {
 
       let pipeline: any = [
         { $match: isFilter.data },
-
         {
           $sort: order_by,
         },

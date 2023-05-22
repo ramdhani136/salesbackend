@@ -321,6 +321,8 @@ class ScheduleListController implements IController {
       // End
 
       req.body.customer = cekCustomer._id;
+      req.body.customerGroup = cekCustomer.customerGroup._id;
+      req.body.branch = cekCustomer.branch._id;
 
       // End
 
@@ -426,7 +428,7 @@ class ScheduleListController implements IController {
         {
           $lookup: {
             from: "customergroups",
-            localField: "customer.customerGroup",
+            localField: "customerGroup",
             foreignField: "_id",
             as: "customerGroup",
           },

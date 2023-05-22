@@ -278,7 +278,12 @@ class ScheduleListController implements IController {
           ["_id"]
         );
 
-        console.log(schedulesData);
+        if (schedulesData.length > 0) {
+          const finalFilterSchedule = schedulesData.map((item) => {
+            return item._id;
+          });
+          console.log(finalFilterSchedule);
+        }
       }
 
       // End

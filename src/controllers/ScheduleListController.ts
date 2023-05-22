@@ -238,6 +238,8 @@ class ScheduleListController implements IController {
         });
       }
 
+      let isFilterScheduleId: any = [];
+
       // Mencari data id schedule
       const scheduleFIlter = filters
         .filter((item: any) => {
@@ -285,6 +287,7 @@ class ScheduleListController implements IController {
               schedule: { $in: finalFilterSchedule },
             },
           });
+          isFilterScheduleId = finalFilterSchedule;
         } else {
           return res.status(400).json({
             status: 404,
@@ -297,7 +300,13 @@ class ScheduleListController implements IController {
 
       console.log(JSON.stringify(pipeline));
 
-      const getAll = await Db.find({}).count();
+      const getAll = await Db.find({
+        $and: [
+          {
+            schedule: { $in: isFilterScheduleId },
+          },
+        ],
+      }).count();
       const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {

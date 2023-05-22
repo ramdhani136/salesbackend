@@ -8,21 +8,9 @@ const ScheduleListModel = new mongoose.Schema(
       required: true,
     },
     customer: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        ref: "customer",
-        required: true,
-      },
-      customerGroup: {
-        _id: {
-          type: Schema.Types.ObjectId,
-          ref: "customergroup",
-          required: true,
-        },
-        branch: {
-          _id: { type: Schema.Types.ObjectId, ref: "branch", required: true },
-        },
-      },
+      type: Schema.Types.ObjectId,
+      ref: "customer",
+      required: true,
     },
     notes: {
       type: String,

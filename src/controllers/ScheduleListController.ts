@@ -39,22 +39,12 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "schedule.type",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "schedule.userGroup._id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "schedule.userGroup.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "schedule.createdBy.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -65,11 +55,6 @@ class ScheduleListController implements IController {
       },
       {
         name: "schedule.workflowState",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -95,27 +80,45 @@ class ScheduleListController implements IController {
       },
       {
         name: "customer.name",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
+
       {
-        name: "customer.customerGroup._id",
+        name: "userGroup._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.customerGroup.name",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        name: "userGroup.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
+
       {
-        name: "customer.customerGroup.branch._id",
+        name: "status",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+
+      {
+        name: "customerGroup._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.customerGroup.branch.name",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        name: "customerGroup.name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "branch._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "branch.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
 
@@ -134,33 +137,71 @@ class ScheduleListController implements IController {
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
+
+      // Mencari data id schedule
+      const scheduleFIlter = filters
+        .filter((item: any) => {
+          const key = item[0]; // Ambil kunci pada indeks 0
+          return key.startsWith("schedule."); // Kembalikan true jika kunci diawali dengan "schedule."
+        })
+        .map((item: any) => {
+          const key = item[0];
+          const value = item[2];
+          return [key.replace("schedule.", ""), item[1], value]; // Hapus "schedule." dari kunci
+        });
+
+      const stateSchedule = stateFilter
+        .filter((item) => item.name.startsWith("schedule.")) // Filter objek yang terkait dengan "schedule"
+        .map((item) => {
+          const newItem = { ...item }; // Salin objek menggunakan spread operator
+          newItem.name = newItem.name.replace("schedule.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          return newItem;
+        });
+
+      if (scheduleFIlter.length > 0 || req.query.search) {
+        let search: ISearch = {
+          filter: ["name"],
+          value: req.query.search || "",
+        };
+        const validScheduleFIlter = FilterQuery.getFilter(
+          scheduleFIlter,
+          stateSchedule,
+          search,
+          ["_id"]
+        );
+
+        const schedulesData = await ScheduleModel.find(
+          validScheduleFIlter.data,
+          ["_id"]
+        );
+      }
+
+      // End
+
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "schedule.name",
-            "customer.name",
-            "notes",
-            "status",
-            "createdBy",
-            "updatedAt",
+            // "schedule.name",
+            // "customer.name",
+            // "notes",
+            // "status",
+            // "createdBy",
+            // "updatedAt",
           ];
+
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let search: ISearch = {
-        filter: ["schedule.name,customer.name"],
-        value: req.query.search || "",
-      };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+      // let search: ISearch = {
+      //   filter: ["schedule.name,customer.name"],
+      //   value: req.query.search || "",
+      // };
+
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
         "_id",
-        "schedule._id",
-        "schedule.userGroup._id",
-        "customer._id",
-        "customer.customerGroup._id",
-        "customer.customerGroup.branch._id",
       ]);
 
       if (!isFilter.status) {
@@ -170,12 +211,9 @@ class ScheduleListController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data, setField).count();
+      const getAll = await Db.find().count();
 
-      const result = await Db.find(isFilter.data, setField)
-        .sort(order_by)
-        .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0);
+      const result = await Db.find();
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -233,23 +271,6 @@ class ScheduleListController implements IController {
     }
 
     try {
-      // Cek Duplikat data
-      const dupl: any = await Db.findOne({
-        $and: [
-          { "schedule._id": new ObjectId(req.body.schedule) },
-          { "customer._id": new ObjectId(req.body.customer) },
-        ],
-      });
-
-      if (dupl) {
-        return res.status(404).json({
-          status: 404,
-          msg: `Error, customer ${dupl.customer.name} sudah ada di dalam schedule ${dupl.schedule.name}!`,
-        });
-      }
-
-      // End
-
       //Mengecek Schedule
       const cekSchedule: any = await ScheduleModel.findOne({
         $and: [{ _id: req.body.schedule }],
@@ -302,15 +323,24 @@ class ScheduleListController implements IController {
       }
       // End
 
-      req.body.customer = {
-        _id: cekCustomer._id,
-        customerGroup: {
-          _id: cekCustomer.customerGroup._id,
-          branch: {
-            _id: cekCustomer.branch._id,
-          },
-        },
-      };
+      req.body.customer = cekCustomer._id;
+
+      // End
+
+      // Cek Duplikat data
+      const dupl: any = await Db.findOne({
+        $and: [
+          { schedule: new ObjectId(req.body.schedule) },
+          { customer: new ObjectId(req.body.customer) },
+        ],
+      });
+
+      if (dupl) {
+        return res.status(404).json({
+          status: 404,
+          msg: `Error, customer ${cekCustomer.name} sudah ada di dalam schedule ${cekSchedule.name}!`,
+        });
+      }
 
       // End
 
@@ -368,20 +398,99 @@ class ScheduleListController implements IController {
           workflow: buttonActions,
         });
       }
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      })
-        .populate("createdBy", "name")
-        .populate("customer._id", "name")
-        .populate("customer.customerGroup._id", "name")
-        .populate("customer.customerGroup.branch._id", "name")
-        .populate("schedule", "name");
+      const getData: any = await Db.aggregate([
+        {
+          $match: {
+            _id: new ObjectId(req.params.id),
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customer.customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedule",
+            foreignField: "_id",
+            as: "schedule",
+          },
+        },
+        {
+          $unwind: "$schedule",
+        },
+        {
+          $lookup: {
+            from: "usergroups",
+            localField: "schedule.userGroup",
+            foreignField: "_id",
+            as: "userGroup",
+          },
+        },
+        {
+          $unwind: "$userGroup",
+        },
+        {
+          $project: {
+            _id: 1,
+            "schedule._id": 1,
+            "schedule.name": 1,
+            "customer._id": 1,
+            "customer.name": 1,
+            status: 1,
+            "createdBy._id": 1,
+            "createdBy.name": 1,
+            "customerGroup._id": 1,
+            "customerGroup.name": 1,
+            "userGroup._id": 1,
+            "userGroup.name": 1,
+            createdAt: 1,
+            updatedAt: 1,
+            "schedule.type": 1,
+            "schedule.status": 1,
+            "schedule.workflowState": 1,
+            "schedule.closingDate": 1,
+            "schedule.activeDate": 1,
+          },
+        },
+      ]);
 
-      if (!result) {
+      if (getData.length === 0) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
+      const result = getData[0];
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -389,6 +498,7 @@ class ScheduleListController implements IController {
         result.workflowState
       );
 
+      console.log(result);
       const getHistory = await History.find(
         {
           $and: [

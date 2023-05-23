@@ -30,7 +30,7 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "schedule._id",
+        name: "schedule",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
@@ -85,19 +85,18 @@ class ScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "customer.customerGroup",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.branch",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-
-      {
-        name: "customerGroup",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "branch",
-        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -129,12 +128,12 @@ class ScheduleListController implements IController {
             "schedule.name",
             "customer._id",
             "customer.name",
+            "createdBy._id",
+            "createdBy.name",
             "customerGroup._id",
             "customerGroup.name",
             "branch._id",
             "branch.name",
-            "createdBy._id",
-            "createdBy.name",
             "userGroup._id",
             "userGroup.name",
             "createdAt",
@@ -153,11 +152,16 @@ class ScheduleListController implements IController {
         return !key.startsWith("schedule."); // Kembalikan true jika kunci diawali dengan "schedule."
       });
 
+      const notCustomer: any = notScheduleFIlter.filter((item: any) => {
+        const key = item[0]; // Ambil kunci pada indeks 0
+        return !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+      });
+
       let isFilter = FilterQuery.getFilter(
-        notScheduleFIlter,
+        notCustomer,
         stateFilter,
         undefined,
-        ["_id", "createdBy", "customer", "customerGroup", "branch"]
+        ["_id", "createdBy", "customer", "schedule"]
       );
 
       if (!isFilter.status) {
@@ -200,13 +204,24 @@ class ScheduleListController implements IController {
         {
           $lookup: {
             from: "customergroups",
-            localField: "customerGroup",
+            localField: "customer.customerGroup",
             foreignField: "_id",
             as: "customerGroup",
           },
         },
         {
           $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+        {
+          $unwind: "$branch",
         },
         {
           $lookup: {
@@ -266,15 +281,11 @@ class ScheduleListController implements IController {
           return newItem;
         });
 
-      if (scheduleFIlter.length > 0 || req.query.search) {
-        let search: ISearch = {
-          filter: ["name"],
-          value: req.query.search || "",
-        };
+      if (scheduleFIlter.length > 0) {
         const validScheduleFIlter = FilterQuery.getFilter(
           scheduleFIlter,
           stateSchedule,
-          search,
+          undefined,
           ["_id", "userGroup"]
         );
 
@@ -296,6 +307,68 @@ class ScheduleListController implements IController {
 
           pipelineTotal.unshift({
             schedule: { $in: finalFilterSchedule },
+          });
+        } else {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data Not found!",
+          });
+        }
+      }
+
+      // End
+
+      // Mencari data id customer
+      const customerFIlter = filters
+        .filter((item: any) => {
+          const key = item[0]; // Ambil kunci pada indeks 0
+          return key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+        })
+        .map((item: any) => {
+          const key = item[0];
+          const value = item[2];
+          return [key.replace("customer.", ""), item[1], value]; // Hapus "schedule." dari kunci
+        });
+
+      const stateCustomer = stateFilter
+        .filter((item) => item.name.startsWith("customer.")) // Filter objek yang terkait dengan "schedule"
+        .map((item) => {
+          const newItem = { ...item }; // Salin objek menggunakan spread operator
+          newItem.name = newItem.name.replace("customer.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          return newItem;
+        });
+
+      if (customerFIlter.length > 0 || req.query.search) {
+        let search: ISearch = {
+          filter: ["name"],
+          value: req.query.search || "",
+        };
+        const validCustomer = FilterQuery.getFilter(
+          customerFIlter,
+          stateCustomer,
+          search,
+          ["_id", "customerGroup", "branch"]
+        );
+
+        const customerData = await CustomerModel.find(validCustomer.data, [
+          "_id",
+        ]);
+
+        if (customerData.length > 0) {
+          const finalFilterCustomer = customerData.map((item) => {
+            return item._id;
+          });
+
+          console.log(finalFilterCustomer);
+
+          pipeline.unshift({
+            $match: {
+              customer: { $in: finalFilterCustomer },
+            },
+          });
+
+          pipelineTotal.unshift({
+            customer: { $in: finalFilterCustomer },
           });
         } else {
           return res.status(400).json({
@@ -960,7 +1033,9 @@ class ScheduleListController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Data tidak ditemukan!!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Data tidak ditemukan!!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

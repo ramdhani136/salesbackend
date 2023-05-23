@@ -278,6 +278,11 @@ class CustomerController implements IController {
         .status(400)
         .json({ status: 400, msg: "Error, customerGroup wajib diisi!" });
     }
+    if (!req.body.branch) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, branch wajib diisi!" });
+    }
 
     if (req.body.lat && req.body.lng) {
       req.body.location = {
@@ -289,8 +294,11 @@ class CustomerController implements IController {
     try {
       //Mengecek Customer Group
       const CekCG: any = await CustomerGroupModel.findOne({
-        $and: [{ _id: req.body.customerGroup }],
-      }).populate("branch", "name");
+        $and: [
+          { _id: req.body.customerGroup },
+          { branch: { $in: [new ObjectId(req.body.branch)] } },
+        ],
+      });
 
       if (!CekCG) {
         return res.status(404).json({
@@ -305,14 +313,14 @@ class CustomerController implements IController {
           msg: "Error, customerGroup tidak aktif!",
         });
       }
+
       // End
 
-      req.body.branch = CekCG.branch._id;
-
       req.body.createdBy = req.userId;
-
       const result = new Db(req.body);
       const response: any = await result.save();
+
+      console.log(req.body);
 
       // push history
       await HistoryController.pushHistory({

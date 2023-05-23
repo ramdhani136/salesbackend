@@ -4,13 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import {
-  BranchModel,
-  CustomerGroupModel as Db,
-  History,
-  RoleProfileModel,
-  User,
-} from "../models";
+import { BranchModel, CustomerGroupModel as Db, History } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -172,9 +166,9 @@ class CustomerGroupController implements IController {
             as: "branch",
           },
         },
-        {
-          $unwind: "$branch",
-        },
+        // {
+        //   $unwind: "$branch",
+        // },
         {
           $lookup: {
             from: "users",
@@ -291,14 +285,6 @@ class CustomerGroupController implements IController {
             .json({ status: 400, msg: "Error, parent tidak aktif!" });
         }
 
-        // Cek branch harus sama dengan parent
-        if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
-          return res.status(400).json({
-            status: 400,
-            msg: "Error, branch harus sama dengan parent!",
-          });
-        }
-        // End
         req.body.parent = {
           _id: new ObjectId(req.body.parent),
           name: cekParent.name,
@@ -364,6 +350,27 @@ class CustomerGroupController implements IController {
         {
           $match: { _id: new ObjectId(req.params.id) },
         },
+
+        {
+          $lookup: {
+            from: "branches",
+            localField: "branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
         {
           $graphLookup: {
             from: "customergroups",
@@ -371,21 +378,26 @@ class CustomerGroupController implements IController {
             connectFromField: "_id",
             connectToField: "parent._id",
             as: "childs",
+            restrictSearchWithMatch: {
+              // branch: { $in: [new ObjectId("646c353c69a4a9f161e32761")] },
+            },
           },
         },
+
         {
           $project: {
             name: 1,
             parent: 1,
-            branch: 1,
+            "branch._id": 1,
+            "branch.name": 1,
             status: 1,
             workflowState: 1,
-            createdBy: 1,
-            // createdAt: 1,
-            // updatedAt: 1,
+            "createdBy._id": 1,
+            "createdBy.name": 1,
             childs: {
               _id: 1,
               name: 1,
+              branch: 1,
             },
           },
         },
@@ -432,6 +444,14 @@ class CustomerGroupController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    // tidak boleh di edit
+    if (req.body.createdBy) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, createdBy tidak dapat dirubah!",
+      });
+    }
+
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
@@ -439,25 +459,47 @@ class CustomerGroupController implements IController {
         .populate("branch", "name")
         .populate("createdBy", "name");
 
-      // Cek branch terdaftar
-      const cekBranch: any = await BranchModel.findOne({
-        $and: [{ _id: req.body.branch }],
-      });
+      if (req.body.branch) {
+        // Cek branch terdaftar
+        if (typeof req.body.branch !== "object") {
+          return res.status(400).json({
+            status: 400,
+            msg: "Error, branch berupa type data object!",
+          });
+        }
 
-      if (!cekBranch) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, branch tidak ditemukan!",
-        });
-      }
+        if (req.body.branch.length === 0) {
+          return res.status(400).json({
+            status: 400,
+            msg: "Error, branch harus diisi minimal 1!",
+          });
+        }
 
-      if (cekBranch.status != 1) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, branch tidak aktif!",
-        });
+        const uniqBranch: any = [...new Set(req.body.branch)];
+
+        for (const item of uniqBranch) {
+          let cekBranch: any = await BranchModel.findOne({
+            $and: [{ _id: item }],
+          });
+
+          if (!cekBranch) {
+            return res.status(404).json({
+              status: 404,
+              msg: `Error, branch ${item} tidak ditemukan! `,
+            });
+          }
+
+          if (cekBranch.status != 1) {
+            return res.status(404).json({
+              status: 404,
+              msg: `Error, branch ${item} tidak aktif!`,
+            });
+          }
+        }
+
+        req.body.branch = uniqBranch;
+        // End
       }
-      // End
 
       // Cek Parent
       if (req.body.parent) {
@@ -477,14 +519,14 @@ class CustomerGroupController implements IController {
             .json({ status: 400, msg: "Error, parent tidak aktif!" });
         }
 
-        // Cek branch harus sama dengan parent
-        if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
-          return res.status(400).json({
-            status: 400,
-            msg: "Error, branch harus sama dengan parent!",
-          });
-        }
-        // End
+        // // Cek branch harus sama dengan parent
+        // if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
+        //   return res.status(400).json({
+        //     status: 400,
+        //     msg: "Error, branch harus sama dengan parent!",
+        //   });
+        // }
+        // // End
         req.body.parent = {
           _id: new ObjectId(req.body.parent),
           name: cekParent.name,
@@ -522,8 +564,7 @@ class CustomerGroupController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         })
-          .populate("roleprofile", "name")
-          .populate("user", "name")
+          .populate("branch", "name")
           .populate("createdBy", "name");
 
         await Redis.client.set(

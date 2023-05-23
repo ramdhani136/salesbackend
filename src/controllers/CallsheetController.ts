@@ -47,23 +47,33 @@ class CallsheetController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "schedule",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "contact",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "customer.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.customerGroup.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "customer.customerGroup",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.customerGroup.branch.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "customer.branch",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "createdBy",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -76,11 +86,7 @@ class CallsheetController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-      {
-        name: "schedule.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
+
       {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
@@ -101,11 +107,15 @@ class CallsheetController implements IController {
         : [
             "name",
             "type",
+            "createdBy._id",
             "createdBy.name",
             "updatedAt",
+            "customer._id",
+            "customerGroup._id",
+            "branch._id",
             "customer.name",
-            "customer.customerGroup.name",
-            "customer.customerGroup.branch.name",
+            "customerGroup.name",
+            "branch.name",
             "status",
             "workflowState",
             "schedule",
@@ -135,10 +145,87 @@ class CallsheetController implements IController {
 
       const getAll = await Db.find(isFilter.data, setField).count();
 
-      const result = await Db.find(isFilter.data, setField)
-        .sort(order_by)
-        .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0);
+      let pipeline: any = [
+        // { $match: isFilter.data },
+        {
+          $sort: order_by,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customer.customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+        {
+          $unwind: "$branch",
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedule",
+            foreignField: "_id",
+            as: "schedule",
+          },
+        },
+        // {
+        //   $unwind: "$schedule",
+        // },
+        // {
+        //   $lookup: {
+        //     from: "usergroups",
+        //     localField: "schedule.userGroup",
+        //     foreignField: "_id",
+        //     as: "schedule.userGroup",
+        //   },
+        // },
+        // {
+        //   $unwind: "$userGroup",
+        // },
+      ];
+      const result = await Db.aggregate(pipeline);
+
+      // const result = await Db.find(isFilter.data, setField)
+      //   .sort(order_by)
+      //   .limit(limit)
+      //   .skip(limit > 0 ? page * limit - limit : 0);
 
       if (result.length > 0) {
         return res.status(200).json({

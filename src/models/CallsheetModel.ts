@@ -6,101 +6,44 @@ const CallsheetModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     type: {
       type: String,
       enum: ["in", "out"],
+      index: true,
     },
     customer: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
-      customerGroup: {
-        _id: {
-          type: Schema.Types.ObjectId,
-          required: true,
-        },
-        name: { type: String, required: true },
-        branch: {
-          _id: {
-            type: Schema.Types.ObjectId,
-            required: true,
-          },
-          name: { type: String, required: true },
-        },
-      },
+      type: Schema.Types.ObjectId,
+      ref: "customer",
+      required: true,
+      index: true,
     },
     contact: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
-      phone: { type: Number, required: true },
+      type: Schema.Types.ObjectId,
+      ref: "contact",
+      required: true,
+      index: true,
     },
     rate: {
       type: Number,
       default: 0,
+      index: true,
     },
     createdBy: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+      index: true,
     },
+
     schedule: {
       type: [
         {
-          _id: { type: Schema.Types.ObjectId, required: true },
-          name: { type: String, required: true },
-          notes: { type: String, required: true },
-          scheduleList: {
-            _id: { type: Schema.Types.ObjectId, required: true },
-            notes: { type: String, required: true },
-          },
-          type: {
-            type: String,
-            required: true,
-            enum: ["visit", "callsheet"],
-          },
-          userGroup: {
-            _id: {
-              type: Schema.Types.ObjectId,
-              required: true,
-            },
-            name: {
-              type: String,
-              required: true,
-            },
-          },
-          activeDate: {
-            type: Date,
-            required: true,
-          },
-          closingDate: {
-            type: Date,
-            require: true,
-          },
-          status: {
-            type: String,
-            enum: ["0", "1", "2"],
-            default: "0",
-          },
-          workflowState: {
-            type: String,
-            required: true,
-            default: "Draft",
-          },
-          createdBy: {
-            _id: {
-              type: Schema.Types.ObjectId,
-              required: true,
-            },
-            name: { type: String },
-          },
+          type: Schema.Types.ObjectId,
+          ref: "schedule",
+          required: true,
+          index: true,
         },
       ],
     },
@@ -121,16 +64,5 @@ const CallsheetModel = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-CallsheetModel.index({
-  name: 1,
-  type: 1,
-  status: 1,
-  workflowState: 1,
-  customer: 1,
-  rate: 1,
-  contact: 1,
-  schedule: 1,
-});
 
 export default mongoose.model("callsheet", CallsheetModel);

@@ -57,6 +57,11 @@ class CallsheetController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "customer",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "customer.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
@@ -126,14 +131,20 @@ class CallsheetController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
+        "customer",
+        "schedule",
+        "createdBy",
+        "_id",
+        "contact",
+      ]);
 
       // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CALLSHEET
+      );
       // End
 
       if (!isFilter.status) {
@@ -143,10 +154,12 @@ class CallsheetController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data, setField).count();
+      let pipelineTotal: any = [isFilter.data];
+
+      const getAll = await Db.find({ $and: pipelineTotal }).count();
 
       let pipeline: any = [
-        // { $match: isFilter.data },
+        { $match: isFilter.data },
         {
           $sort: order_by,
         },
@@ -205,27 +218,31 @@ class CallsheetController implements IController {
             as: "schedule",
           },
         },
-        // {
-        //   $unwind: "$schedule",
-        // },
-        // {
-        //   $lookup: {
-        //     from: "usergroups",
-        //     localField: "schedule.userGroup",
-        //     foreignField: "_id",
-        //     as: "schedule.userGroup",
-        //   },
-        // },
-        // {
-        //   $unwind: "$userGroup",
-        // },
       ];
-      const result = await Db.aggregate(pipeline);
 
-      // const result = await Db.find(isFilter.data, setField)
-      //   .sort(order_by)
-      //   .limit(limit)
-      //   .skip(limit > 0 ? page * limit - limit : 0);
+      //Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipeline.splice(3, 0, { $limit: limit });
+      }
+
+      // End
+      if (Object.keys(setField).length > 0) {
+        pipeline.push({
+          $project: setField,
+        });
+      }
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipeline.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {
         return res.status(200).json({

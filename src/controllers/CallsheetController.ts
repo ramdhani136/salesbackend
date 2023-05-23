@@ -287,11 +287,7 @@ class CallsheetController implements IController {
         });
       }
 
-      req.body.customer = {
-        _id: new ObjectId(cekCustomer._id),
-        name: cekCustomer.name,
-        customerGroup: cekCustomer.customerGroup,
-      };
+      req.body.customer = cekCustomer._id;
       // End
 
       // Mengecek contact jika terdapat kontak untuk customer
@@ -305,7 +301,7 @@ class CallsheetController implements IController {
           $and: [
             { _id: req.body.contact },
             {
-              "customer._id": req.body.customer,
+              customer: req.body.customer,
             },
           ],
         },
@@ -327,35 +323,28 @@ class CallsheetController implements IController {
       }
 
       // set contact
-      req.body.contact = {
-        _id: contact._id,
-        name: contact.name,
-        phone: contact.phone,
-      };
+      req.body.contact = contact._id;
 
       // End
 
-      req.body.createdBy = {
-        _id: new ObjectId(req.userId),
-        name: req.user,
-      };
+      req.body.createdBy = req.userId;
 
-      // const result = new Db(req.body);
-      // const response: any = await result.save({});
+      const result = new Db(req.body);
+      const response: any = await result.save({});
 
-      // //push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan callsheet ${response.name} `,
-      //   user: req.userId,
-      // });
-      // //End
+      //push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan callsheet ${response.name} `,
+        user: req.userId,
+      });
+      //End
 
-      return res.status(200).json({ status: 200, data: 'd' });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)
@@ -393,7 +382,7 @@ class CallsheetController implements IController {
           workflow: buttonActions,
         });
       }
-      
+
       const result: any = await Db.findOne({
         _id: req.params.id,
       });
@@ -403,7 +392,6 @@ class CallsheetController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

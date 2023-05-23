@@ -6,11 +6,13 @@ const ScheduleListModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "schedule",
       required: true,
+      index: true,
     },
     customer: {
       type: Schema.Types.ObjectId,
       ref: "customer",
       required: true,
+      index: true,
     },
     notes: {
       type: String,
@@ -41,6 +43,7 @@ const ScheduleListModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
+      index: true,
     },
   },
   {
@@ -48,12 +51,12 @@ const ScheduleListModel = new mongoose.Schema(
   }
 );
 
-ScheduleListModel.index({
-  schedule: 1,
-  status: 1,
-  customer: 1,
-  workflowState: 1,
-  createdBy: 1,
-});
+// ScheduleListModel.index({
+//   schedule: 1,
+//   status: 1,
+//   customer: 1,
+//   workflowState: 1,
+//   createdBy: 1,
+// });
 
 export default mongoose.model("schedulelist", ScheduleListModel);

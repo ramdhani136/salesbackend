@@ -600,13 +600,24 @@ class ScheduleListController implements IController {
         {
           $lookup: {
             from: "customergroups",
-            localField: "customerGroup",
+            localField: "customer.customerGroup",
             foreignField: "_id",
             as: "customerGroup",
           },
         },
         {
           $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+        {
+          $unwind: "$branch",
         },
         {
           $lookup: {
@@ -642,6 +653,8 @@ class ScheduleListController implements IController {
             "createdBy.name": 1,
             "customerGroup._id": 1,
             "customerGroup.name": 1,
+            "branch._id": 1,
+            "branch.name": 1,
             "userGroup._id": 1,
             "userGroup.name": 1,
             createdAt: 1,
@@ -705,18 +718,6 @@ class ScheduleListController implements IController {
         msg: "Error, createdby tidak dapat dirubah",
       });
     }
-    if (req.body.customerGroup) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, createdby tidak dapat dirubah",
-      });
-    }
-    if (req.body.branch) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, createdby tidak dapat dirubah",
-      });
-    }
 
     // End
 
@@ -751,13 +752,24 @@ class ScheduleListController implements IController {
       {
         $lookup: {
           from: "customergroups",
-          localField: "customerGroup",
+          localField: "customer.customerGroup",
           foreignField: "_id",
           as: "customerGroup",
         },
       },
       {
         $unwind: "$customerGroup",
+      },
+      {
+        $lookup: {
+          from: "branches",
+          localField: "customer.branch",
+          foreignField: "_id",
+          as: "branch",
+        },
+      },
+      {
+        $unwind: "$branch",
       },
       {
         $lookup: {
@@ -793,6 +805,8 @@ class ScheduleListController implements IController {
           "createdBy.name": 1,
           "customerGroup._id": 1,
           "customerGroup.name": 1,
+          "branch._id": 1,
+          "branch.name": 1,
           "userGroup._id": 1,
           "userGroup.name": 1,
           createdAt: 1,
@@ -813,7 +827,6 @@ class ScheduleListController implements IController {
       })
         .populate("schedule", "name")
         .populate("customer", "name")
-        .populate("customerGroup", "name")
         .populate("createdBy", "name");
 
       if (cekData.length > 0) {
@@ -996,7 +1009,6 @@ class ScheduleListController implements IController {
         })
           .populate("schedule", "name")
           .populate("customer", "name")
-          .populate("customerGroup", "name")
           .populate("createdBy", "name");
 
         await Redis.client.set(

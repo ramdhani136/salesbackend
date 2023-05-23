@@ -5,6 +5,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  CallsheetModel,
   CustomerGroupModel,
   CustomerModel,
   ScheduleListModel as Db,
@@ -395,8 +396,6 @@ class ScheduleListController implements IController {
 
       // End
 
-      // End
-
       //Mengecek customer
       const cekCustomer: any = await CustomerModel.findOne({
         $and: [{ _id: req.body.customer }],
@@ -425,42 +424,41 @@ class ScheduleListController implements IController {
 
       // End
 
-      // // Cek Duplikat data
-      // const dupl: any = await Db.findOne({
-      //   $and: [
-      //     { schedule: new ObjectId(req.body.schedule) },
-      //     { customer: new ObjectId(req.body.customer) },
-      //   ],
-      // });
+      // Cek Duplikat data
+      const dupl: any = await Db.findOne({
+        $and: [
+          { schedule: new ObjectId(req.body.schedule) },
+          { customer: new ObjectId(req.body.customer) },
+        ],
+      });
 
-      // if (dupl) {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: `Error, customer ${cekCustomer.name} sudah ada di dalam schedule ${cekSchedule.name}!`,
-      //   });
-      // }
+      if (dupl) {
+        return res.status(404).json({
+          status: 404,
+          msg: `Error, customer ${cekCustomer.name} sudah ada di dalam schedule ${cekSchedule.name}!`,
+        });
+      }
 
       // // End
 
       req.body.createdBy = req.userId;
-      for (let index = 0; index < 1000000; index++) {
-        const result = new Db(req.body);
-        const response: any = await result.save();
-      }
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: `schedulelist`,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan customer ${cekCustomer.name} pada schedule  ${cekSchedule.name} `,
-      //   user: req.userId,
-      // });
-      // // End
+      const result = new Db(req.body);
+      const response: any = await result.save();
 
-      return res.status(200).json({ status: 200, data: "dd" });
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: `schedulelist`,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan customer ${cekCustomer.name} pada schedule  ${cekSchedule.name} `,
+        user: req.userId,
+      });
+      // End
+
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)
@@ -470,34 +468,34 @@ class ScheduleListController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
       const getData: any = await Db.aggregate([
         {
           $match: {
@@ -634,28 +632,119 @@ class ScheduleListController implements IController {
         msg: "Error, createdby tidak dapat dirubah",
       });
     }
-    if (req.body.schedule) {
+    if (req.body.customerGroup) {
       return res.status(404).json({
         status: 404,
-        msg: "Error, schedule tidak dapat dirubah",
+        msg: "Error, createdby tidak dapat dirubah",
       });
     }
+    if (req.body.branch) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, createdby tidak dapat dirubah",
+      });
+    }
+
     // End
 
-    try {
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      });
+    const pipeline = [
+      {
+        $match: {
+          _id: new ObjectId(req.params.id),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+        },
+      },
+      {
+        $unwind: "$createdBy",
+      },
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customer",
+          foreignField: "_id",
+          as: "customer",
+        },
+      },
+      {
+        $unwind: "$customer",
+      },
+      {
+        $lookup: {
+          from: "customergroups",
+          localField: "customerGroup",
+          foreignField: "_id",
+          as: "customerGroup",
+        },
+      },
+      {
+        $unwind: "$customerGroup",
+      },
+      {
+        $lookup: {
+          from: "schedules",
+          localField: "schedule",
+          foreignField: "_id",
+          as: "schedule",
+        },
+      },
+      {
+        $unwind: "$schedule",
+      },
+      {
+        $lookup: {
+          from: "usergroups",
+          localField: "schedule.userGroup",
+          foreignField: "_id",
+          as: "userGroup",
+        },
+      },
+      {
+        $unwind: "$userGroup",
+      },
+      {
+        $project: {
+          _id: 1,
+          "schedule._id": 1,
+          "schedule.name": 1,
+          "customer._id": 1,
+          "customer.name": 1,
+          status: 1,
+          "createdBy._id": 1,
+          "createdBy.name": 1,
+          "customerGroup._id": 1,
+          "customerGroup.name": 1,
+          "userGroup._id": 1,
+          "userGroup.name": 1,
+          createdAt: 1,
+          updatedAt: 1,
+          "schedule.type": 1,
+          "schedule.status": 1,
+          "schedule.workflowState": 1,
+          "schedule.closingDate": 1,
+          "schedule.activeDate": 1,
+        },
+      },
+    ];
 
-      if (result) {
-        // Cek hanya bisa di update ketika schedule masih draft
-        if (result.schedule.status !== "0") {
-          return res.status(404).json({
-            status: 404,
-            msg: `Error, Schedule ${result.schedule.name} bukan draft! `,
-          });
-        }
-        // End
+    try {
+      const cekData = await Db.aggregate(pipeline);
+      const prevDataBanding = await Db.findOne({
+        _id: new ObjectId(req.params.id),
+      })
+        .populate("schedule", "name")
+        .populate("customer", "name")
+        .populate("customerGroup", "name")
+        .populate("createdBy", "name");
+
+      if (cekData.length > 0) {
+        const result = cekData[0];
 
         // Apabila schedulelist di close
         if (result.status !== "0") {
@@ -672,12 +761,6 @@ class ScheduleListController implements IController {
 
         // Cek jika status tidak ada atau bukan 0 tidak boleh update closing
         if (req.body.status === "1") {
-          if (!req.body.closing) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, closing  wajib diisi!",
-            });
-          }
           // Cek bisa di close ketika schedule aktif
           if (result.schedule.status !== "1") {
             return res.status(404).json({
@@ -687,14 +770,14 @@ class ScheduleListController implements IController {
           }
           // End
 
-          if (!req.body.closing.date) {
+          if (!req.body.closing?.date) {
             return res.status(404).json({
               status: 404,
               msg: "Error, closing date wajib diisi!",
             });
           }
 
-          if (!req.body.closing.docId) {
+          if (!req.body.closing?.docId) {
             return res.status(404).json({
               status: 404,
               msg: "Error, closing docId wajib diisi!",
@@ -704,7 +787,7 @@ class ScheduleListController implements IController {
           // Mengecek doc apakah tersedia
           let DBCek: any = visitModel;
           if (result.schedule.type === "callsheet") {
-            // DBCek = CallSheetModel
+            DBCek = CallsheetModel;
           }
 
           const cekValidDoc = await DBCek.findOne({
@@ -741,75 +824,107 @@ class ScheduleListController implements IController {
           });
         }
 
-        //Mengecek jika Customer Group dirubah
-        if (req.body.customerGroup) {
-          if (typeof req.body.customerGroup !== "string") {
+        //Mengecek Schedule
+        if (req.body.schedule) {
+          const cekSchedule: any = await ScheduleModel.findOne({
+            $and: [{ _id: req.body.schedule }],
+          })
+            .populate("userGroup", "name")
+            .populate("createdBy", "name");
+
+          if (!cekSchedule) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, Cek kembali data customerGroup, Data harus berupa string id customerGroup!",
+              msg: "Error, schedule tidak ditemukan!",
             });
           }
 
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
-
-          if (!CekCG) {
+          if (cekSchedule.status != 0) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak ditemukan!",
+              msg: "Error, hanya bisa merubah list schedule saat dokumen status draft!",
             });
           }
 
-          if (CekCG.status != 1) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customerGroup tidak aktif!",
-            });
-          }
-          // End
-
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
-          };
-          // End
-
-          req.body.customerGroup.branch = CekCG.branch;
+          req.body.schedule = cekSchedule._id;
           // End
         }
+
+        // set setSchedule
+
         // End
 
-        if (req.body.id_workflow && req.body.id_state) {
-          const checkedWorkflow =
-            await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
-              req.userId,
-              req.body.id_state,
-              result.createdBy._id
-            );
+        if (req.body.customer) {
+          //Mengecek customer
+          const cekCustomer: any = await CustomerModel.findOne({
+            $and: [{ _id: req.body.customer }],
+          })
+            .populate("customerGroup", "name")
+            .populate("branch", "name");
 
-          if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
-          } else {
-            return res
-              .status(403)
-              .json({ status: 403, msg: checkedWorkflow.msg });
+          if (!cekCustomer) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customer tidak ditemukan!",
+            });
           }
-        } else {
-          await Db.updateOne({ _id: req.params.id }, req.body).populate(
-            "createdBy",
-            "name"
-          );
+
+          if (cekCustomer.status != 1) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customer tidak aktif!",
+            });
+          }
+          // End
+
+          req.body.customer = cekCustomer._id;
+          req.body.customerGroup = cekCustomer.customerGroup._id;
+          req.body.branch = cekCustomer.branch._id;
+
+          // End
         }
 
-        const getData: any = await Db.findOne({
-          _id: req.params.id,
-        });
+        if (req.body.customer || req.body.schedule) {
+          // Cek Duplikat data
+          const dupl: any = await Db.findOne({
+            $and: [
+              {
+                schedule: req.body.schedule
+                  ? new ObjectId(req.body.schedule)
+                  : result.schedule,
+              },
+              {
+                customer: req.body.customer
+                  ? new ObjectId(req.body.customer)
+                  : result.customer,
+              },
+              {
+                _id: { $ne: req.params.id },
+              },
+            ],
+          });
+
+          if (dupl) {
+            return res.status(404).json({
+              status: 404,
+              msg: `Error, customer ini sudah ada di dalam schedule !`,
+            });
+          }
+        }
+
+        await Db.updateOne({ _id: req.params.id }, req.body);
+
+        const realData: any = await Db.aggregate(pipeline);
+
+        const getData = realData[0];
+
+        const dataUpdate = await Db.findOne({
+          _id: new ObjectId(req.params.id),
+        })
+          .populate("schedule", "name")
+          .populate("customer", "name")
+          .populate("customerGroup", "name")
+          .populate("createdBy", "name");
 
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
@@ -821,8 +936,8 @@ class ScheduleListController implements IController {
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
-          result,
-          getData,
+          prevDataBanding,
+          dataUpdate,
           req.user,
           req.userId,
           redisName
@@ -833,7 +948,7 @@ class ScheduleListController implements IController {
       } else {
         return res
           .status(400)
-          .json({ status: 404, msg: "Error update, data not found" });
+          .json({ status: 404, msg: "Error update, data tidal ditemukan!" });
       }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });

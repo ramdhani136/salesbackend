@@ -326,6 +326,7 @@ class HistoryController implements IController {
     doc: String
   ): Promise<any> => {
     const props = Object.keys(prevData._doc);
+
     let differentProps = [];
 
     for (const i of props) {

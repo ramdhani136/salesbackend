@@ -132,7 +132,8 @@ class CallsheetController implements IController {
             "branch.name",
             "status",
             "workflowState",
-            "schedule",
+            "schedulelist.schedule._id",
+            "schedulelist.schedule.name",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -235,10 +236,18 @@ class CallsheetController implements IController {
         },
         {
           $lookup: {
-            from: "schedules",
+            from: "schedulelists",
             localField: "schedule",
             foreignField: "_id",
-            as: "schedule",
+            as: "schedulelist",
+          },
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedulelist.schedule",
+            foreignField: "_id",
+            as: "schedulelist.schedule",
           },
         },
       ];
@@ -634,10 +643,18 @@ class CallsheetController implements IController {
         },
         {
           $lookup: {
-            from: "schedules",
+            from: "schedulelists",
             localField: "schedule",
             foreignField: "_id",
-            as: "schedule",
+            as: "schedulelist",
+          },
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedulelist.schedule",
+            foreignField: "_id",
+            as: "schedulelist.schedule",
           },
         },
 
@@ -648,8 +665,8 @@ class CallsheetController implements IController {
             type: 1,
             status: 1,
             workflowState: 1,
-            "schedule._id": 1,
-            "schedule.name": 1,
+            "schedulelist.schedule._id": 1,
+            "schedulelist.schedule.name": 1,
             "contact._id": 1,
             "contact.name": 1,
             "contact.phone": 1,
@@ -663,11 +680,6 @@ class CallsheetController implements IController {
             "branch.name": 1,
             createdAt: 1,
             updatedAt: 1,
-            "schedule.type": 1,
-            "schedule.status": 1,
-            "schedule.workflowState": 1,
-            "schedule.closingDate": 1,
-            "schedule.activeDate": 1,
           },
         },
       ]);

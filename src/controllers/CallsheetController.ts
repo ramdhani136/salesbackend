@@ -68,6 +68,11 @@ class CallsheetController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "customer.type",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
@@ -115,6 +120,9 @@ class CallsheetController implements IController {
             "type",
             "createdBy._id",
             "createdBy.name",
+            "contact._id",
+            "contact.name",
+            "contact.phone",
             "updatedAt",
             "customer._id",
             "customerGroup._id",
@@ -216,6 +224,17 @@ class CallsheetController implements IController {
         },
         {
           $lookup: {
+            from: "contacts",
+            localField: "contact",
+            foreignField: "_id",
+            as: "contact",
+          },
+        },
+        {
+          $unwind: "$contact",
+        },
+        {
+          $lookup: {
             from: "schedules",
             localField: "schedule",
             foreignField: "_id",
@@ -305,7 +324,6 @@ class CallsheetController implements IController {
       }
 
       // End
-
 
       const getAll = await Db.find({ $and: pipelineTotal }).count();
       const result = await Db.aggregate(pipeline);
@@ -524,38 +542,143 @@ class CallsheetController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
+
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
+
+      const getData: any = await Db.aggregate([
+        {
+          $match: {
+            _id: new ObjectId(req.params.id),
           },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customer.customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+        {
+          $unwind: "$branch",
+        },
+        {
+          $lookup: {
+            from: "contacts",
+            localField: "contact",
+            foreignField: "_id",
+            as: "contact",
+          },
+        },
+        {
+          $unwind: "$contact",
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedule",
+            foreignField: "_id",
+            as: "schedule",
+          },
+        },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            type: 1,
+            status: 1,
+            workflowState: 1,
+            "schedule._id": 1,
+            "schedule.name": 1,
+            "contact._id": 1,
+            "contact.name": 1,
+            "contact.phone": 1,
+            "customer._id": 1,
+            "customer.name": 1,
+            "createdBy._id": 1,
+            "createdBy.name": 1,
+            "customerGroup._id": 1,
+            "customerGroup.name": 1,
+            "branch._id": 1,
+            "branch.name": 1,
+            createdAt: 1,
+            updatedAt: 1,
+            "schedule.type": 1,
+            "schedule.status": 1,
+            "schedule.workflowState": 1,
+            "schedule.closingDate": 1,
+            "schedule.activeDate": 1,
+          },
+        },
+      ]);
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
+      if (getData.length === 0) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      });
+      const result = getData[0];
 
       if (!result) {
         return res

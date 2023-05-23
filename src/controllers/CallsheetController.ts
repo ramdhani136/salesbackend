@@ -25,6 +25,7 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
+import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "callsheet";
 
@@ -131,13 +132,18 @@ class CallsheetController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
-        "customer",
-        "schedule",
-        "createdBy",
-        "_id",
-        "contact",
-      ]);
+
+      const notCustomer: any = filters.filter((item: any) => {
+        const key = item[0]; // Ambil kunci pada indeks 0
+        return !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+      });
+
+      let isFilter = FilterQuery.getFilter(
+        notCustomer,
+        stateFilter,
+        undefined,
+        ["customer", "schedule", "createdBy", "_id", "contact"]
+      );
 
       // Mengambil rincian permission user
       const userPermission = await PermissionMiddleware.getPermission(
@@ -155,8 +161,6 @@ class CallsheetController implements IController {
       // End
 
       let pipelineTotal: any = [isFilter.data];
-
-      const getAll = await Db.find({ $and: pipelineTotal }).count();
 
       let pipeline: any = [
         { $match: isFilter.data },
@@ -242,6 +246,68 @@ class CallsheetController implements IController {
       }
       // End
 
+      // Mencari data id customer
+      const customerFIlter = filters
+        .filter((item: any) => {
+          const key = item[0]; // Ambil kunci pada indeks 0
+          return key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+        })
+        .map((item: any) => {
+          const key = item[0];
+          const value = item[2];
+          return [key.replace("customer.", ""), item[1], value]; // Hapus "schedule." dari kunci
+        });
+
+      const stateCustomer = stateFilter
+        .filter((item) => item.name.startsWith("customer.")) // Filter objek yang terkait dengan "schedule"
+        .map((item) => {
+          const newItem = { ...item }; // Salin objek menggunakan spread operator
+          newItem.name = newItem.name.replace("customer.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          return newItem;
+        });
+
+      if (customerFIlter.length > 0 || req.query.search) {
+        let search: ISearch = {
+          filter: ["name"],
+          value: req.query.search || "",
+        };
+        const validCustomer = FilterQuery.getFilter(
+          customerFIlter,
+          stateCustomer,
+          search,
+          ["_id", "customerGroup", "branch"]
+        );
+
+        const customerData = await CustomerModel.find(validCustomer.data, [
+          "_id",
+        ]);
+
+        if (customerData.length > 0) {
+          const finalFilterCustomer = customerData.map((item) => {
+            return item._id;
+          });
+
+          pipeline.unshift({
+            $match: {
+              customer: { $in: finalFilterCustomer },
+            },
+          });
+
+          pipelineTotal.unshift({
+            customer: { $in: finalFilterCustomer },
+          });
+        } else {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data Not found!",
+          });
+        }
+      }
+
+      // End
+
+
+      const getAll = await Db.find({ $and: pipelineTotal }).count();
       const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {

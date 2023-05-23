@@ -358,7 +358,6 @@ class ScheduleListController implements IController {
             return item._id;
           });
 
-          console.log(finalFilterCustomer);
 
           pipeline.unshift({
             $match: {
@@ -376,7 +375,6 @@ class ScheduleListController implements IController {
           });
         }
       }
-
       // End
 
       const getAll = await Db.find({

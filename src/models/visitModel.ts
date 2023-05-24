@@ -19,9 +19,7 @@ const VisitModel = new mongoose.Schema(
       required: true,
       index: true,
     },
-    address: {
-      type: String,
-    },
+
     contact: {
       type: Schema.Types.ObjectId,
       ref: "contact",
@@ -42,6 +40,10 @@ const VisitModel = new mongoose.Schema(
       },
       lng: {
         type: Number,
+        required: true,
+      },
+      address: {
+        type: String,
         required: true,
       },
     },
@@ -73,6 +75,9 @@ const VisitModel = new mongoose.Schema(
       },
       lng: {
         type: Number,
+      },
+      address: {
+        type: String,
       },
     },
     status: {

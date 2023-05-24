@@ -192,11 +192,17 @@ class VistController implements IController {
         .status(400)
         .json({ status: 400, msg: "Error, checkInLng  wajib diisi!" });
     }
+    if (!req.body.checkAddress) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, checkAddress  wajib diisi!" });
+    }
 
     req.body.checkIn = {
       lat: parseFloat(req.body.checkInLat),
       lng: parseFloat(req.body.checkInLng),
       createdAt: new Date(),
+      address: req.body.checkAddress,
     };
 
     try {
@@ -453,9 +459,126 @@ class VistController implements IController {
       //     workflow: buttonActions,
       //   });
       // }
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      });
+      // const result: any = await Db.findOne({
+      //   _id: req.params.id,
+      // });
+
+      const getData: any = await Db.aggregate([
+        {
+          $match: {
+            _id: new ObjectId(req.params.id),
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customer.customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+        {
+          $unwind: "$branch",
+        },
+        {
+          $lookup: {
+            from: "contacts",
+            localField: "contact",
+            foreignField: "_id",
+            as: "contact",
+          },
+        },
+        {
+          $unwind: "$contact",
+        },
+        {
+          $lookup: {
+            from: "schedulelists",
+            localField: "schedule",
+            foreignField: "_id",
+            as: "schedules",
+          },
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedules.schedule",
+            foreignField: "_id",
+            as: "schedules",
+          },
+        },
+
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            type: 1,
+            status: 1,
+            workflowState: 1,
+            img: 1,
+            signature: 1,
+            checkIn: 1,
+            checkOut: 1,
+            "schedules._id": 1,
+            "schedules.name": 1,
+            "contact._id": 1,
+            "contact.name": 1,
+            "contact.phone": 1,
+            "customer._id": 1,
+            "customer.name": 1,
+            "createdBy._id": 1,
+            "createdBy.name": 1,
+            "customerGroup._id": 1,
+            "customerGroup.name": 1,
+            "branch._id": 1,
+            "branch.name": 1,
+            createdAt: 1,
+            updatedAt: 1,
+            rate: 1,
+          },
+        },
+      ]);
+
+      if (getData.length === 0) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const result = getData[0];
 
       if (!result) {
         return res

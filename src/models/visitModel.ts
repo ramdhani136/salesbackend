@@ -6,42 +6,27 @@ const VisitModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     type: {
       type: String,
       enum: ["insite", "outsite"],
+      index: true,
     },
     customer: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
-      customerGroup: {
-        _id: {
-          type: Schema.Types.ObjectId,
-          required: true,
-        },
-        name: { type: String, required: true },
-        branch: {
-          _id: {
-            type: Schema.Types.ObjectId,
-            required: true,
-          },
-          name: { type: String, required: true },
-        },
-      },
+      type: Schema.Types.ObjectId,
+      ref: "customer",
+      required: true,
+      index: true,
     },
     address: {
       type: String,
     },
     contact: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
-      phone: { type: Number, required: true },
+      type: Schema.Types.ObjectId,
+      ref: "contact",
+      required: true,
+      index: true,
     },
     img: {
       type: String,
@@ -50,77 +35,33 @@ const VisitModel = new mongoose.Schema(
       type: String,
       required: true,
     },
-    location: {
+    checkIn: {
+      createdAt: { type: Date },
       lat: {
-        required: true,
         type: String,
       },
       lng: {
-        required: true,
         type: String,
       },
     },
     rate: {
       type: Number,
       default: 0,
+      index: true,
     },
     createdBy: {
-      _id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      name: { type: String, required: true },
+      type: Schema.Types.ObjectId,
+      ref: "customer",
+      required: true,
+      index: true,
     },
     schedule: {
       type: [
         {
-          _id: { type: Schema.Types.ObjectId, required: true },
-          name: { type: String, required: true },
-          notes: { type: String, required: true },
-          scheduleList: {
-            _id: { type: Schema.Types.ObjectId, required: true },
-            notes: { type: String, required: true },
-          },
-          type: {
-            type: String,
-            required: true,
-            enum: ["visit", "callsheet"],
-          },
-          userGroup: {
-            _id: {
-              type: Schema.Types.ObjectId,
-              required: true,
-            },
-            name: {
-              type: String,
-              required: true,
-            },
-          },
-          activeDate: {
-            type: Date,
-            required: true,
-          },
-          closingDate: {
-            type: Date,
-            require: true,
-          },
-          status: {
-            type: String,
-            enum: ["0", "1", "2"],
-            default: "0",
-          },
-          workflowState: {
-            type: String,
-            required: true,
-            default: "Draft",
-          },
-          createdBy: {
-            _id: {
-              type: Schema.Types.ObjectId,
-              required: true,
-            },
-            name: { type: String },
-          },
+          type: Schema.Types.ObjectId,
+          ref: "schedulelist",
+          required: true,
+          index: true,
         },
       ],
     },
@@ -150,16 +91,5 @@ const VisitModel = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-VisitModel.index({
-  name: 1,
-  type: 1,
-  status: 1,
-  workflowState: 1,
-  customer: 1,
-  rate: 1,
-  contact: 1,
-  schedule: 1,
-});
 
 export default mongoose.model("visit", VisitModel);

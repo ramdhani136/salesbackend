@@ -11,7 +11,6 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   ContactModel,
-  CustomerGroupModel,
   CustomerModel,
   visitModel as Db,
   History,
@@ -992,6 +991,34 @@ class VistController implements IController {
           // set contact
           req.body.contact = contact._id;
         }
+        // End
+
+        if (
+          req.body.checkOut &&
+          (!req.body.checkOutLat ||
+            !req.body.checkOutLng ||
+            !req.body.checkOutAddress)
+        ) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, silahkan isi parameter checkOutLat,checkOutLng,checkOutAddres untuk melakukan checkout!",
+          });
+        }
+
+        // Jika Checkout
+        if (
+          req.body.checkOutLat &&
+          req.body.checkOutLng &&
+          req.body.checkOutAddress
+        ) {
+          req.body.checkOut = {
+            lat: parseFloat(req.body.checkOutLat),
+            lng: parseFloat(req.body.checkOutLng),
+            createdAt: new Date(),
+            address: req.body.checkOutAddress,
+          };
+        }
+
         // End
 
         if (req.body.id_workflow && req.body.id_state) {

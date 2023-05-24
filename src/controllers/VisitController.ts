@@ -29,6 +29,7 @@ import fs from "fs";
 import sharp from "sharp";
 import path from "path";
 import { ISearch } from "../utils/FilterQuery";
+import CustomerController from "./CustomerController";
 
 const redisName = "visit";
 
@@ -948,6 +949,7 @@ class VistController implements IController {
           }
 
           req.body.customer = cekCustomer._id;
+          req.body.customerName = cekCustomer.name;
 
           if (!req.body.contact) {
             return res.status(404).json({
@@ -1016,6 +1018,40 @@ class VistController implements IController {
               status: 404,
               msg: "Error, signature wajib diisi sebelum melakukan checkout!!",
             });
+          }
+
+          let cekCurrentLocation = false;
+
+          if (req.body.type) {
+            if (req.body.type === "insite") {
+              cekCurrentLocation = true;
+            }
+          } else {
+            if (result.type === "insite") {
+              cekCurrentLocation = true;
+            }
+          }
+
+          if (cekCurrentLocation) {
+            const inLocation = await CustomerController.getLocatonNearby({
+              lat: -6.5105445,
+              lng: 106.8631741,
+              maxDistance: 100,
+              customerId: req.body.customer
+                ? new ObjectId(req.body.customer)
+                : result.customer._id,
+            });
+
+            if (inLocation.length === 0) {
+              return res.status(404).json({
+                status: 404,
+                msg: `Gagal, Anda berada diluar area ${
+                  req.body.customerName
+                    ? req.body.customerName
+                    : result.customer.name
+                } !`,
+              });
+            }
           }
 
           // Cek lokasi dulu apabila type insite maka checkout harus dilakukan di posisi konsumen tersebut

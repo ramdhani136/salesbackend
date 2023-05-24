@@ -22,6 +22,13 @@ import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "customer";
 
+interface IGeoLOc {
+  lat: number;
+  lng: number;
+  maxDistance: number;
+  customerId?: ObjectId;
+}
+
 class CustomerController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
@@ -558,45 +565,32 @@ class CustomerController implements IController {
     }
   };
 
-  getLocatonNearby = async (req: Request, res: Response): Promise<any> => {
-    if (!req.query.lat) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, Parameter lat wajib diisi!",
-      });
-    }
-    if (!req.query.lng) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, Parameter lng wajib diisi!",
-      });
-    }
-    if (!req.query.maxDistance) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, Parameter maxDistance wajib diisi!",
-      });
-    }
+  getLocatonNearby = async (data: IGeoLOc): Promise<any[]> => {
+    const targetLatitude = parseFloat(`${data.lat}`);
+    const targetLongitude = parseFloat(`${data.lng}`);
+    const isMaxDistance = parseInt(`${data.maxDistance}`);
 
-    const targetLatitude = parseFloat(`${req.query.lat}`);
-    const targetLongitude = parseFloat(`${req.query.lng}`);
-    const maxDistance = parseInt(`${req.query.maxDistance}`);
     try {
       const result: any = await CustomerModel.find({
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [targetLongitude, targetLatitude],
+        $and: [
+          {
+            location: {
+              $near: {
+                $geometry: {
+                  type: "Point",
+                  coordinates: [targetLongitude, targetLatitude],
+                },
+                $maxDistance: isMaxDistance,
+              },
             },
-            $maxDistance: maxDistance,
           },
-        },
+          { _id: data.customerId },
+        ],
       });
 
-      return res.status(200).json({ status: 200, data: result });
+      return result;
     } catch (error) {
-      return res.status(404).json({ status: 404, msg: error });
+      return [];
     }
   };
 }

@@ -1020,6 +1020,8 @@ class VistController implements IController {
             });
           }
 
+          // Cek lokasi dulu apabila type insite maka checkout harus dilakukan di posisi konsumen tersebut
+
           let cekCurrentLocation = false;
 
           if (req.body.type) {
@@ -1032,11 +1034,20 @@ class VistController implements IController {
             }
           }
 
+          req.body.checkOut = {
+            lat: parseFloat(req.body.checkOutLat),
+            lng: parseFloat(req.body.checkOutLng),
+            createdAt: new Date(),
+            address: req.body.checkOutAddress,
+          };
+
           if (cekCurrentLocation) {
             const inLocation = await CustomerController.getLocatonNearby({
-              lat: -6.5105445,
-              lng: 106.8631741,
-              maxDistance: 100,
+              lat: req.body.checkOut.lat,
+              lng: req.body.checkOut.lng,
+              maxDistance: req.body.maxDistance
+                ? parseInt(`${req.body.maxDistance}`)
+                : 100,
               customerId: req.body.customer
                 ? new ObjectId(req.body.customer)
                 : result.customer._id,
@@ -1053,15 +1064,6 @@ class VistController implements IController {
               });
             }
           }
-
-          // Cek lokasi dulu apabila type insite maka checkout harus dilakukan di posisi konsumen tersebut
-
-          req.body.checkOut = {
-            lat: parseFloat(req.body.checkOutLat),
-            lng: parseFloat(req.body.checkOutLng),
-            createdAt: new Date(),
-            address: req.body.checkOutAddress,
-          };
         }
 
         // End

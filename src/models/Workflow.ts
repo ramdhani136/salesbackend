@@ -6,11 +6,12 @@ const Workflow = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
-      unique:true
+      unique: true,
     },
     doc: {
       type: String,
       required: true,
+      enum: ["visit", "callsheet", "branch", "schedule"],
       index: true,
     },
     user: {

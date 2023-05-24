@@ -199,18 +199,19 @@ class App {
     this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
     this.app.use("/callsheetnote", AuthMiddleware, CallsheetNoteRoutes);
     this.app.use("/memo", AuthMiddleware, MemoRoutes);
+
+    this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
+    this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);
+    this.app.use("/workflow", AuthMiddleware, WorkflowRoutes);
+    this.app.use(
+      "/workflowtransition",
+      AuthMiddleware,
+      WorkflowTransitionRoutes
+    );
+    this.app.use("/workflowchanger", AuthMiddleware, WorkflowCangerRoutes);
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);
-    // this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
-    // this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);
-    // this.app.use("/workflow", AuthMiddleware, WorkflowRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);
-    // this.app.use(
-    //   "/workflowtransition",
-    //   AuthMiddleware,
-    //   WorkflowTransitionRoutes
-    // );
-    // this.app.use("/workflowchanger", AuthMiddleware, WorkflowCangerRoutes);
   }
 }
 

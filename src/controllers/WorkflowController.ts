@@ -5,7 +5,6 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
-  RoleProfileModel,
   RoleUserModel,
   Workflow,
   WorkflowChanger,
@@ -36,15 +35,11 @@ class workflowStateController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "user._id",
+        name: "user",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-      {
-        name: "user.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
+
       {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
@@ -75,7 +70,7 @@ class workflowStateController implements IController {
       };
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "_id",
-        "user._id",
+        "user",
       ]);
 
       if (!isFilter.status) {
@@ -85,34 +80,7 @@ class workflowStateController implements IController {
       }
       // End
       const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.aggregate([
-        {
-          $skip: page * limit - limit,
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "user",
-            foreignField: "_id",
-            as: "user",
-          },
-        },
-        {
-          $unwind: "$user",
-        },
-        {
-          $match: isFilter.data,
-        },
-        {
-          $limit: limit,
-        },
-        {
-          $project: setField,
-        },
-        {
-          $sort: order_by,
-        },
-      ]);
+      const result = await Db.find(isFilter.data).populate("user", "name");
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -146,7 +114,7 @@ class workflowStateController implements IController {
     }
     req.body.user = req.userId;
     try {
-      const doctype = ["schedule"];
+      const doctype = ["schedule", "visit", "callsheet", "branch"];
 
       const cekDocType = doctype.find((item) => item == req.body.doc);
       if (!cekDocType) {

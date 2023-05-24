@@ -820,47 +820,11 @@ class VistController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<any> => {
-    if (req.body.customer) {
-      if (typeof req.body.customer !== "string") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Cek kembali data customer, Data harus berupa string id customer!",
-        });
-      }
-    }
-    if (req.body.contact) {
-      if (typeof req.body.contact !== "string") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Cek kembali data contact, Data harus berupa string id contact!",
-        });
-      }
-    }
-    if (req.body.location) {
-      if (!req.body.location?.lat) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
-      }
-
-      if (!req.body.location?.lng) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-      }
-    }
-
     // Validasi yang tidak boleh di rubah
     if (req.body.createdBy) {
       return res.status(404).json({
         status: 404,
         msg: "Error, Tidak dapat merubah data createdBy!",
-      });
-    }
-    if (req.body.type) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, Tidak dapat merubah data type(insite/outsite)!",
       });
     }
     if (req.body.name) {
@@ -887,44 +851,146 @@ class VistController implements IController {
         msg: "Error, workflowState tidak dapat dirubah",
       });
     }
+    if (req.body.checkIn) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error,  CheckIn tidak dapat dirubah",
+      });
+    }
     // End
 
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      })
+        .populate("customer", "name")
+        .populate("contact", "name")
+        .populate("createdBy", "name");
 
       if (result) {
-        //Mengecek jika Customer Group dirubah
-        if (req.body.customerGroup) {
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
-
-          if (!CekCG) {
+        if (result.status !== "0") {
+          if (req.body.type) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak ditemukan!",
+              msg: "Error, Gagal merubah type, status dokumen bukan draft",
+            });
+          }
+          if (req.body.customer) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Gagal merubah customer, status dokumen bukan draft",
+            });
+          }
+          if (req.body.contact) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Gagal merubah customer, status dokumen bukan draft",
+            });
+          }
+          if (req.body.signature) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Gagal merubah signature, status dokumen bukan draft",
             });
           }
 
-          if (CekCG.status != 1) {
+          if (req.body.checkOut) {
             return res.status(404).json({
               status: 404,
-              msg: "Error, customerGroup tidak aktif!",
+              msg: "Error, Gagal merubah checkOut, status dokumen bukan draft",
             });
           }
-          // End
+        }
 
-          // set setCustomerGroup
-          req.body.customerGroup = {
-            _id: CekCG._id,
-            name: CekCG.name,
-          };
-          // End
+        // Type dirubah
+        if (req.body.type) {
+          if (req.body.type !== "insite" && req.body.type !== "outsite") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, pilih insite atau outsite !" });
+          }
 
-          req.body.customerGroup.branch = CekCG.branch;
-          // End
+          if (req.body.type !== result.type) {
+            if (req.body.type === "outsite") {
+              if (!req.file) {
+                return res.status(404).json({
+                  status: 404,
+                  msg: "Error, img wajib diisi!",
+                });
+              }
+            } else {
+              req.body.img = "";
+            }
+          }
+        }
+        // End
+
+        //Mengecek Customer
+        if (req.body.customer) {
+          const cekCustomer: any = await CustomerModel.findOne(
+            {
+              $and: [{ _id: req.body.customer }],
+            },
+            ["name", "status", "customerGroup"]
+          );
+
+          if (!cekCustomer) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customer tidak ditemukan!",
+            });
+          }
+
+          if (cekCustomer.status != 1) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, customer tidak aktif!",
+            });
+          }
+
+          req.body.customer = cekCustomer._id;
+
+          if (!req.body.contact) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, data kontak sebelumnya tidak tersedia untuk konsumen ini, Silahkan ubah data kontak!",
+            });
+          }
+        }
+        // End
+
+        // Mengecek contact jika terdapat kontak untuk customer
+        if (req.body.contact) {
+          const contact = await ContactModel.findOne(
+            {
+              $and: [
+                { _id: req.body.contact },
+                {
+                  customer: req.body.customer
+                    ? req.body.customer
+                    : result.customer._id,
+                },
+              ],
+            },
+            ["name", "phone", "status"]
+          );
+
+          if (!contact) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, kontak tidak ditemukan!",
+            });
+          }
+
+          if (contact.status !== "1") {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, kontak tidak aktif!",
+            });
+          }
+
+          // set contact
+          req.body.contact = contact._id;
         }
         // End
 
@@ -937,7 +1003,6 @@ class VistController implements IController {
               result.createdBy._id
             );
 
-          console.log(checkedWorkflow);
           if (checkedWorkflow.status) {
             await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
           } else {
@@ -949,13 +1014,181 @@ class VistController implements IController {
           await Db.updateOne({ _id: req.params.id }, req.body);
         }
 
+        if (req.body.type) {
+          // Cek bila ada perubahan type
+          if (req.body.type !== result.type) {
+            if (req.body.type === "outsite") {
+              const compressedImage = path.join(
+                __dirname,
+                "../public/images",
+                req.params.id + ".jpg"
+              );
+              sharp(req.file.path)
+                .resize(640, 480, {
+                  fit: sharp.fit.inside,
+                  withoutEnlargement: true,
+                })
+                .jpeg({
+                  quality: 100,
+                  progressive: true,
+                  chromaSubsampling: "4:4:4",
+                })
+                .withMetadata()
+                .toFile(compressedImage, async (err, info): Promise<any> => {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    await Db.findByIdAndUpdate(req.params.id, {
+                      img: req.params.id + ".jpg",
+                    });
+                  }
+                });
+            } else {
+              if (
+                fs.existsSync(
+                  path.join(__dirname, "../public/images/" + result.img)
+                )
+              ) {
+                fs.unlink(
+                  path.join(__dirname, "../public/images/" + result.img),
+                  function (err) {
+                    if (err && err.code == "ENOENT") {
+                      // file doens't exist
+                      console.log(err);
+                    } else if (err) {
+                      // other errors, e.g. maybe we don't have enough permission
+                      console.log("Error occurred while trying to remove file");
+                    } else {
+                      console.log(`removed`);
+                    }
+                  }
+                );
+              }
+            }
+          }
+
+          // End
+        }
+
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        });
+        })
+          .populate("customer", "name")
+          .populate("contact", "name")
+          .populate("createdBy", "name");
+
+        const resultUpdate: any = await Db.aggregate([
+          {
+            $match: {
+              _id: new ObjectId(req.params.id),
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdBy",
+            },
+          },
+          {
+            $unwind: "$createdBy",
+          },
+          {
+            $lookup: {
+              from: "customers",
+              localField: "customer",
+              foreignField: "_id",
+              as: "customer",
+            },
+          },
+          {
+            $unwind: "$customer",
+          },
+          {
+            $lookup: {
+              from: "customergroups",
+              localField: "customer.customerGroup",
+              foreignField: "_id",
+              as: "customerGroup",
+            },
+          },
+          {
+            $unwind: "$customerGroup",
+          },
+          {
+            $lookup: {
+              from: "branches",
+              localField: "customer.branch",
+              foreignField: "_id",
+              as: "branch",
+            },
+          },
+          {
+            $unwind: "$branch",
+          },
+          {
+            $lookup: {
+              from: "contacts",
+              localField: "contact",
+              foreignField: "_id",
+              as: "contact",
+            },
+          },
+          {
+            $unwind: "$contact",
+          },
+          {
+            $lookup: {
+              from: "schedulelists",
+              localField: "schedule",
+              foreignField: "_id",
+              as: "schedules",
+            },
+          },
+          {
+            $lookup: {
+              from: "schedules",
+              localField: "schedules.schedule",
+              foreignField: "_id",
+              as: "schedules",
+            },
+          },
+
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              type: 1,
+              status: 1,
+              workflowState: 1,
+              img: 1,
+              signature: 1,
+              checkIn: 1,
+              checkOut: 1,
+              "schedules._id": 1,
+              "schedules.name": 1,
+              "contact._id": 1,
+              "contact.name": 1,
+              "contact.phone": 1,
+              "customer._id": 1,
+              "customer.name": 1,
+              "createdBy._id": 1,
+              "createdBy.name": 1,
+              "customerGroup._id": 1,
+              "customerGroup.name": 1,
+              "branch._id": 1,
+              "branch.name": 1,
+              createdAt: 1,
+              updatedAt: 1,
+              rate: 1,
+            },
+          },
+        ]);
 
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
+          JSON.stringify(resultUpdate[0]),
           {
             EX: 30,
           }
@@ -970,11 +1203,11 @@ class VistController implements IController {
           redisName
         );
 
-        // Ubah semua yang terelasi
-        await this.updateRelatedData(req.params.id, getData);
-        // End
+        // // Ubah semua yang terelasi
+        // await this.updateRelatedData(req.params.id, getData);
+        // // End
 
-        return res.status(200).json({ status: 200, data: getData });
+        return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End
       } else {
         return res
@@ -991,7 +1224,9 @@ class VistController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Not found!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result: any = await Db.deleteOne({ _id: req.params.id });

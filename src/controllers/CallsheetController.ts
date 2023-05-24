@@ -796,6 +796,12 @@ class CallsheetController implements IController {
               msg: "Error, Gagal merubah rate, status dokumen bukan draft",
             });
           }
+          if (req.body.contact) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Gagal merubah contact, status dokumen bukan draft",
+            });
+          }
         }
         if (req.body.type) {
           if (req.body.type !== "in" && req.body.type !== "out") {
@@ -829,6 +835,12 @@ class CallsheetController implements IController {
           }
 
           req.body.customer = cekCustomer._id;
+          if (!req.boby.contact) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, data kontak sebelumnya tidak tersedia untuk konsumen ini, Silahkan ubah data kontak!",
+            });
+          }
         }
         // End
 

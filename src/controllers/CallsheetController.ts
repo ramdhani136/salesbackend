@@ -134,6 +134,7 @@ class CallsheetController implements IController {
             "workflowState",
             "schedules._id",
             "schedules.name",
+            "rate",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -680,6 +681,7 @@ class CallsheetController implements IController {
             "branch.name": 1,
             createdAt: 1,
             updatedAt: 1,
+            rate: 1,
           },
         },
       ]);
@@ -752,6 +754,12 @@ class CallsheetController implements IController {
         msg: "Error, status tidak dapat dirubah",
       });
     }
+    if (req.body.schedule) {
+      return res.status(404).json({
+        status: 404,
+        msg: "Error, schedule tidak dapat dirubah",
+      });
+    }
     if (req.body.workflowState) {
       return res.status(404).json({
         status: 404,
@@ -763,9 +771,32 @@ class CallsheetController implements IController {
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      })
+        .populate("customer", "name")
+        .populate("contact", "name")
+        .populate("createdBy", "name");
 
       if (result) {
+        if (result.status !== "0") {
+          if (req.body.type) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Gagal merubah type, status dokumen bukan draft",
+            });
+          }
+          if (req.body.customer) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Gagal merubah customer, status dokumen bukan draft",
+            });
+          }
+          if (req.body.rate) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Gagal merubah rate, status dokumen bukan draft",
+            });
+          }
+        }
         if (req.body.type) {
           if (req.body.type !== "in" && req.body.type !== "out") {
             return res
@@ -797,11 +828,7 @@ class CallsheetController implements IController {
             });
           }
 
-          req.body.customer = {
-            _id: new ObjectId(cekCustomer._id),
-            name: cekCustomer.name,
-            customerGroup: cekCustomer.customerGroup,
-          };
+          req.body.customer = cekCustomer._id;
         }
         // End
 
@@ -836,13 +863,8 @@ class CallsheetController implements IController {
           }
 
           // set contact
-          req.body.contact = {
-            _id: contact._id,
-            name: contact.name,
-            phone: contact.phone,
-          };
+          req.body.contact = contact._id;
         }
-
         // End
 
         if (req.body.id_workflow && req.body.id_state) {
@@ -867,11 +889,119 @@ class CallsheetController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        });
+        })
+          .populate("customer", "name")
+          .populate("contact", "name")
+          .populate("createdBy", "name");
+
+        const resultUpdate: any = await Db.aggregate([
+          {
+            $match: {
+              _id: new ObjectId(req.params.id),
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdBy",
+            },
+          },
+          {
+            $unwind: "$createdBy",
+          },
+          {
+            $lookup: {
+              from: "customers",
+              localField: "customer",
+              foreignField: "_id",
+              as: "customer",
+            },
+          },
+          {
+            $unwind: "$customer",
+          },
+          {
+            $lookup: {
+              from: "customergroups",
+              localField: "customer.customerGroup",
+              foreignField: "_id",
+              as: "customerGroup",
+            },
+          },
+          {
+            $unwind: "$customerGroup",
+          },
+          {
+            $lookup: {
+              from: "branches",
+              localField: "customer.branch",
+              foreignField: "_id",
+              as: "branch",
+            },
+          },
+          {
+            $unwind: "$branch",
+          },
+          {
+            $lookup: {
+              from: "contacts",
+              localField: "contact",
+              foreignField: "_id",
+              as: "contact",
+            },
+          },
+          {
+            $unwind: "$contact",
+          },
+          {
+            $lookup: {
+              from: "schedulelists",
+              localField: "schedule",
+              foreignField: "_id",
+              as: "schedules",
+            },
+          },
+          {
+            $lookup: {
+              from: "schedules",
+              localField: "schedules.schedule",
+              foreignField: "_id",
+              as: "schedules",
+            },
+          },
+
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              type: 1,
+              status: 1,
+              workflowState: 1,
+              "schedules._id": 1,
+              "schedules.name": 1,
+              "contact._id": 1,
+              "contact.name": 1,
+              "contact.phone": 1,
+              "customer._id": 1,
+              "customer.name": 1,
+              "createdBy._id": 1,
+              "createdBy.name": 1,
+              "customerGroup._id": 1,
+              "customerGroup.name": 1,
+              "branch._id": 1,
+              "branch.name": 1,
+              createdAt: 1,
+              updatedAt: 1,
+              rate: 1,
+            },
+          },
+        ]);
 
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
+          JSON.stringify(resultUpdate[0]),
           {
             EX: 30,
           }
@@ -886,11 +1016,11 @@ class CallsheetController implements IController {
           redisName
         );
 
-        // Ubah semua yang terelasi
-        await this.updateRelatedData(req.params.id, getData);
-        // End
+        // // Ubah semua yang terelasi
+        // await this.updateRelatedData(req.params.id, getData);
+        // // End
 
-        return res.status(200).json({ status: 200, data: getData });
+        return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End
       } else {
         return res

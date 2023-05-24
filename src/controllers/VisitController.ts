@@ -169,18 +169,6 @@ class VistController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.customer) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, customer wajib diisi!" });
-    }
-
-    if (!req.body.contact) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, contact wajib diisi!" });
-    }
-
     if (!req.body.type) {
       return res
         .status(400)
@@ -193,45 +181,23 @@ class VistController implements IController {
       }
     }
 
-    if (!req.body.signature) {
+    if (!req.body.checkInLat) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, signature wajib diisi!" });
+        .json({ status: 400, msg: "Error, checkInLat  wajib diisi!" });
     }
 
-    if (!req.body.location?.lat) {
+    if (!req.body.checkInLng) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, lat lokasi wajib diisi!" });
+        .json({ status: 400, msg: "Error, checkInLng  wajib diisi!" });
     }
 
-    if (!req.body.location?.lng) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, lng lokasi wajib diisi!" });
-    }
-
-    // Jika ada checkout
-    if (req.body.checkOut) {
-      if (!req.body.checkOut.lng) {
-        return res.status(400).json({
-          status: 400,
-          msg: "Error, lokasi lng checkout wajib diisi!",
-        });
-      }
-      if (!req.body.checkOut.lat) {
-        return res.status(400).json({
-          status: 400,
-          msg: "Error, lokasi lat checkout wajib diisi!",
-        });
-      }
-      if (!req.body.checkOut.createdAt) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, waktu checkout wajib diisi!" });
-      }
-    }
-    // End
+    req.body.checkIn = {
+      lat: parseFloat(req.body.checkInLat),
+      lng: parseFloat(req.body.checkInLng),
+      createdAt: new Date(),
+    };
 
     try {
       // Set nama/nomor doc
@@ -317,6 +283,11 @@ class VistController implements IController {
       // End set name
 
       //Mengecek Customer
+      if (!req.body.customer) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, customer wajib diisi!" });
+      }
       const cekCustomer: any = await CustomerModel.findOne(
         {
           $and: [{ _id: req.body.customer }],
@@ -338,20 +309,21 @@ class VistController implements IController {
         });
       }
 
-      req.body.customer = {
-        _id: new ObjectId(cekCustomer._id),
-        name: cekCustomer.name,
-        customerGroup: cekCustomer.customerGroup,
-      };
+      req.body.customer = cekCustomer._id;
       // End
 
       // Mengecek contact jika terdapat kontak untuk customer tersebut
+      if (!req.body.contact) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, contact wajib diisi!" });
+      }
       const contact = await ContactModel.findOne(
         {
           $and: [
             { _id: req.body.contact },
             {
-              "customer._id": req.body.customer,
+              customer: req.body.customer,
             },
           ],
         },
@@ -373,18 +345,11 @@ class VistController implements IController {
       }
 
       // set contact
-      req.body.contact = {
-        _id: contact._id,
-        name: contact.name,
-        phone: contact.phone,
-      };
+      req.body.contact = contact._id;
 
       // End
 
-      req.body.createdBy = {
-        _id: new ObjectId(req.userId),
-        name: req.user,
-      };
+      req.body.createdBy = req.userId;
 
       // Menset img ketika terdapat gambar
       if (req.body.type === "outsite") {
@@ -394,7 +359,6 @@ class VistController implements IController {
             msg: "Error, img wajib diisi!",
           });
         }
-        req.body.img = req.body.name + ".jpg";
       }
       // End
 
@@ -406,7 +370,7 @@ class VistController implements IController {
         const compressedImage = path.join(
           __dirname,
           "../public/images",
-          req.body.img
+          response._id + ".jpg"
         );
         sharp(req.file.path)
           .resize(640, 480, {
@@ -419,11 +383,13 @@ class VistController implements IController {
             chromaSubsampling: "4:4:4",
           })
           .withMetadata()
-          .toFile(compressedImage, (err, info) => {
+          .toFile(compressedImage, async (err, info): Promise<any> => {
             if (err) {
               console.log(err);
             } else {
-              console.log(info);
+              await Db.findByIdAndUpdate(response._id, {
+                img: response._id + ".jpg",
+              });
             }
           });
       }
@@ -490,7 +456,6 @@ class VistController implements IController {
       const result: any = await Db.findOne({
         _id: req.params.id,
       });
-
 
       if (!result) {
         return res

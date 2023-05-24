@@ -33,15 +33,16 @@ const VisitModel = new mongoose.Schema(
     },
     signature: {
       type: String,
-      required: true,
     },
     checkIn: {
       createdAt: { type: Date },
       lat: {
-        type: String,
+        type: Number,
+        required: true,
       },
       lng: {
-        type: String,
+        type: Number,
+        required: true,
       },
     },
     rate: {
@@ -68,10 +69,10 @@ const VisitModel = new mongoose.Schema(
     checkOut: {
       createdAt: { type: Date },
       lat: {
-        type: String,
+        type: Number,
       },
       lng: {
-        type: String,
+        type: Number,
       },
     },
     status: {

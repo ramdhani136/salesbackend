@@ -392,18 +392,6 @@ class VistController implements IController {
         .status(400)
         .json({ status: 400, msg: "Error, checkInLng  wajib diisi!" });
     }
-    if (!req.body.checkAddress) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, checkAddress  wajib diisi!" });
-    }
-
-    req.body.checkIn = {
-      lat: parseFloat(req.body.checkInLat),
-      lng: parseFloat(req.body.checkInLng),
-      createdAt: new Date(),
-      address: req.body.checkAddress,
-    };
 
     try {
       // Set nama/nomor doc
@@ -567,6 +555,18 @@ class VistController implements IController {
         }
       }
       // End
+
+      const getLocation: any = await GetNameLocation({
+        lat: parseFloat(req.body.checkInLat),
+        lng: parseFloat(req.body.checkInLng),
+      });
+
+      req.body.checkIn = {
+        lat: parseFloat(req.body.checkInLat),
+        lng: parseFloat(req.body.checkInLng),
+        createdAt: new Date(),
+        address: getLocation.data.display_name,
+      };
 
       const result = new Db(req.body);
       const response: any = await result.save({});

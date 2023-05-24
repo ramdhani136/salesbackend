@@ -29,6 +29,7 @@ import WorkflowController from "./WorkflowController";
 import fs from "fs";
 import sharp from "sharp";
 import path from "path";
+import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "visit";
 
@@ -51,23 +52,43 @@ class VistController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "schedule",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "contact",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "customer.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.customerGroup.name",
+        name: "customer.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.customerGroup.branch.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "customer.customerGroup",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "customer.branch",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "createdBy",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -80,11 +101,7 @@ class VistController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-      {
-        name: "schedule.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
+
       {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
@@ -105,30 +122,51 @@ class VistController implements IController {
         : [
             "name",
             "type",
+            "createdBy._id",
             "createdBy.name",
+            "contact._id",
+            "contact.name",
+            "contact.phone",
             "updatedAt",
+            "customer._id",
+            "customerGroup._id",
+            "branch._id",
             "customer.name",
-            "customer.customerGroup.name",
-            "customer.customerGroup.branch.name",
+            "customerGroup.name",
+            "branch.name",
             "status",
             "workflowState",
-            "schedule",
-            "img",
+            "schedules._id",
+            "schedules.name",
+            "rate",
+            "checkIn",
+            "checkOut",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
-      const limit: number | string = parseInt(`${req.query.limit}`) || 0;
+      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+
+      const notCustomer: any = filters.filter((item: any) => {
+        const key = item[0]; // Ambil kunci pada indeks 0
+        return !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+      });
+
+      let isFilter = FilterQuery.getFilter(
+        notCustomer,
+        stateFilter,
+        undefined,
+        ["customer", "schedule", "createdBy", "_id", "contact"]
+      );
 
       // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.VISIT
+      );
       // End
 
       if (!isFilter.status) {
@@ -138,12 +176,173 @@ class VistController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data, setField).count();
+      let pipelineTotal: any = [isFilter.data];
 
-      const result = await Db.find(isFilter.data, setField)
-        .sort(order_by)
-        .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0);
+      let pipeline: any = [
+        { $match: isFilter.data },
+        {
+          $sort: order_by,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customer.customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+        {
+          $unwind: "$branch",
+        },
+        {
+          $lookup: {
+            from: "contacts",
+            localField: "contact",
+            foreignField: "_id",
+            as: "contact",
+          },
+        },
+        {
+          $unwind: "$contact",
+        },
+        {
+          $lookup: {
+            from: "schedulelists",
+            localField: "schedule",
+            foreignField: "_id",
+            as: "schedules",
+          },
+        },
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedules.schedule",
+            foreignField: "_id",
+            as: "schedules",
+          },
+        },
+      ];
+
+      //Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipeline.splice(3, 0, { $limit: limit });
+      }
+
+      // End
+      if (Object.keys(setField).length > 0) {
+        pipeline.push({
+          $project: setField,
+        });
+      }
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipeline.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      // Mencari data id customer
+      const customerFIlter = filters
+        .filter((item: any) => {
+          const key = item[0]; // Ambil kunci pada indeks 0
+          return key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+        })
+        .map((item: any) => {
+          const key = item[0];
+          const value = item[2];
+          return [key.replace("customer.", ""), item[1], value]; // Hapus "schedule." dari kunci
+        });
+
+      const stateCustomer = stateFilter
+        .filter((item) => item.name.startsWith("customer.")) // Filter objek yang terkait dengan "schedule"
+        .map((item) => {
+          const newItem = { ...item }; // Salin objek menggunakan spread operator
+          newItem.name = newItem.name.replace("customer.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          return newItem;
+        });
+
+      if (customerFIlter.length > 0 || req.query.search) {
+        let search: ISearch = {
+          filter: ["name"],
+          value: req.query.search || "",
+        };
+        const validCustomer = FilterQuery.getFilter(
+          customerFIlter,
+          stateCustomer,
+          search,
+          ["_id", "customerGroup", "branch"]
+        );
+
+        const customerData = await CustomerModel.find(validCustomer.data, [
+          "_id",
+        ]);
+
+        if (customerData.length > 0) {
+          const finalFilterCustomer = customerData.map((item) => {
+            return item._id;
+          });
+
+          pipeline.unshift({
+            $match: {
+              customer: { $in: finalFilterCustomer },
+            },
+          });
+
+          pipelineTotal.unshift({
+            customer: { $in: finalFilterCustomer },
+          });
+        } else {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data Not found!",
+          });
+        }
+      }
+
+      // End
+
+      const getAll = await Db.find({ $and: pipelineTotal }).count();
+      const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {
         return res.status(200).json({

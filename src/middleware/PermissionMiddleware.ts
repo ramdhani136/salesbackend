@@ -21,6 +21,7 @@ export enum selPermissionType {
   USERGROUP = "usergroup",
   SCHEDULE = "schedule",
   CALLSHEET = "callsheet",
+  VISIT = "visit",
 }
 
 class PermissionMiddleware {

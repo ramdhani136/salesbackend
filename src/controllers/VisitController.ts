@@ -1018,6 +1018,8 @@ class VistController implements IController {
             });
           }
 
+          // Cek lokasi dulu apabila type insite maka checkout harus dilakukan di posisi konsumen tersebut
+
           req.body.checkOut = {
             lat: parseFloat(req.body.checkOutLat),
             lng: parseFloat(req.body.checkOutLng),

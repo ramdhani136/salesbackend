@@ -1011,6 +1011,13 @@ class VistController implements IController {
           req.body.checkOutLng &&
           req.body.checkOutAddress
         ) {
+          if (!req.body.signature && !result.signature) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, signature wajib diisi sebelum melakukan checkout!!",
+            });
+          }
+
           req.body.checkOut = {
             lat: parseFloat(req.body.checkOutLat),
             lng: parseFloat(req.body.checkOutLng),

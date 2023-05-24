@@ -1047,7 +1047,7 @@ class VistController implements IController {
               lng: req.body.checkOut.lng,
               maxDistance: req.body.maxDistance
                 ? parseInt(`${req.body.maxDistance}`)
-                : 100,
+                : 200,
               customerId: req.body.customer
                 ? new ObjectId(req.body.customer)
                 : result.customer._id,

@@ -5,6 +5,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  History,
   RoleUserModel,
   Workflow,
   WorkflowChanger,
@@ -12,6 +13,7 @@ import {
 } from "../models";
 import mongoose, { ObjectId } from "mongoose";
 import { ISearch } from "../utils/FilterQuery";
+import HistoryController from "./HistoryController";
 
 const Db = Workflow;
 const redisName = "workflow";
@@ -125,6 +127,19 @@ class workflowStateController implements IController {
 
       const result = new Db(req.body);
       const response = await result.save();
+
+      //push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan workflow ${response.name} `,
+        user: req.userId,
+      });
+      //End
+
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
@@ -133,10 +148,26 @@ class workflowStateController implements IController {
 
   show = async (req: Request, res: Response): Promise<Response> => {
     try {
+      const getHistory = await History.find(
+        {
+          $and: [
+            { "document._id": req.params.id },
+            { "document.type": redisName },
+          ],
+        },
+        ["_id", "message", "createdAt", "updatedAt"]
+      )
+        .populate("user", "name")
+        .sort({ createdAt: -1 });
+
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         console.log("Cache");
-        return res.status(200).json({ status: 200, data: JSON.parse(cache) });
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+        });
       }
       const result = await Db.findOne({ _id: req.params.id }).populate(
         "user",
@@ -153,7 +184,11 @@ class workflowStateController implements IController {
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
       );
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({
+        status: 200,
+        data: result,
+        history: getHistory,
+      });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });
     }
@@ -161,13 +196,25 @@ class workflowStateController implements IController {
 
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const result = await Db.updateOne({ _id: req.params.id }, req.body);
-      const getData = await Db.findOne({ _id: req.params.id });
+      const prevData = await Db.findOne({ _id: req.params.id }).populate(
+        "user",
+        "name"
+      );
+      if (!prevData) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+      const update = await Db.findByIdAndUpdate(
+        { _id: req.params.id },
+        req.body
+      ).populate("user", "name");
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
-        JSON.stringify(getData)
+        JSON.stringify(update)
       );
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({ status: 200, data: update });
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }

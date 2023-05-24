@@ -30,6 +30,7 @@ import sharp from "sharp";
 import path from "path";
 import { ISearch } from "../utils/FilterQuery";
 import CustomerController from "./CustomerController";
+import { GetNameLocation } from "../utils/GetNameLocation";
 
 const redisName = "visit";
 
@@ -997,22 +998,16 @@ class VistController implements IController {
 
         if (
           req.body.checkOut &&
-          (!req.body.checkOutLat ||
-            !req.body.checkOutLng ||
-            !req.body.checkOutAddress)
+          (!req.body.checkOutLat || !req.body.checkOutLng)
         ) {
           return res.status(404).json({
             status: 404,
-            msg: "Error, silahkan isi parameter checkOutLat,checkOutLng,checkOutAddres untuk melakukan checkout!",
+            msg: "Error, silahkan isi parameter checkOutLat,checkOutLng untuk melakukan checkout!",
           });
         }
 
         // Jika Checkout
-        if (
-          req.body.checkOutLat &&
-          req.body.checkOutLng &&
-          req.body.checkOutAddress
-        ) {
+        if (req.body.checkOutLat && req.body.checkOutLng) {
           if (!req.body.signature && !result.signature) {
             return res.status(404).json({
               status: 404,
@@ -1034,12 +1029,19 @@ class VistController implements IController {
             }
           }
 
-          req.body.checkOut = {
+          const getLocation: any = await GetNameLocation({
             lat: parseFloat(req.body.checkOutLat),
             lng: parseFloat(req.body.checkOutLng),
-            createdAt: new Date(),
-            address: req.body.checkOutAddress,
-          };
+          });
+
+          if (getLocation) {
+            req.body.checkOut = {
+              lat: parseFloat(req.body.checkOutLat),
+              lng: parseFloat(req.body.checkOutLng),
+              createdAt: new Date(),
+              address: getLocation.data.display_name,
+            };
+          }
 
           if (cekCurrentLocation) {
             const inLocation = await CustomerController.getLocatonNearby({

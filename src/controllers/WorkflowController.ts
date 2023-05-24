@@ -59,11 +59,11 @@ class workflowStateController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "user.name", "doc"];
+        : [];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
-      const limit: number | string = parseInt(`${req.query.limit}`) || 0;
+      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
       let search: ISearch = {
@@ -82,7 +82,11 @@ class workflowStateController implements IController {
       }
       // End
       const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.find(isFilter.data).populate("user", "name");
+      const result = await Db.find(isFilter.data, setField)
+        .populate("user", "name")
+        .limit(limit)
+        .skip(limit > 0 ? page * limit - limit : 0)
+        .sort(order_by);
 
       if (result.length > 0) {
         return res.status(200).json({

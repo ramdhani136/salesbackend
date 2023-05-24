@@ -132,8 +132,8 @@ class CallsheetController implements IController {
             "branch.name",
             "status",
             "workflowState",
-            "schedulelist.schedule._id",
-            "schedulelist.schedule.name",
+            "schedules._id",
+            "schedules.name",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -239,15 +239,15 @@ class CallsheetController implements IController {
             from: "schedulelists",
             localField: "schedule",
             foreignField: "_id",
-            as: "schedulelist",
+            as: "schedules",
           },
         },
         {
           $lookup: {
             from: "schedules",
-            localField: "schedulelist.schedule",
+            localField: "schedules.schedule",
             foreignField: "_id",
-            as: "schedulelist.schedule",
+            as: "schedules",
           },
         },
       ];
@@ -551,40 +551,40 @@ class CallsheetController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
 
       const getData: any = await Db.aggregate([
         {
           $match: {
             _id: new ObjectId(req.params.id),
-          },  
+          },
         },
         {
           $lookup: {
@@ -646,15 +646,15 @@ class CallsheetController implements IController {
             from: "schedulelists",
             localField: "schedule",
             foreignField: "_id",
-            as: "schedulelist",
+            as: "schedules",
           },
         },
         {
           $lookup: {
             from: "schedules",
-            localField: "schedulelist.schedule",
+            localField: "schedules.schedule",
             foreignField: "_id",
-            as: "schedulelist.schedule",
+            as: "schedules",
           },
         },
 
@@ -665,8 +665,8 @@ class CallsheetController implements IController {
             type: 1,
             status: 1,
             workflowState: 1,
-            "schedulelist.schedule._id": 1,
-            "schedulelist.schedule.name": 1,
+            "schedules._id": 1,
+            "schedules.name": 1,
             "contact._id": 1,
             "contact.name": 1,
             "contact.phone": 1,

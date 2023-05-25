@@ -233,6 +233,12 @@ class CallsheetNoteController implements IController {
           .json({ status: 400, msg: "Error, callsheet tidak ditemukan!" });
       }
 
+      if (callsheet.status !== "0") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, callsheet bukan draft!" });
+      }
+
       req.body.callsheet = callsheet._id;
       // End
 

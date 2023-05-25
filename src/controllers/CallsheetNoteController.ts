@@ -9,6 +9,7 @@ import {
   History,
   CallsheetModel,
   TagModel,
+  CustomerModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -78,6 +79,11 @@ class CallsheetNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "callsheet.branch",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "callsheet.createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
@@ -130,10 +136,18 @@ class CallsheetNoteController implements IController {
         filter: ["title"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
-        "_id",
-        "tags",
-      ]);
+
+      const notCallsheetilter: any = filters.filter((item: any) => {
+        const key = item[0]; // Ambil kunci pada indeks 0
+        return !key.startsWith("callsheet."); // Kembalikan true jika kunci diawali dengan "schedule."
+      });
+
+      let isFilter = FilterQuery.getFilter(
+        notCallsheetilter,
+        stateFilter,
+        search,
+        ["_id", "tags"]
+      );
 
       // Mengambil rincian permission user
       // const userPermission = await PermissionMiddleware.getPermission(
@@ -151,7 +165,7 @@ class CallsheetNoteController implements IController {
       // End
 
       let pipeline: any = [
-        { $match: isFilter.data },
+        // { $match: isFilter.data },
         {
           $sort: order_by,
         },
@@ -310,6 +324,68 @@ class CallsheetNoteController implements IController {
       if (limit > 0) {
         pipeline.splice(3, 0, { $limit: limit });
       }
+      // End
+
+      // Mencari data id callsheet
+      const callsheetFilter = filters
+        .filter((item: any) => {
+          const key = item[0]; // Ambil kunci pada indeks 0
+          return key.startsWith("callsheet."); // Kembalikan true jika kunci diawali dengan "schedule."
+        })
+        .map((item: any) => {
+          const key = item[0];
+          const value = item[2];
+          return [key.replace("callsheet.", ""), item[1], value]; // Hapus "schedule." dari kunci
+        });
+
+      const stateCallsheet = stateFilter
+        .filter((item) => item.name.startsWith("callsheet.")) // Filter objek yang terkait dengan "schedule"
+        .map((item) => {
+          const newItem = { ...item }; // Salin objek menggunakan spread operator
+          newItem.name = newItem.name.replace("callsheet.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          return newItem;
+        });
+
+      if (callsheetFilter.length > 0 || req.query.search) {
+        let search: ISearch = {
+          filter: ["name"],
+          value: req.query.search || "",
+        };
+        const validCustomer = FilterQuery.getFilter(
+          callsheetFilter,
+          stateCallsheet,
+          search,
+          ["_id", "customer", "createdBy", "customer.branch"]
+        );
+
+        console.log(JSON.stringify(validCustomer));
+
+        const callsheetData = await CallsheetModel.find(validCustomer.data, [
+          "_id",
+        ]);
+
+        if (callsheetData.length > 0) {
+          const finalFilterCustomer = callsheetData.map((item) => {
+            return new ObjectId(item._id);
+          });
+
+          pipeline.unshift({
+            $match: {
+              callsheet: { $in: finalFilterCustomer },
+            },
+          });
+
+          // pipelineTotal.unshift({
+          //   customer: { $in: finalFilterCustomer },
+          // });
+        } else {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data Not found!",
+          });
+        }
+      }
+      //End
 
       const getAll: any = await Db.find(isFilter.data).count();
 
@@ -378,19 +454,19 @@ class CallsheetNoteController implements IController {
 
       // Cek duplikasi data
 
-      const cekDup = await Db.findOne({
-        $and: [
-          { callsheet: new ObjectId(req.body.callsheetId) },
-          { title: req.body.title },
-        ],
-      });
+      // const cekDup = await Db.findOne({
+      //   $and: [
+      //     { callsheet: new ObjectId(req.body.callsheetId) },
+      //     { title: req.body.title },
+      //   ],
+      // });
 
-      if (cekDup) {
-        return res.status(400).json({
-          status: 400,
-          msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
-        });
-      }
+      // if (cekDup) {
+      //   return res.status(400).json({
+      //     status: 400,
+      //     msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
+      //   });
+      // }
 
       // End
 
@@ -427,24 +503,26 @@ class CallsheetNoteController implements IController {
 
       req.body.createdBy = req.userId;
 
-      const result = new Db(req.body);
-      const response: any = await result.save();
+      for (let index = 0; index < 4000000; index++) {
+        const result = new Db(req.body);
+        const response: any = await result.save();
+      }
 
-      const getData = await response.populate("callsheet", "name");
+      // const getData = await response.populate("callsheet", "name");
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: getData._id,
-          name: getData.title,
-          type: redisName,
-        },
-        message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
-        user: req.userId,
-      });
-      // End
+      // // push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: getData._id,
+      //     name: getData.title,
+      //     type: redisName,
+      //   },
+      //   message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
+      //   user: req.userId,
+      // });
+      // // End
 
-      return res.status(200).json({ status: 200, data: getData });
+      return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {
       return res
         .status(400)

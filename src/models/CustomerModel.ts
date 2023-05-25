@@ -5,8 +5,8 @@ const CustomerModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
-      inex: true,
+      // unique: true,
+      index: true,
     },
     type: {
       type: String,

@@ -6,21 +6,25 @@ const CustomerModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      inex: true,
     },
     type: {
       type: String,
       enum: ["Individual", "Company"],
       default: "Company",
+      index: true,
     },
     customerGroup: {
       type: Schema.Types.ObjectId,
       ref: "customergroup",
       required: true,
+      index: 1,
     },
     branch: {
       type: Schema.Types.ObjectId,
       ref: "branch",
       required: true,
+      index: true,
     },
 
     img: {
@@ -40,16 +44,19 @@ const CustomerModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
+      index: true,
     },
     status: {
       type: String,
       enum: ["0", "1", "2"],
       default: "1",
+      index: true,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Submitted",
+      index: true,
     },
   },
   {
@@ -60,13 +67,16 @@ const CustomerModel = new mongoose.Schema(
 CustomerModel.index({ location: "2dsphere" });
 
 CustomerModel.index({
-  name: 1,
-  type: 1,
-  status: 1,
-  workflowState: 1,
+  createdAt: -1,
+});
+
+CustomerModel.index({
+  updatedAt: -1,
+});
+
+CustomerModel.index({
   customerGroup: 1,
   branch: 1,
-  createdBy: 1,
 });
 
 export default mongoose.model("customer", CustomerModel);

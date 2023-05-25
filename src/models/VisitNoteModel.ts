@@ -145,12 +145,10 @@ const VisitNoteModel = new mongoose.Schema(
   }
 );
 
-// VisitNoteModel.index({
-//   name: 1,
-//   visit: 1,
-//   rate: 1,
-//   createdBy: 1,
-//   tag: 1,
-// });
-
+VisitNoteModel.index({
+  createdAt: -1,
+});
+VisitNoteModel.index({
+  updatedAt: -1,
+});
 export default mongoose.model("visitnote", VisitNoteModel);

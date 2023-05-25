@@ -5,7 +5,7 @@ const CallsheetModel = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
       index: true,
     },
     type: {
@@ -63,5 +63,13 @@ const CallsheetModel = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+CallsheetModel.index({
+  createdAt: -1,
+});
+CallsheetModel.index({
+  updatedAt: -1,
+});
+
 
 export default mongoose.model("callsheet", CallsheetModel);

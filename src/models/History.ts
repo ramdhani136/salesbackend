@@ -6,23 +6,23 @@ const History = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
+      index: 1,
     },
     document: {
       _id: {
         type: Schema.Types.ObjectId,
         required: true,
-        index: true,
+        index: 1,
       },
       name: {
         type: String,
         required: true,
-        index: true,
+        index: 1,
       },
       type: {
         type: String,
         required: true,
-        index: true,
+        index: 1,
       },
     },
     message: {
@@ -32,7 +32,7 @@ const History = new mongoose.Schema(
     status: {
       type: Boolean,
       default: 0,
-      index: true,
+      index: 1,
     },
   },
   {
@@ -40,6 +40,11 @@ const History = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("history", History);
+History.index({
+  createdAt: -1,
+});
+History.index({
+  updatedAt: -1,
+});
 
 History.index({ status: 1 });

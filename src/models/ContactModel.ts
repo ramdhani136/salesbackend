@@ -6,19 +6,22 @@ const ContactModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
+      index: 1,
     },
     phone: {
       type: Number,
       required: true,
+      index: 1,
     },
     email: {
       type: Number,
+      index: 1,
     },
     customer: {
       type: Schema.Types.ObjectId,
       ref: "customer",
       required: true,
+      index: -1,
     },
     desc: {
       type: String,
@@ -27,16 +30,19 @@ const ContactModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
+      index: 1,
     },
     status: {
       type: String,
       enum: ["0", "1", "2"],
       default: "1",
+      index: 1,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Submitted",
+      index: 1,
     },
   },
   {
@@ -45,13 +51,10 @@ const ContactModel = new mongoose.Schema(
 );
 
 ContactModel.index({
-  name: 1,
-  phone: 1,
-  email: 1,
-  customer: 1,
-  status: 1,
-  createdBy: 1,
-  workflowState: 1,
+  createdAt: -1,
+});
+ContactModel.index({
+  updatedAt: -1,
 });
 
 export default mongoose.model("contact", ContactModel);

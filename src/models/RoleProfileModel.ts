@@ -5,8 +5,9 @@ const RoleProfile = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      index: true,
+
       unique: true,
+      index: 1,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -18,11 +19,13 @@ const RoleProfile = new mongoose.Schema(
       type: String,
       enum: ["0", "1", "2"],
       default: "0",
+      index: true,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Draft",
+      index: true,
     },
   },
   {
@@ -30,8 +33,11 @@ const RoleProfile = new mongoose.Schema(
   }
 );
 
-RoleProfile.index({ name: 1, status: 1, workflowState: 1 });
-
+RoleProfile.index({
+  createdAt: -1,
+});
+RoleProfile.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("RoleProfiles", RoleProfile);
-

@@ -6,16 +6,19 @@ const UserGroupListModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
+      index: true,
     },
     userGroup: {
       type: Schema.Types.ObjectId,
       ref: "usergroup",
       required: true,
+      index: true,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
+      index: true,
     },
   },
   {
@@ -24,9 +27,10 @@ const UserGroupListModel = new mongoose.Schema(
 );
 
 UserGroupListModel.index({
-  user: 1,
-  userGroup: 1,
-  createdBy: 1,
+  createdAt: -1,
+});
+UserGroupListModel.index({
+  updatedAt: -1,
 });
 
 export default mongoose.model("usergrouplist", UserGroupListModel);

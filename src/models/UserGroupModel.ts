@@ -6,21 +6,25 @@ const UserGroupModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: 1,
     },
     status: {
       type: String,
       enum: ["0", "1", "2"],
       default: "0",
+      index: 1,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Draft",
+      index: 1,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
+      index: 1,
     },
   },
   {
@@ -28,6 +32,11 @@ const UserGroupModel = new mongoose.Schema(
   }
 );
 
-UserGroupModel.index({ name: 1, status: 1, workflowState: 1, createdBy: 1 });
+UserGroupModel.index({
+  createdAt: -1,
+});
+UserGroupModel.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("usergroup", UserGroupModel);

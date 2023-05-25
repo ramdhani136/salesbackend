@@ -6,7 +6,7 @@ const CustomerGroupModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
+      index: 1,
     },
     desc: {
       type: String,
@@ -25,24 +25,25 @@ const CustomerGroupModel = new mongoose.Schema(
         },
         message: "Array harus diisi setidaknya dengan satu tag.",
       },
+      index: 1,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
+      index: 1,
     },
     status: {
       type: String,
       enum: ["0", "1", "2"],
       default: "1",
-      index: true,
+      index: 1,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Submitted",
-      index: true,
+      index: 1,
     },
   },
   {
@@ -50,6 +51,11 @@ const CustomerGroupModel = new mongoose.Schema(
   }
 );
 
-CustomerGroupModel.index({ name: 1, status: 1, parent: 1, workflowState: 1 });
+CustomerGroupModel.index({
+  createdAt: -1,
+});
+CustomerGroupModel.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("customergroup", CustomerGroupModel);

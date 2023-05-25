@@ -6,13 +6,13 @@ const ScheduleListModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "schedule",
       required: true,
-      index: true,
+      index: 1,
     },
     customer: {
       type: Schema.Types.ObjectId,
       ref: "customer",
       required: true,
-      index: true,
+      index: 1,
     },
     notes: {
       type: String,
@@ -21,29 +21,33 @@ const ScheduleListModel = new mongoose.Schema(
       type: String,
       enum: ["0", "1"],
       default: "0",
+      index: 1,
     },
     closing: {
       date: {
         type: Date,
+        index: -1,
       },
       user: {
         _id: {
           type: Schema.Types.ObjectId,
+          index: 1,
         },
-        name: { type: String },
+        name: { type: String, index: 1 },
       },
       doc: {
         _id: {
           type: Schema.Types.ObjectId,
+          index: 1,
         },
-        name: { type: String },
+        name: { type: String, index: 1 },
       },
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
+      index: 1,
     },
   },
   {
@@ -51,12 +55,11 @@ const ScheduleListModel = new mongoose.Schema(
   }
 );
 
-// ScheduleListModel.index({
-//   schedule: 1,
-//   status: 1,
-//   customer: 1,
-//   workflowState: 1,
-//   createdBy: 1,
-// });
+ScheduleListModel.index({
+  createdAt: -1,
+});
+ScheduleListModel.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("schedulelist", ScheduleListModel);

@@ -12,6 +12,7 @@ const User = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      index: true,
     },
     email: {
       type: String,
@@ -33,6 +34,7 @@ const User = new mongoose.Schema(
       type: String,
       enum: ["0", "1", "2"],
       default: "0",
+      index: true,
     },
   },
   {
@@ -40,8 +42,11 @@ const User = new mongoose.Schema(
   }
 );
 
-
-User.index({ name: 1, email: 1, username: 1, status: 1 });
+User.index({
+  createdAt: -1,
+});
+User.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("Users", User);
-

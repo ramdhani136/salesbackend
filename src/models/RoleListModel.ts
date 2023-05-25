@@ -6,7 +6,7 @@ const RoleListModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "RoleProfiles",
       required: true,
-      index: true,
+      index: 1,
     },
     doc: {
       type: String,
@@ -33,61 +33,61 @@ const RoleListModel = new mongoose.Schema(
         "memo",
       ],
       require: true,
-      index: true,
+      index: 1,
     },
     create: {
       type: String,
       enum: [0, 1],
       default: 0,
-      index: true,
+      index: 1,
     },
     read: {
       type: String,
       enum: [0, 1],
       default: 1,
-      index: true,
+      index: 1,
     },
     delete: {
       type: String,
       enum: [0, 1],
       default: 0,
-      index: true,
+      index: 1,
     },
     update: {
       type: String,
       enum: [0, 1],
       default: 0,
-      index: true,
+      index: 1,
     },
     amend: {
       type: String,
       enum: [0, 1],
       default: 0,
-      index: true,
+      index: 1,
     },
     submit: {
       type: String,
       enum: [0, 1],
       default: 0,
-      index: true,
+      index: 1,
     },
     report: {
       type: String,
       enum: [0, 1],
       default: 0,
-      index: true,
+      index: 1,
     },
     export: {
       type: String,
       enum: [0, 1],
       default: 0,
-      index: true,
+      index: 1,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
+      index: 1,
     },
   },
   {
@@ -95,6 +95,11 @@ const RoleListModel = new mongoose.Schema(
   }
 );
 
-RoleListModel.index({ doc: 1 });
+RoleListModel.index({
+  createdAt: -1,
+});
+RoleListModel.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("RoleLists", RoleListModel);

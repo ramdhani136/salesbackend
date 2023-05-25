@@ -6,13 +6,13 @@ const Permission = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
+      index: 1,
     },
     allow: {
       type: String,
       enum: ["branch", "user", "customer", "customergroup", "userGroup"],
       require: true,
-      index: true,
+      index: 1,
     },
     doc: {
       type: String,
@@ -28,37 +28,39 @@ const Permission = new mongoose.Schema(
         "permission",
         "memo",
         "contact",
-        "usergroup"
+        "usergroup",
       ],
       default: "",
-      index: true,
+      index: 1,
     },
     allDoc: {
       type: Boolean,
-      index: true,
+      index: 1,
       enum: [0, 1],
       default: 0,
     },
     value: {
       type: String,
       require: true,
-      index: true,
+      index: 1,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: true,
+      index: 1,
     },
     status: {
       type: String,
       enum: ["0", "1", "2"],
       default: "1",
+      index: 1,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Submited",
+      index: 1,
     },
   },
   {
@@ -66,6 +68,11 @@ const Permission = new mongoose.Schema(
   }
 );
 
-// Permission.index({ allow: 1, doc: 1, allDoc: 1, status: 1, workflowState: 1 });
+Permission.index({
+  createdAt: -1,
+});
+Permission.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("Permissions", Permission);

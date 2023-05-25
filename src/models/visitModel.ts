@@ -98,4 +98,12 @@ const VisitModel = new mongoose.Schema(
   }
 );
 
+VisitModel.index({
+  createdAt: -1,
+});
+VisitModel.index({
+  updatedAt: -1,
+});
+
+
 export default mongoose.model("visit", VisitModel);

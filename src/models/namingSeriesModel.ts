@@ -6,20 +6,21 @@ const NamingSeriesModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
+      index: 1,
     },
     branch: [
       {
         type: Schema.Types.ObjectId,
         ref: "branch",
         required: true,
-        index: true,
+        index: 1,
       },
     ],
     doc: {
       type: String,
       enum: ["visit", "callsheet", "schedule"],
       required: true,
+      index: 1,
     },
   },
   {
@@ -27,8 +28,11 @@ const NamingSeriesModel = new mongoose.Schema(
   }
 );
 
-NamingSeriesModel.index({ name: 1, branch: 1, doc: 1 });
-
+NamingSeriesModel.index({
+  createdAt: -1,
+});
+NamingSeriesModel.index({
+  updatedAt: -1,
+});
 
 export default mongoose.model("namingseries", NamingSeriesModel);
-

@@ -79,33 +79,18 @@ class CallsheetNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.branch",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
         name: "callsheet.createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.customer.customerGroup._id",
+        name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.customer.customerGroup.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "callsheet.customer.branch._id",
+        name: "customer.branch",
         operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "callsheet.customer.branch.name",
-        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
@@ -137,17 +122,15 @@ class CallsheetNoteController implements IController {
         value: req.query.search || "",
       };
 
-      const notCallsheetilter: any = filters.filter((item: any) => {
+      const notDefault: any = filters.filter((item: any) => {
         const key = item[0]; // Ambil kunci pada indeks 0
-        return !key.startsWith("callsheet."); // Kembalikan true jika kunci diawali dengan "schedule."
+        return !key.startsWith("callsheet.") && !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
       });
 
-      let isFilter = FilterQuery.getFilter(
-        notCallsheetilter,
-        stateFilter,
-        search,
-        ["_id", "tags"]
-      );
+      let isFilter = FilterQuery.getFilter(notDefault, stateFilter, search, [
+        "_id",
+        "tags",
+      ]);
 
       // Mengambil rincian permission user
       // const userPermission = await PermissionMiddleware.getPermission(

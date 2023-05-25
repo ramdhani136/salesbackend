@@ -26,32 +26,12 @@ class CallsheetNoteController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
-        name: "name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "schedule._id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "schedule.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "tag._id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "tag.name",
+        name: "title",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -60,6 +40,18 @@ class CallsheetNoteController implements IController {
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      {
+        name: "notes",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+
+      {
+        name: "tags",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+
       {
         name: "callsheet.name",
         operator: ["=", "!=", "like", "notlike"],
@@ -81,13 +73,13 @@ class CallsheetNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.customer._id",
+        name: "callsheet.customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.customer.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "callsheet.createdBy",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -101,17 +93,12 @@ class CallsheetNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.customer.customerGroup.branch._id",
+        name: "callsheet.customer.branch._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.customer.customerGroup.branch.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "createdBy.name",
+        name: "callsheet.customer.branch.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
@@ -143,7 +130,10 @@ class CallsheetNoteController implements IController {
         filter: ["title"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "tags",
+      ]);
 
       // Mengambil rincian permission user
       // const userPermission = await PermissionMiddleware.getPermission(
@@ -386,23 +376,23 @@ class CallsheetNoteController implements IController {
       req.body.callsheet = callsheet._id;
       // End
 
-      // // Cek duplikasi data
+      // Cek duplikasi data
 
-      // const cekDup = await Db.findOne({
-      //   $and: [
-      //     { callsheet: new ObjectId(req.body.callsheetId) },
-      //     { title: req.body.title },
-      //   ],
-      // });
+      const cekDup = await Db.findOne({
+        $and: [
+          { callsheet: new ObjectId(req.body.callsheetId) },
+          { title: req.body.title },
+        ],
+      });
 
-      // if (cekDup) {
-      //   return res.status(400).json({
-      //     status: 400,
-      //     msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
-      //   });
-      // }
+      if (cekDup) {
+        return res.status(400).json({
+          status: 400,
+          msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
+        });
+      }
 
-      // // End
+      // End
 
       // Cek tag
       if (!req.body.tags) {
@@ -437,25 +427,24 @@ class CallsheetNoteController implements IController {
 
       req.body.createdBy = req.userId;
 
-      for (let index = 0; index < 300000; index++) {
-        const result = new Db(req.body);
-        const response: any = await result.save();
-      }
-      // const getData = await response.populate("callsheet", "name");
+      const result = new Db(req.body);
+      const response: any = await result.save();
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: getData._id,
-      //     name: getData.title,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
-      //   user: req.userId,
-      // });
-      // // End
+      const getData = await response.populate("callsheet", "name");
 
-      return res.status(200).json({ status: 200, data: "d" });
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: getData._id,
+          name: getData.title,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
+        user: req.userId,
+      });
+      // End
+
+      return res.status(200).json({ status: 200, data: getData });
     } catch (error) {
       return res
         .status(400)

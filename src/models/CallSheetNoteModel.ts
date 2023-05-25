@@ -11,7 +11,7 @@ const CallsheetNoteModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "callsheet",
       required: true,
-      index: true,
+      index: -1,
     },
     tags: {
       type: [
@@ -33,6 +33,7 @@ const CallsheetNoteModel = new mongoose.Schema(
     notes: {
       type: String,
       required: true,
+      index: true,
     },
   },
   {
@@ -46,5 +47,6 @@ CallsheetNoteModel.index({
 CallsheetNoteModel.index({
   updatedAt: -1,
 });
+
 
 export default mongoose.model("callsheetnote", CallsheetNoteModel);

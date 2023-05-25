@@ -319,49 +319,168 @@ class CallsheetNoteController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
+
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
+
+      const getData: any = await Db.aggregate([
+        {
+          $match: {
+            _id: new ObjectId(req.params.id),
           },
+        },
+        {
+          $lookup: {
+            from: "callsheets",
+            localField: "callsheet",
+            foreignField: "_id",
+            as: "callsheet",
+          },
+        },
+        {
+          $unwind: "$callsheet",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "callsheet.customer",
+            foreignField: "_id",
+            as: "callsheet.customer",
+          },
+        },
+        {
+          $unwind: "$callsheet.customer",
+        },
+        {
+          $lookup: {
+            from: "contacts",
+            localField: "callsheet.contact",
+            foreignField: "_id",
+            as: "callsheet.contact",
+          },
+        },
+        {
+          $unwind: "$callsheet.contact",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "callsheet.createdBy",
+            foreignField: "_id",
+            as: "callsheet.createdBy",
+          },
+        },
+        {
+          $unwind: "$callsheet.createdBy",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "callsheet.customer.customerGroup",
+            foreignField: "_id",
+            as: "callsheet.customerGroup",
+          },
+        },
+        {
+          $unwind: "$callsheet.customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "callsheet.customer.branch",
+            foreignField: "_id",
+            as: "callsheet.branch",
+          },
+        },
+        {
+          $unwind: "$callsheet.branch",
+        },
+        {
+          $lookup: {
+            from: "tags",
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags",
+          },
+        },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+        {
+          $project: {
+            "callsheet.customer.customerGroup": 0,
+            "callsheet.customer.branch": 0,
+            "callsheet.customer.status": 0,
+            "callsheet.customer.workflowState": 0,
+            "callsheet.customer.createdAt": 0,
+            "callsheet.customer.updatedAt": 0,
+            "callsheet.contact.createdAt": 0,
+            "callsheet.contact.updatedAt": 0,
+            "callsheet.contact.customer": 0,
+            "callsheet.contact.createdBy": 0,
+            "callsheet.contact.status": 0,
+            "callsheet.contact.workflowState": 0,
+            "callsheet.createdBy.workflowState": 0,
+            "callsheet.createdBy.password": 0,
+            "callsheet.createdBy.username": 0,
+            "callsheet.createdBy.status": 0,
+            "callsheet.createdBy.createdAt": 0,
+            "callsheet.createdBy.updatedAt": 0,
+            "callsheet.customerGroup.updatedAt": 0,
+            "callsheet.customerGroup.createdAt": 0,
+            "callsheet.customerGroup.parent": 0,
+            "callsheet.customerGroup.branch": 0,
+            "callsheet.customerGroup.createdBy": 0,
+            "callsheet.customerGroup.status": 0,
+            "callsheet.customerGroup.workflowState": 0,
+            "callsheet.branch.createdBy": 0,
+            "callsheet.branch.status": 0,
+            "callsheet.branch.workflowState": 0,
+            "callsheet.branch.createdAt": 0,
+            "callsheet.branch.updatedAt": 0,
+            "tags.createdBy": 0,
+            "tags.createdAt": 0,
+            "tags.updatedAt": 0,
+          },
+        },
+      ]);
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
+      if (getData.length === 0) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      });
+
+      const result = getData[0];
 
       if (!result) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-
-      const buttonActions = await WorkflowController.getButtonAction(
-        redisName,
-        req.userId,
-        result.workflowState
-      );
 
       const getHistory = await History.find(
         {
@@ -384,7 +503,6 @@ class CallsheetNoteController implements IController {
         status: 200,
         data: result,
         history: getHistory,
-        workflow: buttonActions,
       });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });

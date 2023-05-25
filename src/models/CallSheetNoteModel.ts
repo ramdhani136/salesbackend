@@ -5,13 +5,11 @@ const CallsheetNoteModel = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      index: true,
     },
     callsheet: {
       type: Schema.Types.ObjectId,
       ref: "callsheet",
       required: true,
-      index: true,
     },
     tags: {
       type: [
@@ -19,7 +17,6 @@ const CallsheetNoteModel = new mongoose.Schema(
           type: Schema.Types.ObjectId,
           ref: "tag",
           required: true,
-          index: true,
         },
       ],
       required: true,
@@ -39,5 +36,7 @@ const CallsheetNoteModel = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+CallsheetNoteModel.index({ title: 1, createdAt: -1, updatedAt: -1 });
 
 export default mongoose.model("callsheetnote", CallsheetNoteModel);

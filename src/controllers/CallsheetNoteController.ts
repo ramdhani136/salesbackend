@@ -17,7 +17,6 @@ import {
 } from "../middleware/PermissionMiddleware";
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
-import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "callsheetnote";
@@ -131,30 +130,17 @@ class CallsheetNoteController implements IController {
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
-      const fields: any = req.query.fields
-        ? JSON.parse(`${req.query.fields}`)
-        : [
-            "name",
-            "callsheet.name",
-            "callsheet.customer.name",
-            "callsheet.customer.customerGroup.name",
-            "callsheet.customer.customerGroup.branch.name",
-            "createdBy.name",
-            "updatedAt",
-            "schedule.name",
-            "tag.name",
-            "callsheet.rating",
-            "callsheet.type",
-            "note",
-          ];
+      // const fields: any = req.query.fields
+      //   ? JSON.parse(`${req.query.fields}`)
+      //   : ["_id", "title", "callsheet._id"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
-      const limit: number | string = parseInt(`${req.query.limit}`) || 0;
+      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
-      let setField = FilterQuery.getField(fields);
+      // let setField = FilterQuery.getField(fields);
       let search: ISearch = {
-        filter: ["name"],
+        filter: ["title"],
         value: req.query.search || "",
       };
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
@@ -174,12 +160,170 @@ class CallsheetNoteController implements IController {
       }
       // End
 
-      const getAll = await Db.find(isFilter.data, setField).count();
+      let pipeline: any = [
+        { $match: isFilter.data },
+        {
+          $sort: order_by,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $lookup: {
+            from: "callsheets",
+            localField: "callsheet",
+            foreignField: "_id",
+            as: "callsheet",
+          },
+        },
+        {
+          $unwind: "$callsheet",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "callsheet.customer",
+            foreignField: "_id",
+            as: "callsheet.customer",
+          },
+        },
+        {
+          $unwind: "$callsheet.customer",
+        },
+        {
+          $lookup: {
+            from: "contacts",
+            localField: "callsheet.contact",
+            foreignField: "_id",
+            as: "callsheet.contact",
+          },
+        },
+        {
+          $unwind: "$callsheet.contact",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "callsheet.createdBy",
+            foreignField: "_id",
+            as: "callsheet.createdBy",
+          },
+        },
+        {
+          $unwind: "$callsheet.createdBy",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "callsheet.customer.customerGroup",
+            foreignField: "_id",
+            as: "callsheet.customerGroup",
+          },
+        },
+        {
+          $unwind: "$callsheet.customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "callsheet.customer.branch",
+            foreignField: "_id",
+            as: "callsheet.branch",
+          },
+        },
+        {
+          $unwind: "$callsheet.branch",
+        },
+        {
+          $lookup: {
+            from: "tags",
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags",
+          },
+        },
 
-      const result = await Db.find(isFilter.data, setField)
-        .sort(order_by)
-        .limit(limit)
-        .skip(limit > 0 ? page * limit - limit : 0);
+        {
+          $lookup: {
+            from: "schedulelists",
+            localField: "callsheet.schedulelist",
+            foreignField: "_id",
+            as: "callsheet.schedulelist",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "schedules",
+                  localField: "schedule",
+                  foreignField: "_id",
+                  as: "schedule",
+                },
+              },
+              {
+                $unwind: "$schedule",
+              },
+              {
+                $project: {
+                  "schedule._id": 1,
+                  "schedule.name": 1,
+                  "schedule.closingDate": 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            "callsheet.customer.customerGroup": 0,
+            "callsheet.customer.branch": 0,
+            "callsheet.customer.status": 0,
+            "callsheet.customer.workflowState": 0,
+            "callsheet.customer.createdAt": 0,
+            "callsheet.customer.updatedAt": 0,
+            "callsheet.contact.createdAt": 0,
+            "callsheet.contact.updatedAt": 0,
+            "callsheet.contact.customer": 0,
+            "callsheet.contact.createdBy": 0,
+            "callsheet.contact.status": 0,
+            "callsheet.contact.workflowState": 0,
+            "callsheet.createdBy.workflowState": 0,
+            "callsheet.createdBy.password": 0,
+            "callsheet.createdBy.username": 0,
+            "callsheet.createdBy.status": 0,
+            "callsheet.createdBy.createdAt": 0,
+            "callsheet.createdBy.updatedAt": 0,
+            "callsheet.customerGroup.updatedAt": 0,
+            "callsheet.customerGroup.createdAt": 0,
+            "callsheet.customerGroup.parent": 0,
+            "callsheet.customerGroup.branch": 0,
+            "callsheet.customerGroup.createdBy": 0,
+            "callsheet.customerGroup.status": 0,
+            "callsheet.customerGroup.workflowState": 0,
+            "callsheet.branch.createdBy": 0,
+            "callsheet.branch.status": 0,
+            "callsheet.branch.workflowState": 0,
+            "callsheet.branch.createdAt": 0,
+            "callsheet.branch.updatedAt": 0,
+            "tags.createdBy": 0,
+            "tags.createdAt": 0,
+            "tags.updatedAt": 0,
+            "callsheet.schedulelist.customer": 0,
+            "callsheet.schedulelist.status": 0,
+            "callsheet.schedulelist.createdBy": 0,
+            "callsheet.schedulelist.createdAt": 0,
+            "callsheet.schedulelist.updatedAt": 0,
+            "callsheet.schedulelist.__v": 0,
+          },
+        },
+      ];
+
+      //Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipeline.splice(3, 0, { $limit: limit });
+      }
+
+      const getAll: any = await Db.find(isFilter.data).count();
+
+      const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -242,23 +386,23 @@ class CallsheetNoteController implements IController {
       req.body.callsheet = callsheet._id;
       // End
 
-      // Cek duplikasi data
+      // // Cek duplikasi data
 
-      const cekDup = await Db.findOne({
-        $and: [
-          { callsheet: new ObjectId(req.body.callsheetId) },
-          { title: req.body.title },
-        ],
-      });
+      // const cekDup = await Db.findOne({
+      //   $and: [
+      //     { callsheet: new ObjectId(req.body.callsheetId) },
+      //     { title: req.body.title },
+      //   ],
+      // });
 
-      if (cekDup) {
-        return res.status(400).json({
-          status: 400,
-          msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
-        });
-      }
+      // if (cekDup) {
+      //   return res.status(400).json({
+      //     status: 400,
+      //     msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
+      //   });
+      // }
 
-      // End
+      // // End
 
       // Cek tag
       if (!req.body.tags) {
@@ -293,23 +437,25 @@ class CallsheetNoteController implements IController {
 
       req.body.createdBy = req.userId;
 
-      const result = new Db(req.body);
-      const response: any = await result.save();
-      const getData = await response.populate("callsheet", "name");
+      for (let index = 0; index < 300000; index++) {
+        const result = new Db(req.body);
+        const response: any = await result.save();
+      }
+      // const getData = await response.populate("callsheet", "name");
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: getData._id,
-          name: getData.title,
-          type: redisName,
-        },
-        message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
-        user: req.userId,
-      });
-      // End
+      // // push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: getData._id,
+      //     name: getData.title,
+      //     type: redisName,
+      //   },
+      //   message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
+      //   user: req.userId,
+      // });
+      // // End
 
-      return res.status(200).json({ status: 200, data: getData });
+      return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {
       return res
         .status(400)

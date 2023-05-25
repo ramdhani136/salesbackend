@@ -53,7 +53,7 @@ class VistController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "schedule",
+        name: "schedulelist",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
@@ -137,8 +137,8 @@ class VistController implements IController {
             "branch.name",
             "status",
             "workflowState",
-            "schedules._id",
-            "schedules.name",
+            "schedulelist._id",
+            "schedulelist.schedule",
             "rate",
             "checkIn",
             "checkOut",
@@ -146,6 +146,7 @@ class VistController implements IController {
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
+      ``;
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
@@ -159,7 +160,7 @@ class VistController implements IController {
         notCustomer,
         stateFilter,
         undefined,
-        ["customer", "schedule", "createdBy", "_id", "contact"]
+        ["customer", "schedulelist", "createdBy", "_id", "contact"]
       );
 
       // Mengambil rincian permission user
@@ -245,17 +246,29 @@ class VistController implements IController {
         {
           $lookup: {
             from: "schedulelists",
-            localField: "schedule",
+            localField: "schedulelist",
             foreignField: "_id",
-            as: "schedules",
-          },
-        },
-        {
-          $lookup: {
-            from: "schedules",
-            localField: "schedules.schedule",
-            foreignField: "_id",
-            as: "schedules",
+            as: "schedulelist",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "schedules",
+                  localField: "schedule",
+                  foreignField: "_id",
+                  as: "schedule",
+                },
+              },
+              {
+                $unwind: "$schedule",
+              },
+              {
+                $project: {
+                  "schedule._id": 1,
+                  "schedule.name": 1,
+                  "schedule.closingDate": 1,
+                },
+              },
+            ],
           },
         },
       ];
@@ -589,52 +602,52 @@ class VistController implements IController {
         address: getLocation.data.display_name,
       };
 
-      // const result = new Db(req.body);
-      // const response: any = await result.save({});
+      const result = new Db(req.body);
+      const response: any = await result.save({});
 
-      // // Upload data ketika outsite
-      // if (req.body.type === "outsite") {
-      //   const compressedImage = path.join(
-      //     __dirname,
-      //     "../public/images",
-      //     response._id + ".jpg"
-      //   );
-      //   sharp(req.file.path)
-      //     .resize(640, 480, {
-      //       fit: sharp.fit.inside,
-      //       withoutEnlargement: true,
-      //     })
-      //     .jpeg({
-      //       quality: 100,
-      //       progressive: true,
-      //       chromaSubsampling: "4:4:4",
-      //     })
-      //     .withMetadata()
-      //     .toFile(compressedImage, async (err, info): Promise<any> => {
-      //       if (err) {
-      //         console.log(err);
-      //       } else {
-      //         await Db.findByIdAndUpdate(response._id, {
-      //           img: response._id + ".jpg",
-      //         });
-      //       }
-      //     });
-      // }
-      // End
+      // Upload data ketika outsite
+      if (req.body.type === "outsite") {
+        const compressedImage = path.join(
+          __dirname,
+          "../public/images",
+          response._id + ".jpg"
+        );
+        sharp(req.file.path)
+          .resize(640, 480, {
+            fit: sharp.fit.inside,
+            withoutEnlargement: true,
+          })
+          .jpeg({
+            quality: 100,
+            progressive: true,
+            chromaSubsampling: "4:4:4",
+          })
+          .withMetadata()
+          .toFile(compressedImage, async (err, info): Promise<any> => {
+            if (err) {
+              console.log(err);
+            } else {
+              await Db.findByIdAndUpdate(response._id, {
+                img: response._id + ".jpg",
+              });
+            }
+          });
+      }
+      //  End
 
-      // //push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan visit ${response.name} `,
-      //   user: req.userId,
-      // });
-      // //End
+      //push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan visit ${response.name} `,
+        user: req.userId,
+      });
+      //End
 
-      return res.status(200).json({ status: 200, data: "d" });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       if (req.file) {
         // Jika pembuatan visit gagal, hapus foto yang telah di-upload
@@ -748,17 +761,29 @@ class VistController implements IController {
         {
           $lookup: {
             from: "schedulelists",
-            localField: "schedule",
+            localField: "schedulelist",
             foreignField: "_id",
-            as: "schedules",
-          },
-        },
-        {
-          $lookup: {
-            from: "schedules",
-            localField: "schedules.schedule",
-            foreignField: "_id",
-            as: "schedules",
+            as: "schedulelist",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "schedules",
+                  localField: "schedule",
+                  foreignField: "_id",
+                  as: "schedule",
+                },
+              },
+              {
+                $unwind: "$schedule",
+              },
+              {
+                $project: {
+                  "schedule._id": 1,
+                  "schedule.name": 1,
+                  "schedule.closingDate": 1,
+                },
+              },
+            ],
           },
         },
 
@@ -773,8 +798,8 @@ class VistController implements IController {
             signature: 1,
             checkIn: 1,
             checkOut: 1,
-            "schedules._id": 1,
-            "schedules.name": 1,
+            "schedulelist._id": 1,
+            "schedulelist.schedule": 1,
             "contact._id": 1,
             "contact.name": 1,
             "contact.phone": 1,
@@ -1238,17 +1263,29 @@ class VistController implements IController {
           {
             $lookup: {
               from: "schedulelists",
-              localField: "schedule",
+              localField: "schedulelist",
               foreignField: "_id",
-              as: "schedules",
-            },
-          },
-          {
-            $lookup: {
-              from: "schedules",
-              localField: "schedules.schedule",
-              foreignField: "_id",
-              as: "schedules",
+              as: "schedulelist",
+              pipeline: [
+                {
+                  $lookup: {
+                    from: "schedules",
+                    localField: "schedule",
+                    foreignField: "_id",
+                    as: "schedule",
+                  },
+                },
+                {
+                  $unwind: "$schedule",
+                },
+                {
+                  $project: {
+                    "schedule._id": 1,
+                    "schedule.name": 1,
+                    "schedule.closingDate": 1,
+                  },
+                },
+              ],
             },
           },
 
@@ -1263,8 +1300,8 @@ class VistController implements IController {
               signature: 1,
               checkIn: 1,
               checkOut: 1,
-              "schedules._id": 1,
-              "schedules.name": 1,
+              "schedulelist._id": 1,
+              "schedulelist.schedule": 1,
               "contact._id": 1,
               "contact.name": 1,
               "contact.phone": 1,

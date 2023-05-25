@@ -132,10 +132,8 @@ class CallsheetController implements IController {
             "branch.name",
             "status",
             "workflowState",
-            "schedules._id",
             "schedulelist._id",
-            "schedulelist.schedule._id",
-            "schedulelist.schedule.name",
+            "schedulelist.schedule",
             "rate",
           ];
       const order_by: any = req.query.order_by
@@ -250,6 +248,16 @@ class CallsheetController implements IController {
                   localField: "schedule",
                   foreignField: "_id",
                   as: "schedule",
+                },
+              },
+              {
+                $unwind: "$schedule",
+              },
+              {
+                $project: {
+                  "schedule._id": 1,
+                  "schedule.name": 1,
+                  "schedule.closingDate": 1,
                 },
               },
             ],
@@ -661,6 +669,16 @@ class CallsheetController implements IController {
                   as: "schedule",
                 },
               },
+              {
+                $unwind: "$schedule",
+              },
+              {
+                $project: {
+                  "schedule._id": 1,
+                  "schedule.name": 1,
+                  "schedule.closingDate": 1,
+                },
+              },
             ],
           },
         },
@@ -673,8 +691,7 @@ class CallsheetController implements IController {
             status: 1,
             workflowState: 1,
             "schedulelist._id": 1,
-            "schedulelist.schedule._id": 1,
-            "schedulelist.schedule.name": 1,
+            "schedulelist.schedule": 1,
             "contact._id": 1,
             "contact.name": 1,
             "contact.phone": 1,
@@ -977,17 +994,29 @@ class CallsheetController implements IController {
           {
             $lookup: {
               from: "schedulelists",
-              localField: "schedule",
+              localField: "schedulelist",
               foreignField: "_id",
-              as: "schedules",
-            },
-          },
-          {
-            $lookup: {
-              from: "schedules",
-              localField: "schedules.schedule",
-              foreignField: "_id",
-              as: "schedules",
+              as: "schedulelist",
+              pipeline: [
+                {
+                  $lookup: {
+                    from: "schedules",
+                    localField: "schedule",
+                    foreignField: "_id",
+                    as: "schedule",
+                  },
+                },
+                {
+                  $unwind: "$schedule",
+                },
+                {
+                  $project: {
+                    "schedule._id": 1,
+                    "schedule.name": 1,
+                    "schedule.closingDate": 1,
+                  },
+                },
+              ],
             },
           },
 
@@ -998,8 +1027,8 @@ class CallsheetController implements IController {
               type: 1,
               status: 1,
               workflowState: 1,
-              "schedules._id": 1,
-              "schedules.name": 1,
+              "schedulelist._id": 1,
+              "schedulelist.schedule": 1,
               "contact._id": 1,
               "contact.name": 1,
               "contact.phone": 1,

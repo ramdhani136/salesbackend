@@ -430,6 +430,26 @@ class CallsheetNoteController implements IController {
         },
 
         {
+          $lookup: {
+            from: "schedulelists",
+            localField: "callsheet.schedulelist",
+            foreignField: "_id",
+            as: "callsheet.schedulelist",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "schedules",
+                  localField: "schedule",
+                  foreignField: "_id",
+                  as: "schedule",
+                },
+              },
+              { $project: { "schedule.type": 0, "schedule.userGroup": 0 } },
+            ],
+          },
+        },
+
+        {
           $project: {
             "callsheet.customer.customerGroup": 0,
             "callsheet.customer.branch": 0,
@@ -464,6 +484,12 @@ class CallsheetNoteController implements IController {
             "tags.createdBy": 0,
             "tags.createdAt": 0,
             "tags.updatedAt": 0,
+            "callsheet.schedulelist.customer": 0,
+            "callsheet.schedulelist.status": 0,
+            "callsheet.schedulelist.createdBy": 0,
+            "callsheet.schedulelist.createdAt": 0,
+            "callsheet.schedulelist.updatedAt": 0,
+            "callsheet.schedulelist.__v": 0,
           },
         },
       ]);

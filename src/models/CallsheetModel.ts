@@ -36,7 +36,7 @@ const CallsheetModel = new mongoose.Schema(
       required: true,
       index: true,
     },
-    schedule: {
+    schedulelist: {
       type: [
         {
           type: Schema.Types.ObjectId,

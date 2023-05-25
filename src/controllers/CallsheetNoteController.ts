@@ -4,7 +4,12 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { CallSheetNoteModel as Db, History, CallsheetModel } from "../models";
+import {
+  CallSheetNoteModel as Db,
+  History,
+  CallsheetModel,
+  TagModel,
+} from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -200,15 +205,16 @@ class CallsheetNoteController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.name) {
+    if (!req.body.title) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, name wajib diisi!" });
+        .json({ status: 400, msg: "Error, title wajib diisi!" });
     }
-    if (!req.body.note) {
+
+    if (!req.body.notes) {
       return res
         .status(400)
-        .json({ status: 400, msg: "Error, note wajib diisi!" });
+        .json({ status: 400, msg: "Error, notes wajib diisi!" });
     }
 
     try {
@@ -227,40 +233,60 @@ class CallsheetNoteController implements IController {
           .json({ status: 400, msg: "Error, callsheet tidak ditemukan!" });
       }
 
-      req.body.callsheet = callsheet;
+      req.body.callsheet = callsheet._id;
 
       // End
 
       // Cek tag
-      if (!req.body.tag) {
+      if (!req.body.tags) {
         return res
           .status(400)
-          .json({ status: 400, msg: "Error, tag wajib diisi!" });
+          .json({ status: 400, msg: "Error, tags wajib diisi!" });
+      }
+
+      if (typeof req.body.tags !== "object") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, tags harus berupa object!" });
+      }
+
+      if (req.body.tags.length === 0) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, tags harus diisi minimal 1 tag!" });
+      }
+
+      for (const item of req.body.tags) {
+        let getTag: any = await TagModel.findById(new ObjectId(item));
+        if (!getTag) {
+          return res.status(400).json({
+            status: 400,
+            msg: `Error, tag ${item} tidak ditemukan!`,
+          });
+        }
       }
 
       // End
 
-      req.body.createdBy = {
-        _id: new ObjectId(req.userId),
-        name: req.user,
-      };
+      req.body.createdBy = req.userId;
 
       const result = new Db(req.body);
       const response: any = await result.save();
+      const getData = await response.populate("callsheet", "name");
 
       // push history
       await HistoryController.pushHistory({
         document: {
-          _id: response._id,
-          name: response.name,
+          _id: getData._id,
+          name: getData.title,
           type: redisName,
         },
-        message: `${req.user} menambahkan callsheetnote ${response.name} dalam dok ${response.callsheet.name} `,
+        message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
         user: req.userId,
       });
       // End
 
-      return res.status(200).json({ status: 200, data: response });
+      return res.status(200).json({ status: 200, data: getData });
     } catch (error) {
       return res
         .status(400)
@@ -307,7 +333,6 @@ class CallsheetNoteController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

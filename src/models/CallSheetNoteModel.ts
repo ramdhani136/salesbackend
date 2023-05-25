@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 const CallsheetNoteModel = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
       required: true,
       index: true,

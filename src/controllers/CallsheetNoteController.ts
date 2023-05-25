@@ -444,7 +444,16 @@ class CallsheetNoteController implements IController {
                   as: "schedule",
                 },
               },
-              { $project: { "schedule.type": 0, "schedule.userGroup": 0 } },
+              {
+                $unwind: "$schedule",
+              },
+              {
+                $project: {
+                  "schedule._id": 1,
+                  "schedule.name": 1,
+                  "schedule.closingDate": 1,
+                },
+              },
             ],
           },
         },

@@ -394,6 +394,8 @@ class VistController implements IController {
     }
 
     try {
+      // End
+
       // Set nama/nomor doc
       // Cek naming series
       if (!req.body.namingSeries) {
@@ -506,6 +508,25 @@ class VistController implements IController {
       req.body.customer = cekCustomer._id;
       // End
 
+      // Cek lokasi ketika type insite
+      if (req.body.type === "insite") {
+        const inLocation = await CustomerController.getLocatonNearby({
+          lat: req.body.checkInLat,
+          lng: req.body.checkInLng,
+          maxDistance: req.body.maxDistance
+            ? parseInt(`${req.body.maxDistance}`)
+            : 100,
+          customerId: new ObjectId(req.body.customer),
+        });
+
+        if (inLocation.length === 0) {
+          return res.status(400).json({
+            status: 400,
+            msg: `Error, Lokasi anda berada diluar area ${cekCustomer.name}!`,
+          });
+        }
+      }
+
       // Mengecek contact jika terdapat kontak untuk customer tersebut
       if (!req.body.contact) {
         return res
@@ -568,52 +589,52 @@ class VistController implements IController {
         address: getLocation.data.display_name,
       };
 
-      const result = new Db(req.body);
-      const response: any = await result.save({});
+      // const result = new Db(req.body);
+      // const response: any = await result.save({});
 
-      // Upload data ketika outsite
-      if (req.body.type === "outsite") {
-        const compressedImage = path.join(
-          __dirname,
-          "../public/images",
-          response._id + ".jpg"
-        );
-        sharp(req.file.path)
-          .resize(640, 480, {
-            fit: sharp.fit.inside,
-            withoutEnlargement: true,
-          })
-          .jpeg({
-            quality: 100,
-            progressive: true,
-            chromaSubsampling: "4:4:4",
-          })
-          .withMetadata()
-          .toFile(compressedImage, async (err, info): Promise<any> => {
-            if (err) {
-              console.log(err);
-            } else {
-              await Db.findByIdAndUpdate(response._id, {
-                img: response._id + ".jpg",
-              });
-            }
-          });
-      }
+      // // Upload data ketika outsite
+      // if (req.body.type === "outsite") {
+      //   const compressedImage = path.join(
+      //     __dirname,
+      //     "../public/images",
+      //     response._id + ".jpg"
+      //   );
+      //   sharp(req.file.path)
+      //     .resize(640, 480, {
+      //       fit: sharp.fit.inside,
+      //       withoutEnlargement: true,
+      //     })
+      //     .jpeg({
+      //       quality: 100,
+      //       progressive: true,
+      //       chromaSubsampling: "4:4:4",
+      //     })
+      //     .withMetadata()
+      //     .toFile(compressedImage, async (err, info): Promise<any> => {
+      //       if (err) {
+      //         console.log(err);
+      //       } else {
+      //         await Db.findByIdAndUpdate(response._id, {
+      //           img: response._id + ".jpg",
+      //         });
+      //       }
+      //     });
+      // }
       // End
 
-      //push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name,
-          type: redisName,
-        },
-        message: `${req.user} menambahkan visit ${response.name} `,
-        user: req.userId,
-      });
-      //End
+      // //push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: response._id,
+      //     name: response.name,
+      //     type: redisName,
+      //   },
+      //   message: `${req.user} menambahkan visit ${response.name} `,
+      //   user: req.userId,
+      // });
+      // //End
 
-      return res.status(200).json({ status: 200, data: response });
+      return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {
       if (req.file) {
         // Jika pembuatan visit gagal, hapus foto yang telah di-upload

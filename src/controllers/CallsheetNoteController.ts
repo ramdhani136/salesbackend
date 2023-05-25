@@ -234,6 +234,23 @@ class CallsheetNoteController implements IController {
       }
 
       req.body.callsheet = callsheet._id;
+      // End
+
+      // Cek duplikasi data
+
+      const cekDup = await Db.findOne({
+        $and: [
+          { callsheet: new ObjectId(req.body.callsheetId) },
+          { title: req.body.title },
+        ],
+      });
+
+      if (cekDup) {
+        return res.status(400).json({
+          status: 400,
+          msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
+        });
+      }
 
       // End
 

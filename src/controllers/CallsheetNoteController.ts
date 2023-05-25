@@ -319,34 +319,28 @@ class CallsheetNoteController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+        });
+      }
 
       const getData: any = await Db.aggregate([
         {
@@ -545,82 +539,98 @@ class CallsheetNoteController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
-    // Cek data yang tidak boleh dirubah
-    if (req.body.createdBy) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, createdby tidak dapat dirubah",
-      });
-    }
-    if (req.body.callsheet) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, callsheet tidak dapat dirubah",
-      });
-    }
-
-    // End
-
-    // Jika nama dirubah
-    if (req.body.name) {
-      const dupl = await Db.findOne({
-        $and: [
-          { name: req.body.name },
-          {
-            _id: { $ne: req.params.id },
-          },
-        ],
-      });
-      if (dupl) {
-        return res.status(404).json({
-          status: 404,
-          msg: `Error, name ${req.body.name} sudah terinput di database!`,
-        });
-      }
-    }
-
-    // End
-
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      })
+        .populate("callsheet", "name")
+        .populate("tags", "name");
 
       if (result) {
-        if (req.body.id_workflow && req.body.id_state) {
-          const checkedWorkflow =
-            await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
-              req.userId,
-              req.body.id_state,
-              result.createdBy._id
-            );
+        // Cek callsheet
 
-          if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
-          } else {
+        if (req.body.callsheetId) {
+          const callsheet = await CallsheetModel.findById(req.body.callsheetId);
+
+          if (!callsheet) {
             return res
-              .status(403)
-              .json({ status: 403, msg: checkedWorkflow.msg });
+              .status(400)
+              .json({ status: 400, msg: "Error, callsheet tidak ditemukan!" });
           }
-        } else {
-          await Db.updateOne({ _id: req.params.id }, req.body);
+
+          if (callsheet.status !== "0") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, callsheet bukan draft!" });
+          }
+
+          req.body.callsheet = callsheet._id;
         }
+        // End
+
+        // Cek duplikasi data
+        if (req.body.title || req.body.callsheetId) {
+          const cekDup = await Db.findOne({
+            $and: [
+              {
+                callsheet: req.body.callsheetId
+                  ? new ObjectId(req.body.callsheetId)
+                  : result.callsheet,
+              },
+              { title: req.body.title ? req.body.title : result.title },
+              {
+                _id: { $ne: req.params.id },
+              },
+            ],
+          });
+
+          if (cekDup) {
+            return res.status(400).json({
+              status: 400,
+              msg: `Error, title ${
+                req.body.title ? req.body.title : result.title
+              }! sudah digunakan di customer ini sebelumnya!`,
+            });
+          }
+        }
+        // End
+
+        // Cek tag
+
+        if (req.body.tags) {
+          if (typeof req.body.tags !== "object") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, tags harus berupa object!" });
+          }
+
+          if (req.body.tags.length === 0) {
+            return res.status(400).json({
+              status: 400,
+              msg: "Error, tags harus diisi minimal 1 tag!",
+            });
+          }
+
+          for (const item of req.body.tags) {
+            let getTag: any = await TagModel.findById(new ObjectId(item));
+            if (!getTag) {
+              return res.status(400).json({
+                status: 400,
+                msg: `Error, tag ${item} tidak ditemukan!`,
+              });
+            }
+          }
+        }
+
+        // End
+
+        await Db.updateOne({ _id: req.params.id }, req.body);
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        });
-
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
-          {
-            EX: 30,
-          }
-        );
+        })
+          .populate("callsheet", "name")
+          .populate("tags", "name");
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -630,8 +640,172 @@ class CallsheetNoteController implements IController {
           req.userId,
           redisName
         );
+        // End
 
-        return res.status(200).json({ status: 200, data: getData });
+        const resultUpdate: any = await Db.aggregate([
+          {
+            $match: {
+              _id: new ObjectId(req.params.id),
+            },
+          },
+          {
+            $lookup: {
+              from: "callsheets",
+              localField: "callsheet",
+              foreignField: "_id",
+              as: "callsheet",
+            },
+          },
+          {
+            $unwind: "$callsheet",
+          },
+          {
+            $lookup: {
+              from: "customers",
+              localField: "callsheet.customer",
+              foreignField: "_id",
+              as: "callsheet.customer",
+            },
+          },
+          {
+            $unwind: "$callsheet.customer",
+          },
+          {
+            $lookup: {
+              from: "contacts",
+              localField: "callsheet.contact",
+              foreignField: "_id",
+              as: "callsheet.contact",
+            },
+          },
+          {
+            $unwind: "$callsheet.contact",
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "callsheet.createdBy",
+              foreignField: "_id",
+              as: "callsheet.createdBy",
+            },
+          },
+          {
+            $unwind: "$callsheet.createdBy",
+          },
+          {
+            $lookup: {
+              from: "customergroups",
+              localField: "callsheet.customer.customerGroup",
+              foreignField: "_id",
+              as: "callsheet.customerGroup",
+            },
+          },
+          {
+            $unwind: "$callsheet.customerGroup",
+          },
+          {
+            $lookup: {
+              from: "branches",
+              localField: "callsheet.customer.branch",
+              foreignField: "_id",
+              as: "callsheet.branch",
+            },
+          },
+          {
+            $unwind: "$callsheet.branch",
+          },
+          {
+            $lookup: {
+              from: "tags",
+              localField: "tags",
+              foreignField: "_id",
+              as: "tags",
+            },
+          },
+
+          {
+            $lookup: {
+              from: "schedulelists",
+              localField: "callsheet.schedulelist",
+              foreignField: "_id",
+              as: "callsheet.schedulelist",
+              pipeline: [
+                {
+                  $lookup: {
+                    from: "schedules",
+                    localField: "schedule",
+                    foreignField: "_id",
+                    as: "schedule",
+                  },
+                },
+                {
+                  $unwind: "$schedule",
+                },
+                {
+                  $project: {
+                    "schedule._id": 1,
+                    "schedule.name": 1,
+                    "schedule.closingDate": 1,
+                  },
+                },
+              ],
+            },
+          },
+
+          {
+            $project: {
+              "callsheet.customer.customerGroup": 0,
+              "callsheet.customer.branch": 0,
+              "callsheet.customer.status": 0,
+              "callsheet.customer.workflowState": 0,
+              "callsheet.customer.createdAt": 0,
+              "callsheet.customer.updatedAt": 0,
+              "callsheet.contact.createdAt": 0,
+              "callsheet.contact.updatedAt": 0,
+              "callsheet.contact.customer": 0,
+              "callsheet.contact.createdBy": 0,
+              "callsheet.contact.status": 0,
+              "callsheet.contact.workflowState": 0,
+              "callsheet.createdBy.workflowState": 0,
+              "callsheet.createdBy.password": 0,
+              "callsheet.createdBy.username": 0,
+              "callsheet.createdBy.status": 0,
+              "callsheet.createdBy.createdAt": 0,
+              "callsheet.createdBy.updatedAt": 0,
+              "callsheet.customerGroup.updatedAt": 0,
+              "callsheet.customerGroup.createdAt": 0,
+              "callsheet.customerGroup.parent": 0,
+              "callsheet.customerGroup.branch": 0,
+              "callsheet.customerGroup.createdBy": 0,
+              "callsheet.customerGroup.status": 0,
+              "callsheet.customerGroup.workflowState": 0,
+              "callsheet.branch.createdBy": 0,
+              "callsheet.branch.status": 0,
+              "callsheet.branch.workflowState": 0,
+              "callsheet.branch.createdAt": 0,
+              "callsheet.branch.updatedAt": 0,
+              "tags.createdBy": 0,
+              "tags.createdAt": 0,
+              "tags.updatedAt": 0,
+              "callsheet.schedulelist.customer": 0,
+              "callsheet.schedulelist.status": 0,
+              "callsheet.schedulelist.createdBy": 0,
+              "callsheet.schedulelist.createdAt": 0,
+              "callsheet.schedulelist.updatedAt": 0,
+              "callsheet.schedulelist.__v": 0,
+            },
+          },
+        ]);
+
+        await Redis.client.set(
+          `${redisName}-${req.params.id}`,
+          JSON.stringify(resultUpdate[0]),
+          {
+            EX: 30,
+          }
+        );
+
+        return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End
       } else {
         return res

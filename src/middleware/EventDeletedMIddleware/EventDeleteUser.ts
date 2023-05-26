@@ -45,37 +45,27 @@ export const EventDeleteUser = async (
     { doc: "Branch", filters: ["createdBy"], model: BranchModel },
     {
       doc: "Callsheet",
-      filters: ["createdBy._id", "schedule.createdBy._id"],
+      filters: ["createdBy"],
       model: CallsheetModel,
     },
     {
-      doc: "CallsheetNote",
-      filters: ["callsheet.createdBy._id", "callsheet.schedule.createdBy._id"],
-      model: CallSheetNoteModel,
-    },
-    {
       doc: "Visit",
-      filters: ["createdBy._id", "schedule.createdBy._id"],
+      filters: ["createdBy"],
       model: visitModel,
     },
     {
-      doc: "VisitNote",
-      filters: ["visit.createdBy._id", "visit.schedule.createdBy._id"],
-      model: VisitNoteModel,
-    },
-    {
       doc: "Contact",
-      filters: ["createdBy._id"],
+      filters: ["createdBy"],
       model: ContactModel,
     },
     {
       doc: "Customer",
-      filters: ["createdBy._id"],
+      filters: ["createdBy"],
       model: CustomerModel,
     },
     {
       doc: "Memo",
-      filters: ["createdBy._id"],
+      filters: ["createdBy"],
       model: MemoModel,
     },
     {
@@ -110,22 +100,22 @@ export const EventDeleteUser = async (
     },
     {
       doc: "ScheduleList",
-      filters: ["schedule.createdBy._id", "createdBy._id"],
+      filters: [ "createdBy"],
       model: ScheduleListModel,
     },
     {
       doc: "Schedule",
-      filters: ["createdBy._id"],
+      filters: ["createdBy"],
       model: ScheduleModel,
     },
     {
       doc: "Tag",
-      filters: ["createdBy._id"],
+      filters: ["createdBy"],
       model: TagModel,
     },
     {
       doc: "UserGroupList",
-      filters: ["createdBy._id", "user._id"],
+      filters: ["createdBy", "user"],
       model: UserGroupListModel,
     },
     {

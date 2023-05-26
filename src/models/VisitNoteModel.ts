@@ -7,9 +7,9 @@ const VisitNoteModel = new mongoose.Schema(
       required: true,
       index: true,
     },
-    callsheet: {
+    visit: {
       type: Schema.Types.ObjectId,
-      ref: "callsheet",
+      ref: "visit",
       required: true,
       index: -1,
     },

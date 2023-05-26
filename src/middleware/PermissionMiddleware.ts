@@ -22,6 +22,8 @@ export enum selPermissionType {
   SCHEDULE = "schedule",
   CALLSHEET = "callsheet",
   VISIT = "visit",
+  CALLSHEETNOTE = "callsheetnote",
+  VISITNOTE = "visitnote",
 }
 
 class PermissionMiddleware {

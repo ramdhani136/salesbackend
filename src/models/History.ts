@@ -48,3 +48,5 @@ History.index({
 });
 
 History.index({ status: 1 });
+
+export default mongoose.model("history", History);

@@ -37,7 +37,7 @@ class VisitNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet",
+        name: "visit",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
@@ -54,42 +54,42 @@ class VisitNoteController implements IController {
       },
 
       {
-        name: "callsheet.name",
+        name: "visit.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.type",
+        name: "visit.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.rate",
+        name: "visit.rate",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.status",
+        name: "visit.status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.customer",
+        name: "visit.customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.createdBy",
+        name: "visit.createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet.createdAt",
+        name: "visit.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
-        name: "callsheet.updatedAt",
+        name: "visit.updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
@@ -130,7 +130,7 @@ class VisitNoteController implements IController {
         : [];
       // const fields: any = req.query.fields
       //   ? JSON.parse(`${req.query.fields}`)
-      //   : ["_id", "title", "callsheet._id"];
+      //   : ["_id", "title", "visit._id"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -144,13 +144,13 @@ class VisitNoteController implements IController {
 
       const notDefault: any = filters.filter((item: any) => {
         const key = item[0]; // Ambil kunci pada indeks 0
-        return !key.startsWith("callsheet.") && !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+        return !key.startsWith("visit.") && !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
       });
 
       let isFilter = FilterQuery.getFilter(notDefault, stateFilter, search, [
         "_id",
         "tags",
-        "callsheet",
+        "visit",
       ]);
 
       // Mengambil rincian permission user
@@ -178,69 +178,69 @@ class VisitNoteController implements IController {
         },
         {
           $lookup: {
-            from: "callsheets",
-            localField: "callsheet",
+            from: "visits",
+            localField: "visit",
             foreignField: "_id",
-            as: "callsheet",
+            as: "visit",
           },
         },
         {
-          $unwind: "$callsheet",
+          $unwind: "$visit",
         },
         {
           $lookup: {
             from: "customers",
-            localField: "callsheet.customer",
+            localField: "visit.customer",
             foreignField: "_id",
-            as: "callsheet.customer",
+            as: "visit.customer",
           },
         },
         {
-          $unwind: "$callsheet.customer",
+          $unwind: "$visit.customer",
         },
         {
           $lookup: {
             from: "contacts",
-            localField: "callsheet.contact",
+            localField: "visit.contact",
             foreignField: "_id",
-            as: "callsheet.contact",
+            as: "visit.contact",
           },
         },
         {
-          $unwind: "$callsheet.contact",
+          $unwind: "$visit.contact",
         },
         {
           $lookup: {
             from: "users",
-            localField: "callsheet.createdBy",
+            localField: "visit.createdBy",
             foreignField: "_id",
-            as: "callsheet.createdBy",
+            as: "visit.createdBy",
           },
         },
         {
-          $unwind: "$callsheet.createdBy",
+          $unwind: "$visit.createdBy",
         },
         {
           $lookup: {
             from: "customergroups",
-            localField: "callsheet.customer.customerGroup",
+            localField: "visit.customer.customerGroup",
             foreignField: "_id",
-            as: "callsheet.customerGroup",
+            as: "visit.customerGroup",
           },
         },
         {
-          $unwind: "$callsheet.customerGroup",
+          $unwind: "$visit.customerGroup",
         },
         {
           $lookup: {
             from: "branches",
-            localField: "callsheet.customer.branch",
+            localField: "visit.customer.branch",
             foreignField: "_id",
-            as: "callsheet.branch",
+            as: "visit.branch",
           },
         },
         {
-          $unwind: "$callsheet.branch",
+          $unwind: "$visit.branch",
         },
         {
           $lookup: {
@@ -254,9 +254,9 @@ class VisitNoteController implements IController {
         {
           $lookup: {
             from: "schedulelists",
-            localField: "callsheet.schedulelist",
+            localField: "visit.schedulelist",
             foreignField: "_id",
-            as: "callsheet.schedulelist",
+            as: "visit.schedulelist",
             pipeline: [
               {
                 $lookup: {
@@ -281,45 +281,45 @@ class VisitNoteController implements IController {
         },
         {
           $project: {
-            "callsheet.customer.customerGroup": 0,
-            "callsheet.customer.branch": 0,
-            "callsheet.customer.status": 0,
-            "callsheet.customer.workflowState": 0,
-            "callsheet.customer.createdAt": 0,
-            "callsheet.customer.updatedAt": 0,
-            "callsheet.contact.createdAt": 0,
-            "callsheet.contact.updatedAt": 0,
-            "callsheet.contact.customer": 0,
-            "callsheet.contact.createdBy": 0,
-            "callsheet.contact.status": 0,
-            "callsheet.contact.workflowState": 0,
-            "callsheet.createdBy.workflowState": 0,
-            "callsheet.createdBy.password": 0,
-            "callsheet.createdBy.username": 0,
-            "callsheet.createdBy.status": 0,
-            "callsheet.createdBy.createdAt": 0,
-            "callsheet.createdBy.updatedAt": 0,
-            "callsheet.customerGroup.updatedAt": 0,
-            "callsheet.customerGroup.createdAt": 0,
-            "callsheet.customerGroup.parent": 0,
-            "callsheet.customerGroup.branch": 0,
-            "callsheet.customerGroup.createdBy": 0,
-            "callsheet.customerGroup.status": 0,
-            "callsheet.customerGroup.workflowState": 0,
-            "callsheet.branch.createdBy": 0,
-            "callsheet.branch.status": 0,
-            "callsheet.branch.workflowState": 0,
-            "callsheet.branch.createdAt": 0,
-            "callsheet.branch.updatedAt": 0,
+            "visit.customer.customerGroup": 0,
+            "visit.customer.branch": 0,
+            "visit.customer.status": 0,
+            "visit.customer.workflowState": 0,
+            "visit.customer.createdAt": 0,
+            "visit.customer.updatedAt": 0,
+            "visit.contact.createdAt": 0,
+            "visit.contact.updatedAt": 0,
+            "visit.contact.customer": 0,
+            "visit.contact.createdBy": 0,
+            "visit.contact.status": 0,
+            "visit.contact.workflowState": 0,
+            "visit.createdBy.workflowState": 0,
+            "visit.createdBy.password": 0,
+            "visit.createdBy.username": 0,
+            "visit.createdBy.status": 0,
+            "visit.createdBy.createdAt": 0,
+            "visit.createdBy.updatedAt": 0,
+            "visit.customerGroup.updatedAt": 0,
+            "visit.customerGroup.createdAt": 0,
+            "visit.customerGroup.parent": 0,
+            "visit.customerGroup.branch": 0,
+            "visit.customerGroup.createdBy": 0,
+            "visit.customerGroup.status": 0,
+            "visit.customerGroup.workflowState": 0,
+            "visit.branch.createdBy": 0,
+            "visit.branch.status": 0,
+            "visit.branch.workflowState": 0,
+            "visit.branch.createdAt": 0,
+            "visit.branch.updatedAt": 0,
             "tags.createdBy": 0,
             "tags.createdAt": 0,
             "tags.updatedAt": 0,
-            "callsheet.schedulelist.customer": 0,
-            "callsheet.schedulelist.status": 0,
-            "callsheet.schedulelist.createdBy": 0,
-            "callsheet.schedulelist.createdAt": 0,
-            "callsheet.schedulelist.updatedAt": 0,
-            "callsheet.schedulelist.__v": 0,
+            "visit.schedulelist.customer": 0,
+            "visit.schedulelist.status": 0,
+            "visit.schedulelist.createdBy": 0,
+            "visit.schedulelist.createdAt": 0,
+            "visit.schedulelist.updatedAt": 0,
+            "visit.schedulelist.__v": 0,
           },
         },
       ];
@@ -352,28 +352,28 @@ class VisitNoteController implements IController {
           return newItem;
         });
 
-      // Mencari data id callsheet
-      const callsheetFilter = filters
+      // Mencari data id visit
+      const visitFilter = filters
         .filter((item: any) => {
           const key = item[0]; // Ambil kunci pada indeks 0
-          return key.startsWith("callsheet."); // Kembalikan true jika kunci diawali dengan "schedule."
+          return key.startsWith("visit."); // Kembalikan true jika kunci diawali dengan "schedule."
         })
         .map((item: any) => {
           const key = item[0];
           const value = item[2];
-          return [key.replace("callsheet.", ""), item[1], value]; // Hapus "schedule." dari kunci
+          return [key.replace("visit.", ""), item[1], value]; // Hapus "schedule." dari kunci
         });
 
-      const stateCallsheet = stateFilter
-        .filter((item) => item.name.startsWith("callsheet.")) // Filter objek yang terkait dengan "schedule"
+      const stateVisit = stateFilter
+        .filter((item) => item.name.startsWith("visit.")) // Filter objek yang terkait dengan "schedule"
         .map((item) => {
           const newItem = { ...item }; // Salin objek menggunakan spread operator
-          newItem.name = newItem.name.replace("callsheet.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          newItem.name = newItem.name.replace("visit.", ""); // Hapus "schedule." dari properti nama pada salinan objek
           return newItem;
         });
 
       if (
-        callsheetFilter.length > 0 ||
+        visitFilter.length > 0 ||
         req.query.search ||
         customerFIlter.length > 0
       ) {
@@ -408,36 +408,36 @@ class VisitNoteController implements IController {
 
         // End
 
-        const validCallsheet = FilterQuery.getFilter(
-          callsheetFilter,
-          stateCallsheet,
+        const validVisit = FilterQuery.getFilter(
+          visitFilter,
+          stateVisit,
           undefined,
           ["_id", "customer", "createdBy", "customer.branch"]
         );
 
-        let pipelineCallsheet: any[] = [validCallsheet.data];
+        let pipelineVisit: any[] = [validVisit.data];
 
         if (finalFilterCustomer.length > 0) {
-          pipelineCallsheet.push({ customer: { $in: finalFilterCustomer } });
+          pipelineVisit.push({ customer: { $in: finalFilterCustomer } });
         }
 
-        const visitData = await visitModel.find({ $and: pipelineCallsheet }, [
+        const visitData = await visitModel.find({ $and: pipelineVisit }, [
           "_id",
         ]);
 
         if (visitData.length > 0) {
-          const finalFilterCallsheet = visitData.map((item) => {
+          const finalFilterVisit = visitData.map((item) => {
             return new ObjectId(item._id);
           });
 
           pipeline.unshift({
             $match: {
-              callsheet: { $in: finalFilterCallsheet },
+              visit: { $in: finalFilterVisit },
             },
           });
 
           pipelineTotal.push({
-            callsheet: { $in: finalFilterCallsheet },
+            visit: { $in: finalFilterVisit },
           });
         } else {
           return res.status(400).json({
@@ -492,7 +492,7 @@ class VisitNoteController implements IController {
     }
 
     try {
-      // Cek callsheet
+      // Cek visit
       if (!req.body.visitId) {
         return res
           .status(400)
@@ -520,7 +520,7 @@ class VisitNoteController implements IController {
 
       // const cekDup = await Db.findOne({
       //   $and: [
-      //     { callsheet: new ObjectId(req.body.callsheetId) },
+      //     { visit: new ObjectId(req.body.visitId) },
       //     { title: req.body.title },
       //   ],
       // });
@@ -528,7 +528,7 @@ class VisitNoteController implements IController {
       // if (cekDup) {
       //   return res.status(400).json({
       //     status: 400,
-      //     msg: `Error, title ${req.body.title}! sudah digunakan di ${callsheet.name} sebelumnya!`,
+      //     msg: `Error, title ${req.body.title}! sudah digunakan di ${visit.name} sebelumnya!`,
       //   });
       // }
 
@@ -570,7 +570,7 @@ class VisitNoteController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save();
 
-      const getData = await response.populate("callsheet", "name");
+      const getData = await response.populate("visit", "name");
 
       // push history
       await HistoryController.pushHistory({
@@ -579,7 +579,7 @@ class VisitNoteController implements IController {
           name: getData.title,
           type: redisName,
         },
-        message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
+        message: `${req.user} menambahkan visitNote ${getData.title} dalam dok ${getData.visit.name} `,
         user: req.userId,
       });
       // End
@@ -625,69 +625,69 @@ class VisitNoteController implements IController {
         },
         {
           $lookup: {
-            from: "callsheets",
-            localField: "callsheet",
+            from: "visits",
+            localField: "visit",
             foreignField: "_id",
-            as: "callsheet",
+            as: "visit",
           },
         },
         {
-          $unwind: "$callsheet",
+          $unwind: "$visit",
         },
         {
           $lookup: {
             from: "customers",
-            localField: "callsheet.customer",
+            localField: "visit.customer",
             foreignField: "_id",
-            as: "callsheet.customer",
+            as: "visit.customer",
           },
         },
         {
-          $unwind: "$callsheet.customer",
+          $unwind: "$visit.customer",
         },
         {
           $lookup: {
             from: "contacts",
-            localField: "callsheet.contact",
+            localField: "visit.contact",
             foreignField: "_id",
-            as: "callsheet.contact",
+            as: "visit.contact",
           },
         },
         {
-          $unwind: "$callsheet.contact",
+          $unwind: "$visit.contact",
         },
         {
           $lookup: {
             from: "users",
-            localField: "callsheet.createdBy",
+            localField: "visit.createdBy",
             foreignField: "_id",
-            as: "callsheet.createdBy",
+            as: "visit.createdBy",
           },
         },
         {
-          $unwind: "$callsheet.createdBy",
+          $unwind: "$visit.createdBy",
         },
         {
           $lookup: {
             from: "customergroups",
-            localField: "callsheet.customer.customerGroup",
+            localField: "visit.customer.customerGroup",
             foreignField: "_id",
-            as: "callsheet.customerGroup",
+            as: "visit.customerGroup",
           },
         },
         {
-          $unwind: "$callsheet.customerGroup",
+          $unwind: "$visit.customerGroup",
         },
         {
           $lookup: {
             from: "branches",
-            localField: "callsheet.customer.branch",
+            localField: "visit.customer.branch",
             foreignField: "_id",
-            as: "callsheet.branch",
+            as: "visit.branch",
           },
         },
         {
-          $unwind: "$callsheet.branch",
+          $unwind: "$visit.branch",
         },
         {
           $lookup: {
@@ -701,9 +701,9 @@ class VisitNoteController implements IController {
         {
           $lookup: {
             from: "schedulelists",
-            localField: "callsheet.schedulelist",
+            localField: "visit.schedulelist",
             foreignField: "_id",
-            as: "callsheet.schedulelist",
+            as: "visit.schedulelist",
             pipeline: [
               {
                 $lookup: {
@@ -729,45 +729,45 @@ class VisitNoteController implements IController {
 
         {
           $project: {
-            "callsheet.customer.customerGroup": 0,
-            "callsheet.customer.branch": 0,
-            "callsheet.customer.status": 0,
-            "callsheet.customer.workflowState": 0,
-            "callsheet.customer.createdAt": 0,
-            "callsheet.customer.updatedAt": 0,
-            "callsheet.contact.createdAt": 0,
-            "callsheet.contact.updatedAt": 0,
-            "callsheet.contact.customer": 0,
-            "callsheet.contact.createdBy": 0,
-            "callsheet.contact.status": 0,
-            "callsheet.contact.workflowState": 0,
-            "callsheet.createdBy.workflowState": 0,
-            "callsheet.createdBy.password": 0,
-            "callsheet.createdBy.username": 0,
-            "callsheet.createdBy.status": 0,
-            "callsheet.createdBy.createdAt": 0,
-            "callsheet.createdBy.updatedAt": 0,
-            "callsheet.customerGroup.updatedAt": 0,
-            "callsheet.customerGroup.createdAt": 0,
-            "callsheet.customerGroup.parent": 0,
-            "callsheet.customerGroup.branch": 0,
-            "callsheet.customerGroup.createdBy": 0,
-            "callsheet.customerGroup.status": 0,
-            "callsheet.customerGroup.workflowState": 0,
-            "callsheet.branch.createdBy": 0,
-            "callsheet.branch.status": 0,
-            "callsheet.branch.workflowState": 0,
-            "callsheet.branch.createdAt": 0,
-            "callsheet.branch.updatedAt": 0,
+            "visit.customer.customerGroup": 0,
+            "visit.customer.branch": 0,
+            "visit.customer.status": 0,
+            "visit.customer.workflowState": 0,
+            "visit.customer.createdAt": 0,
+            "visit.customer.updatedAt": 0,
+            "visit.contact.createdAt": 0,
+            "visit.contact.updatedAt": 0,
+            "visit.contact.customer": 0,
+            "visit.contact.createdBy": 0,
+            "visit.contact.status": 0,
+            "visit.contact.workflowState": 0,
+            "visit.createdBy.workflowState": 0,
+            "visit.createdBy.password": 0,
+            "visit.createdBy.username": 0,
+            "visit.createdBy.status": 0,
+            "visit.createdBy.createdAt": 0,
+            "visit.createdBy.updatedAt": 0,
+            "visit.customerGroup.updatedAt": 0,
+            "visit.customerGroup.createdAt": 0,
+            "visit.customerGroup.parent": 0,
+            "visit.customerGroup.branch": 0,
+            "visit.customerGroup.createdBy": 0,
+            "visit.customerGroup.status": 0,
+            "visit.customerGroup.workflowState": 0,
+            "visit.branch.createdBy": 0,
+            "visit.branch.status": 0,
+            "visit.branch.workflowState": 0,
+            "visit.branch.createdAt": 0,
+            "visit.branch.updatedAt": 0,
             "tags.createdBy": 0,
             "tags.createdAt": 0,
             "tags.updatedAt": 0,
-            "callsheet.schedulelist.customer": 0,
-            "callsheet.schedulelist.status": 0,
-            "callsheet.schedulelist.createdBy": 0,
-            "callsheet.schedulelist.createdAt": 0,
-            "callsheet.schedulelist.updatedAt": 0,
-            "callsheet.schedulelist.__v": 0,
+            "visit.schedulelist.customer": 0,
+            "visit.schedulelist.status": 0,
+            "visit.schedulelist.createdBy": 0,
+            "visit.schedulelist.createdAt": 0,
+            "visit.schedulelist.updatedAt": 0,
+            "visit.schedulelist.__v": 0,
           },
         },
       ]);
@@ -825,11 +825,11 @@ class VisitNoteController implements IController {
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
-        .populate("callsheet", "name")
+        .populate("visit", "name")
         .populate("tags", "name");
 
       if (result) {
-        // Cek callsheet
+        // Cek visit
 
         if (req.body.visitId) {
           const visit = await visitModel.findById(req.body.visitId);
@@ -851,13 +851,13 @@ class VisitNoteController implements IController {
         // End
 
         // Cek duplikasi data
-        if (req.body.title || req.body.callsheetId) {
+        if (req.body.title || req.body.visitId) {
           const cekDup = await Db.findOne({
             $and: [
               {
-                callsheet: req.body.callsheetId
-                  ? new ObjectId(req.body.callsheetId)
-                  : result.callsheet,
+                visit: req.body.visitId
+                  ? new ObjectId(req.body.visitId)
+                  : result.visit,
               },
               { title: req.body.title ? req.body.title : result.title },
               {
@@ -911,7 +911,7 @@ class VisitNoteController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         })
-          .populate("callsheet", "name")
+          .populate("visit", "name")
           .populate("tags", "name");
 
         // push history semua field yang di update
@@ -932,69 +932,69 @@ class VisitNoteController implements IController {
           },
           {
             $lookup: {
-              from: "callsheets",
-              localField: "callsheet",
+              from: "visits",
+              localField: "visit",
               foreignField: "_id",
-              as: "callsheet",
+              as: "visit",
             },
           },
           {
-            $unwind: "$callsheet",
+            $unwind: "$visit",
           },
           {
             $lookup: {
               from: "customers",
-              localField: "callsheet.customer",
+              localField: "visit.customer",
               foreignField: "_id",
-              as: "callsheet.customer",
+              as: "visit.customer",
             },
           },
           {
-            $unwind: "$callsheet.customer",
+            $unwind: "$visit.customer",
           },
           {
             $lookup: {
               from: "contacts",
-              localField: "callsheet.contact",
+              localField: "visit.contact",
               foreignField: "_id",
-              as: "callsheet.contact",
+              as: "visit.contact",
             },
           },
           {
-            $unwind: "$callsheet.contact",
+            $unwind: "$visit.contact",
           },
           {
             $lookup: {
               from: "users",
-              localField: "callsheet.createdBy",
+              localField: "visit.createdBy",
               foreignField: "_id",
-              as: "callsheet.createdBy",
+              as: "visit.createdBy",
             },
           },
           {
-            $unwind: "$callsheet.createdBy",
+            $unwind: "$visit.createdBy",
           },
           {
             $lookup: {
               from: "customergroups",
-              localField: "callsheet.customer.customerGroup",
+              localField: "visit.customer.customerGroup",
               foreignField: "_id",
-              as: "callsheet.customerGroup",
+              as: "visit.customerGroup",
             },
           },
           {
-            $unwind: "$callsheet.customerGroup",
+            $unwind: "$visit.customerGroup",
           },
           {
             $lookup: {
               from: "branches",
-              localField: "callsheet.customer.branch",
+              localField: "visit.customer.branch",
               foreignField: "_id",
-              as: "callsheet.branch",
+              as: "visit.branch",
             },
           },
           {
-            $unwind: "$callsheet.branch",
+            $unwind: "$visit.branch",
           },
           {
             $lookup: {
@@ -1008,9 +1008,9 @@ class VisitNoteController implements IController {
           {
             $lookup: {
               from: "schedulelists",
-              localField: "callsheet.schedulelist",
+              localField: "visit.schedulelist",
               foreignField: "_id",
-              as: "callsheet.schedulelist",
+              as: "visit.schedulelist",
               pipeline: [
                 {
                   $lookup: {
@@ -1036,45 +1036,45 @@ class VisitNoteController implements IController {
 
           {
             $project: {
-              "callsheet.customer.customerGroup": 0,
-              "callsheet.customer.branch": 0,
-              "callsheet.customer.status": 0,
-              "callsheet.customer.workflowState": 0,
-              "callsheet.customer.createdAt": 0,
-              "callsheet.customer.updatedAt": 0,
-              "callsheet.contact.createdAt": 0,
-              "callsheet.contact.updatedAt": 0,
-              "callsheet.contact.customer": 0,
-              "callsheet.contact.createdBy": 0,
-              "callsheet.contact.status": 0,
-              "callsheet.contact.workflowState": 0,
-              "callsheet.createdBy.workflowState": 0,
-              "callsheet.createdBy.password": 0,
-              "callsheet.createdBy.username": 0,
-              "callsheet.createdBy.status": 0,
-              "callsheet.createdBy.createdAt": 0,
-              "callsheet.createdBy.updatedAt": 0,
-              "callsheet.customerGroup.updatedAt": 0,
-              "callsheet.customerGroup.createdAt": 0,
-              "callsheet.customerGroup.parent": 0,
-              "callsheet.customerGroup.branch": 0,
-              "callsheet.customerGroup.createdBy": 0,
-              "callsheet.customerGroup.status": 0,
-              "callsheet.customerGroup.workflowState": 0,
-              "callsheet.branch.createdBy": 0,
-              "callsheet.branch.status": 0,
-              "callsheet.branch.workflowState": 0,
-              "callsheet.branch.createdAt": 0,
-              "callsheet.branch.updatedAt": 0,
+              "visit.customer.customerGroup": 0,
+              "visit.customer.branch": 0,
+              "visit.customer.status": 0,
+              "visit.customer.workflowState": 0,
+              "visit.customer.createdAt": 0,
+              "visit.customer.updatedAt": 0,
+              "visit.contact.createdAt": 0,
+              "visit.contact.updatedAt": 0,
+              "visit.contact.customer": 0,
+              "visit.contact.createdBy": 0,
+              "visit.contact.status": 0,
+              "visit.contact.workflowState": 0,
+              "visit.createdBy.workflowState": 0,
+              "visit.createdBy.password": 0,
+              "visit.createdBy.username": 0,
+              "visit.createdBy.status": 0,
+              "visit.createdBy.createdAt": 0,
+              "visit.createdBy.updatedAt": 0,
+              "visit.customerGroup.updatedAt": 0,
+              "visit.customerGroup.createdAt": 0,
+              "visit.customerGroup.parent": 0,
+              "visit.customerGroup.branch": 0,
+              "visit.customerGroup.createdBy": 0,
+              "visit.customerGroup.status": 0,
+              "visit.customerGroup.workflowState": 0,
+              "visit.branch.createdBy": 0,
+              "visit.branch.status": 0,
+              "visit.branch.workflowState": 0,
+              "visit.branch.createdAt": 0,
+              "visit.branch.updatedAt": 0,
               "tags.createdBy": 0,
               "tags.createdAt": 0,
               "tags.updatedAt": 0,
-              "callsheet.schedulelist.customer": 0,
-              "callsheet.schedulelist.status": 0,
-              "callsheet.schedulelist.createdBy": 0,
-              "callsheet.schedulelist.createdAt": 0,
-              "callsheet.schedulelist.updatedAt": 0,
-              "callsheet.schedulelist.__v": 0,
+              "visit.schedulelist.customer": 0,
+              "visit.schedulelist.status": 0,
+              "visit.schedulelist.createdBy": 0,
+              "visit.schedulelist.createdAt": 0,
+              "visit.schedulelist.updatedAt": 0,
+              "visit.schedulelist.__v": 0,
             },
           },
         ]);

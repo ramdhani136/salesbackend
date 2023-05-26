@@ -1,5 +1,6 @@
 
 import { RoleUserController } from "../controllers";
+import { DeletedValidMiddleware } from "../middleware";
 
 import RouteBase from "./RouteBase";
 

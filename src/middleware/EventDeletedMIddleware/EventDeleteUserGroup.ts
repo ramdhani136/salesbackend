@@ -1,13 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  CallSheetNoteModel,
-  CallsheetModel,
-  ContactModel,
-  CustomerModel,
-  ScheduleListModel,
-  VisitNoteModel,
-  visitModel,
-} from "../../models";
+import { ScheduleModel } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
 
@@ -17,16 +9,16 @@ interface IData {
   filters: string[];
 }
 
-export const EventDeleteScheduleList = async (
+export const EventDeleteUserGroup = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
     {
-      doc: "Callsheet",
-      filters: ["scheduleList"],
-      model: CallsheetModel,
+      doc: "Schedule",
+      filters: ["userGroup"],
+      model: ScheduleModel,
     },
   ];
 
@@ -36,5 +28,5 @@ export const EventDeleteScheduleList = async (
     }
   }
 
-  // return next();
+  return next();
 };

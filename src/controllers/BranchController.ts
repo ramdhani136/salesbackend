@@ -426,11 +426,11 @@ class BranchController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      if (result.status === "1") {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      }
+      // if (result.status === "1") {
+      //   return res
+      //     .status(404)
+      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
+      // }
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);

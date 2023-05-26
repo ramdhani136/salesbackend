@@ -606,11 +606,11 @@ class CustomerGroupController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      if (getData.status === "1") {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      }
+      // if (getData.status === "1") {
+      //   return res
+      //     .status(404)
+      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
+      // }
 
       const result = await Db.deleteOne({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);

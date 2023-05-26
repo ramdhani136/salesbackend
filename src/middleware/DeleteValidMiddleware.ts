@@ -7,6 +7,7 @@ import {
   EventDeleteRoleProfile,
   EventDeleteScheduleList,
   EventDeleteUser,
+  EventDeleteUserGroup,
 } from "./EventDeletedMIddleware";
 import { ObjectId } from "mongodb";
 
@@ -69,11 +70,14 @@ const DeletedValidMiddleware = async (
       case "customer":
         EventDeleteCustomer(req, res, next);
         break;
-      case "scheduleitem":
-        EventDeleteScheduleList(req, res, next);
-        break;
+      // case "scheduleitem":
+      //   EventDeleteScheduleList(req, res, next);
+      //   break;
       case "roleprofile":
         EventDeleteRoleProfile(req, res, next);
+        break;
+      case "usergroup":
+        EventDeleteUserGroup(req, res, next);
         break;
 
       default:

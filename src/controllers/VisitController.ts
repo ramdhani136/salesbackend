@@ -53,6 +53,16 @@ class VistController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "checkIn.createdAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+      },
+      {
+        name: "checkOut.createdAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+      },
+      {
         name: "schedulelist",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,

@@ -3,6 +3,7 @@ import {
   CallSheetNoteModel,
   CallsheetModel,
   ContactModel,
+  CustomerGroupModel,
   CustomerModel,
   ScheduleListModel,
   VisitNoteModel,
@@ -23,6 +24,11 @@ export const EventDeleteCGt = async (
   next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
+    {
+      doc: "Parent CustomerGroup",
+      filters: ["parent._id"],
+      model: CustomerGroupModel,
+    },
     {
       doc: "Customer",
       filters: ["customerGroup"],

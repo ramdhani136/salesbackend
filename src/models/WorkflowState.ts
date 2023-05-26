@@ -20,4 +20,12 @@ const WorkflowState = new mongoose.Schema(
   }
 );
 
+WorkflowState.index({
+  createdAt: -1,
+});
+WorkflowState.index({
+  updatedAt: -1,
+});
+
+
 export default mongoose.model("workflowStates", WorkflowState);

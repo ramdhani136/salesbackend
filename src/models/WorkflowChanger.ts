@@ -43,4 +43,12 @@ const WorkflowChanger = new mongoose.Schema(
   }
 );
 
+
+WorkflowChanger.index({
+  createdAt: -1,
+});
+WorkflowChanger.index({
+  updatedAt: -1,
+});
+
 export default mongoose.model("workflowChangers", WorkflowChanger);

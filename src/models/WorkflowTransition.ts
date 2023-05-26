@@ -50,4 +50,12 @@ const WorkflowTransition = new mongoose.Schema(
   }
 );
 
+WorkflowTransition.index({
+  createdAt: -1,
+});
+WorkflowTransition.index({
+  updatedAt: -1,
+});
+
+
 export default mongoose.model("workflowTransitions", WorkflowTransition);

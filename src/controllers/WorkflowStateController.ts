@@ -60,7 +60,7 @@ class workflowStateController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "user.name", "status", "workflowState"];
+        : ["name", "user._id", "user.name", "status", "workflowState"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -83,10 +83,8 @@ class workflowStateController implements IController {
       }
       // End
       const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.aggregate([
-        {
-          $skip: page * limit - limit,
-        },
+
+      let pipelineResult: any = [
         {
           $lookup: {
             from: "users",
@@ -102,7 +100,7 @@ class workflowStateController implements IController {
           $match: isFilter.data,
         },
         {
-          $limit: limit,
+          $skip: limit > 0 ? page * limit - limit : 0,
         },
         {
           $project: setField,
@@ -110,15 +108,23 @@ class workflowStateController implements IController {
         {
           $sort: order_by,
         },
-      ]);
+      ];
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+      }
+      // End
+
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
           total: getAll,
           limit,
-          nextPage: page + 1,
-          hasMore: getAll > page * limit ? true : false,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });

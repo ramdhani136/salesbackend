@@ -20,4 +20,12 @@ const WorkflowAction = new mongoose.Schema(
   }
 );
 
+
+WorkflowAction.index({
+  createdAt: -1,
+});
+WorkflowAction.index({
+  updatedAt: -1,
+});
+
 export default mongoose.model("workflowActions", WorkflowAction);

@@ -31,4 +31,11 @@ const Workflow = new mongoose.Schema(
   }
 );
 
+Workflow.index({
+  createdAt: -1,
+});
+Workflow.index({
+  updatedAt: -1,
+});
+
 export default mongoose.model("workflows", Workflow);

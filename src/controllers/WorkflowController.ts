@@ -93,8 +93,8 @@ class workflowStateController implements IController {
           status: 200,
           total: getAll,
           limit,
-          nextPage: page + 1,
-          hasMore: getAll > page * limit ? true : false,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });

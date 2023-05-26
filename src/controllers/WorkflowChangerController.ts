@@ -149,7 +149,6 @@ class WorkflowChangerController implements IController {
         },
       ];
 
-      console.log(page * limit - limit);
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
         pipelineResult.push({ $limit: limit > 0 ? limit : getAll });

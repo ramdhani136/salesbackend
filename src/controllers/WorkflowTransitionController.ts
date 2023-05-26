@@ -26,33 +26,33 @@ class WorkflowTransitionController implements IController {
       },
 
       {
-        name: "user.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "user",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "workflow.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "workflow",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "action.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "action",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "stateActive.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "stateActive",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "nextState.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "nextState",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "roleprofile.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "roleprofile",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -93,12 +93,18 @@ class WorkflowTransitionController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let search: ISearch = {
-        filter: ["workflow.name"],
-        value: req.query.search || "",
-      };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+      // let search: ISearch = {
+      //   filter: ["workflow"],
+      //   value: req.query.search || "",
+      // };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
         "_id",
+        "user",
+        "workflow",
+        "action",
+        "stateActive",
+        "nextState",
+        "roleprofile",
       ]);
 
       if (!isFilter.status) {
@@ -107,10 +113,15 @@ class WorkflowTransitionController implements IController {
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
       // End
+
+      console.log(JSON.stringify(isFilter.data));
       const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.aggregate([
+
+      console.log(getAll);
+
+      let pipelineResult: any = [
         {
-          $skip: page * limit - limit,
+          $match: isFilter.data,
         },
         {
           $lookup: {
@@ -178,27 +189,32 @@ class WorkflowTransitionController implements IController {
         {
           $unwind: "$workflow",
         },
-        {
-          $match: isFilter.data,
-        },
-        {
-          $limit: limit,
-        },
+
         {
           $project: setField,
         },
         {
           $sort: order_by,
         },
-      ]);
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+      ];
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+      }
+      // End
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
           total: getAll,
           limit,
-          nextPage: page + 1,
-          hasMore: getAll > page * limit ? true : false,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });

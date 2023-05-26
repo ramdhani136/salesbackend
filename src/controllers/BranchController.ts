@@ -418,8 +418,16 @@ class BranchController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.findOneAndDelete({ _id: req.params.id });
+      const result = await Db.findById(req.params.id);
+
       if (result) {
+        if (result.status === "1") {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, status dokumen aktif!" });
+        }
+
+        const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
         await Redis.client.del(`${redisName}-${req.params.id}`);
         // push history
         await HistoryController.pushHistory({
@@ -432,7 +440,7 @@ class BranchController implements IController {
           user: req.userId,
         });
         // End
-        return res.status(200).json({ status: 200, data: result });
+        return res.status(200).json({ status: 200, data: actionDel });
       }
       return res
         .status(404)

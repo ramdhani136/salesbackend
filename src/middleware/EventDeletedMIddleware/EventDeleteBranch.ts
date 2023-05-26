@@ -26,49 +26,19 @@ export const EventDeleteBranch = async (
 ): Promise<any> => {
   const data: IData[] = [
     {
-      doc: "Callsheet",
-      filters: ["customer.customerGroup.branch._id"],
-      model: CallsheetModel,
-    },
-    {
-      doc: "CallsheetNote",
-      filters: ["callsheet.customer.customerGroup.branch._id"],
-      model: CallSheetNoteModel,
-    },
-    {
-      doc: "Contact",
-      filters: ["customer.customerGroup.branch._id"],
-      model: ContactModel,
-    },
-    {
       doc: "CustomerGroup",
       filters: ["branch"],
       model: CustomerGroupModel,
     },
     {
       doc: "Customer",
-      filters: ["customerGroup.branch._id"],
+      filters: ["branch"],
       model: CustomerModel,
     },
     {
       doc: "NamingSeries",
       filters: ["branch"],
       model: namingSeriesModel,
-    },
-    {
-      doc: "ScheduleList",
-      filters: ["customer.customerGroup.branch._id"],
-      model: ScheduleListModel,
-    },
-    {
-      doc: "Visit",
-      filters: ["customer.customerGroup.branch._id"],
-      model: visitModel,
-    },
-    {
-      doc: "VisitNote",
-      filters: ["visit.customer.customerGroup.branch._id"],
-      model: VisitNoteModel,
     },
   ];
 

@@ -33,7 +33,7 @@ const VisitModel = new mongoose.Schema(
       type: String,
     },
     checkIn: {
-      createdAt: { type: Date },
+      createdAt: { type: Date, index: -1 },
       lat: {
         type: Number,
         required: true,
@@ -69,7 +69,7 @@ const VisitModel = new mongoose.Schema(
       ],
     },
     checkOut: {
-      createdAt: { type: Date },
+      createdAt: { type: Date, index: -1 },
       lat: {
         type: Number,
       },
@@ -104,6 +104,5 @@ VisitModel.index({
 VisitModel.index({
   updatedAt: -1,
 });
-
 
 export default mongoose.model("visit", VisitModel);

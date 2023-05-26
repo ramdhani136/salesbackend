@@ -1,9 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  RoleUserModel,
-  WorkflowChanger,
-  WorkflowTransition,
-} from "../../models";
+import { WorkflowChanger, WorkflowTransition } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
 
@@ -13,26 +9,21 @@ interface IData {
   filters: string[];
 }
 
-export const EventDeleteRoleProfile = async (
+export const EventDeleteWorkflow = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
     {
-      doc: "RoleUser",
-      filters: ["roleprofile"],
-      model: RoleUserModel,
+      doc: "WorkflowChanger",
+      filters: ["workflow"],
+      model: WorkflowChanger,
     },
     {
       doc: "WorkflowTransition",
-      filters: ["roleprofile"],
+      filters: ["workflow"],
       model: WorkflowTransition,
-    },
-    {
-      doc: "WorkflowChanger",
-      filters: ["roleprofile"],
-      model: WorkflowChanger,
     },
   ];
 

@@ -7,6 +7,7 @@ import { EventDeleteScheduleList } from "./EventDeleteScheduleList";
 import { EventDeleteRoleProfile } from "./EventDeleteRoleProfile";
 import { EventDeleteUserGroup } from "./EventDeleteUserGroup";
 import { EventDeleteTag } from "./EventDeleteTag";
+import { EventDeleteWorkflow } from "./EventDeleteWorkflow";
 
 export {
   EventDeleteUser,
@@ -17,5 +18,6 @@ export {
   EventDeleteCustomer,
   EventDeleteRoleProfile,
   EventDeleteUserGroup,
-  EventDeleteTag
+  EventDeleteTag,
+  EventDeleteWorkflow
 };

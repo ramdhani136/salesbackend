@@ -9,6 +9,7 @@ import {
   EventDeleteTag,
   EventDeleteUser,
   EventDeleteUserGroup,
+  EventDeleteWorkflow,
 } from "./EventDeletedMIddleware";
 import { ObjectId } from "mongodb";
 
@@ -79,6 +80,9 @@ const DeletedValidMiddleware = async (
         break;
       case "usergroup":
         EventDeleteUserGroup(req, res, next);
+        break;
+      case "workflow":
+        EventDeleteWorkflow(req, res, next);
         break;
 
       default:

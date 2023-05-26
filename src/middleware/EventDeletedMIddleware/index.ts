@@ -4,7 +4,7 @@ import { EventDeleteCGt } from "./EventDeleteCG";
 import { EventDeleteContact } from "./EventDeleteContact";
 import { EventDeleteCustomer } from "./EventDeleteCustomer";
 import { EventDeleteScheduleList } from "./EventDeleteScheduleList";
-
+import { EventDeleteRoleProfile } from "./EventDeleteRoleProfile";
 
 export {
   EventDeleteUser,
@@ -12,5 +12,6 @@ export {
   EventDeleteContact,
   EventDeleteCGt,
   EventDeleteScheduleList,
-  EventDeleteCustomer
+  EventDeleteCustomer,
+  EventDeleteRoleProfile,
 };

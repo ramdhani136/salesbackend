@@ -4,6 +4,7 @@ import {
   EventDeleteCGt,
   EventDeleteContact,
   EventDeleteCustomer,
+  EventDeleteRoleProfile,
   EventDeleteScheduleList,
   EventDeleteUser,
 } from "./EventDeletedMIddleware";
@@ -70,6 +71,9 @@ const DeletedValidMiddleware = async (
         break;
       case "scheduleitem":
         EventDeleteScheduleList(req, res, next);
+        break;
+      case "roleprofile":
+        EventDeleteRoleProfile(req, res, next);
         break;
 
       default:

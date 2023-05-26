@@ -25,33 +25,18 @@ export const EventDeleteCustomer = async (
   const data: IData[] = [
     {
       doc: "Callsheet",
-      filters: ["customer._id"],
+      filters: ["customer"],
       model: CallsheetModel,
-    },
-    {
-      doc: "CallsheetNote",
-      filters: ["callsheet.customer._id"],
-      model: CallSheetNoteModel,
-    },
+    }, 
     {
       doc: "Contact",
-      filters: ["customer._id"],
+      filters: ["customer"],
       model: ContactModel,
-    },
-    {
-      doc: "ScheduleList",
-      filters: ["customer._id"],
-      model: ScheduleListModel,
     },
     {
       doc: "Visit",
       filters: ["customer._id"],
       model: visitModel,
-    },
-    {
-      doc: "VisitNote",
-      filters: ["visit.customer._id"],
-      model: VisitNoteModel,
     },
   ];
 

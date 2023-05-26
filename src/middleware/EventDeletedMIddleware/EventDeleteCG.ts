@@ -24,39 +24,9 @@ export const EventDeleteCGt = async (
 ): Promise<any> => {
   const data: IData[] = [
     {
-      doc: "Callsheet",
-      filters: ["customer.customerGroup._id"],
-      model: CallsheetModel,
-    },
-    {
-      doc: "CallsheetNote",
-      filters: ["callsheet.customer.customerGroup._id"],
-      model: CallSheetNoteModel,
-    },
-    {
-      doc: "Contact",
-      filters: ["customer.customerGroup._id"],
-      model: ContactModel,
-    },
-    {
       doc: "Customer",
-      filters: ["customerGroup._id"],
+      filters: ["customerGroup"],
       model: CustomerModel,
-    },
-    {
-      doc: "ScheduleList",
-      filters: ["customer.customerGroup._id"],
-      model: ScheduleListModel,
-    },
-    {
-      doc: "Visit",
-      filters: ["customer.customerGroup._id"],
-      model: visitModel,
-    },
-    {
-      doc: "VisitNote",
-      filters: ["visit.customer.customerGroup._id"],
-      model: VisitNoteModel,
     },
   ];
 

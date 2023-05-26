@@ -22,23 +22,13 @@ export const EventDeleteContact = async (
   const data: IData[] = [
     {
       doc: "Callsheet",
-      filters: ["contact._id"],
+      filters: ["contact"],
       model: CallsheetModel,
-    },
-    {
-      doc: "CallsheetNote",
-      filters: ["callsheet.contact._id"],
-      model: CallSheetNoteModel,
-    },
+    },    
     {
       doc: "Visit",
-      filters: ["contact._id"],
+      filters: ["contact"],
       model: visitModel,
-    },
-    {
-      doc: "VisitNote",
-      filters: ["callsheet.contact._id"],
-      model: VisitNoteModel,
     },
   ];
 

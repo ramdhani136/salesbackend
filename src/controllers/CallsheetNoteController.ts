@@ -815,6 +815,12 @@ class CallsheetNoteController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    if (req.body.callsheet) {
+      return res.status(400).json({
+        status: 400,
+        msg: "Error, tidak dapat merubah callsheet!",
+      });
+    }
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,

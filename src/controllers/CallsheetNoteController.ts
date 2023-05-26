@@ -37,7 +37,7 @@ class CallsheetNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        name: "callsheet._id",
+        name: "callsheet",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
@@ -84,8 +84,28 @@ class CallsheetNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "callsheet.createdAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+      },
+      {
+        name: "callsheet.updatedAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+      },
+      {
         name: "customer.customerGroup",
         operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.type",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
+        name: "customer.name",
+        operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
@@ -130,6 +150,7 @@ class CallsheetNoteController implements IController {
       let isFilter = FilterQuery.getFilter(notDefault, stateFilter, search, [
         "_id",
         "tags",
+        "callsheet",
       ]);
 
       // Mengambil rincian permission user
@@ -148,7 +169,7 @@ class CallsheetNoteController implements IController {
       // End
 
       let pipeline: any = [
-        // { $match: isFilter.data },
+        { $match: isFilter.data },
         {
           $sort: order_by,
         },
@@ -309,6 +330,28 @@ class CallsheetNoteController implements IController {
       }
       // End
 
+      let pipelineTotal: any[] = [isFilter.data];
+
+      // Mencari data id customer
+      const customerFIlter = filters
+        .filter((item: any) => {
+          const key = item[0]; // Ambil kunci pada indeks 0
+          return key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
+        })
+        .map((item: any) => {
+          const key = item[0];
+          const value = item[2];
+          return [key.replace("customer.", ""), item[1], value]; // Hapus "schedule." dari kunci
+        });
+
+      const stateCustomer = stateFilter
+        .filter((item) => item.name.startsWith("customer.")) // Filter objek yang terkait dengan "schedule"
+        .map((item) => {
+          const newItem = { ...item }; // Salin objek menggunakan spread operator
+          newItem.name = newItem.name.replace("customer.", ""); // Hapus "schedule." dari properti nama pada salinan objek
+          return newItem;
+        });
+
       // Mencari data id callsheet
       const callsheetFilter = filters
         .filter((item: any) => {
@@ -329,38 +372,74 @@ class CallsheetNoteController implements IController {
           return newItem;
         });
 
-      if (callsheetFilter.length > 0 || req.query.search) {
-        let search: ISearch = {
+      if (
+        callsheetFilter.length > 0 ||
+        req.query.search ||
+        customerFIlter.length > 0
+      ) {
+        // Cek Customer
+
+        let searchCust: ISearch = {
           filter: ["name"],
           value: req.query.search || "",
         };
         const validCustomer = FilterQuery.getFilter(
-          callsheetFilter,
-          stateCallsheet,
-          search,
-          ["_id", "customer", "createdBy", "customer.branch"]
+          customerFIlter,
+          stateCustomer,
+          searchCust,
+          ["_id", "customerGroup", "branch"]
         );
 
-        console.log(JSON.stringify(validCustomer));
-
-        const callsheetData = await CallsheetModel.find(validCustomer.data, [
+        const customerData = await CustomerModel.find(validCustomer.data, [
           "_id",
         ]);
 
+        let finalFilterCustomer: any[] = [];
+        if (customerData.length > 0) {
+          finalFilterCustomer = customerData.map((item) => {
+            return item._id;
+          });
+        } else {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data Not found!",
+          });
+        }
+
+        // End
+
+        const validCallsheet = FilterQuery.getFilter(
+          callsheetFilter,
+          stateCallsheet,
+          undefined,
+          ["_id", "customer", "createdBy", "customer.branch"]
+        );
+
+        let pipelineCallsheet: any[] = [validCallsheet.data];
+
+        if (finalFilterCustomer.length > 0) {
+          pipelineCallsheet.push({ customer: { $in: finalFilterCustomer } });
+        }
+
+        const callsheetData = await CallsheetModel.find(
+          { $and: pipelineCallsheet },
+          ["_id"]
+        );
+
         if (callsheetData.length > 0) {
-          const finalFilterCustomer = callsheetData.map((item) => {
+          const finalFilterCallsheet = callsheetData.map((item) => {
             return new ObjectId(item._id);
           });
 
           pipeline.unshift({
             $match: {
-              callsheet: { $in: finalFilterCustomer },
+              callsheet: { $in: finalFilterCallsheet },
             },
           });
 
-          // pipelineTotal.unshift({
-          //   customer: { $in: finalFilterCustomer },
-          // });
+          pipelineTotal.push({
+            callsheet: { $in: finalFilterCallsheet },
+          });
         } else {
           return res.status(400).json({
             status: 404,
@@ -370,7 +449,10 @@ class CallsheetNoteController implements IController {
       }
       //End
 
-      const getAll: any = await Db.find(isFilter.data).count();
+      const getAll: any = await Db.find(
+        { $and: pipelineTotal },
+        { _id: 1 }
+      ).count();
 
       const result = await Db.aggregate(pipeline);
 
@@ -486,26 +568,24 @@ class CallsheetNoteController implements IController {
 
       req.body.createdBy = req.userId;
 
-      for (let index = 0; index < 4000000; index++) {
-        const result = new Db(req.body);
-        const response: any = await result.save();
-      }
+      const result = new Db(req.body);
+      const response: any = await result.save();
 
-      // const getData = await response.populate("callsheet", "name");
+      const getData = await response.populate("callsheet", "name");
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: getData._id,
-      //     name: getData.title,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
-      //   user: req.userId,
-      // });
-      // // End
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: getData._id,
+          name: getData.title,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan callsheetnote ${getData.title} dalam dok ${getData.callsheet.name} `,
+        user: req.userId,
+      });
+      // End
 
-      return res.status(200).json({ status: 200, data: "d" });
+      return res.status(200).json({ status: 200, data: getData });
     } catch (error) {
       return res
         .status(400)

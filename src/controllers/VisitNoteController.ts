@@ -89,10 +89,21 @@ class VisitNoteController implements IController {
         typeOf: TypeOfState.Date,
       },
       {
-        name: "visit.updatedAt",
+        name: "visit.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
+      {
+        name: "visit.checkIn.createdAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+      },
+      {
+        name: "visit.checkOut.createdAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+      },
+  
       {
         name: "customer.customerGroup",
         operator: ["=", "!="],

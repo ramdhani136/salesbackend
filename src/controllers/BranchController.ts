@@ -420,31 +420,32 @@ class BranchController implements IController {
     try {
       const result = await Db.findById(req.params.id);
 
-      if (result) {
-        if (result.status === "1") {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, status dokumen aktif!" });
-        }
-
-        const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
-        await Redis.client.del(`${redisName}-${req.params.id}`);
-        // push history
-        await HistoryController.pushHistory({
-          document: {
-            _id: result._id,
-            name: result.name,
-            type: redisName,
-          },
-          message: `Menghapus ${redisName} nomor ${result.name}`,
-          user: req.userId,
-        });
-        // End
-        return res.status(200).json({ status: 200, data: actionDel });
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-      return res
-        .status(404)
-        .json({ status: 404, msg: "Error, Gagal menghapus data!" });
+
+      if (result.status === "1") {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, status dokumen aktif!" });
+      }
+
+      const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
+      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: result._id,
+          name: result.name,
+          type: redisName,
+        },
+        message: `Menghapus ${redisName} nomor ${result.name}`,
+        user: req.userId,
+      });
+      // End
+      return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

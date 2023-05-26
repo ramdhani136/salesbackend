@@ -42,7 +42,7 @@ import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
 import cron from "node-cron";
 import { AuthMiddleware, RoleMiddleware } from "./middleware";
-import { ScheduleModel } from "./models";
+import { MemoModel, ScheduleModel } from "./models";
 
 const cookieParser = require("cookie-parser");
 
@@ -104,6 +104,8 @@ class App {
         0,
         0
       );
+
+      // Check expired schedule
       const update = { $set: { status: "3", workflowState: "Closed" } };
       try {
         await ScheduleModel.updateMany(
@@ -113,7 +115,21 @@ class App {
           update
         );
       } catch (error) {
-        console.log(error);
+        throw error;
+      }
+      // End
+
+      // Cek Expired Memo
+      const updateMemo = { $set: { status: "3", workflowState: "Closed" } };
+      try {
+        await MemoModel.updateMany(
+          {
+            $and: [{ closingDate: { $lt: startOfToday } }, { status: "1" }],
+          },
+          updateMemo
+        );
+      } catch (error) {
+        throw error;
       }
       // End
     });

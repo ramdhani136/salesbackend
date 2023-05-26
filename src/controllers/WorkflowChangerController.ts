@@ -19,7 +19,7 @@ class WorkflowChangerController implements IController {
     const stateFilter: IStateFilter[] = [
       {
         name: "_id",
-        operator: ["=", "!=",],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -88,10 +88,9 @@ class WorkflowChangerController implements IController {
       }
       // End
       const getAll = await Db.find(isFilter.data).count();
-      const result = await Db.aggregate([
-        {
-          $skip: page * limit - limit,
-        },
+
+      let pipelineResult: any = [
+      
         {
           $lookup: {
             from: "users",
@@ -140,23 +139,32 @@ class WorkflowChangerController implements IController {
           $match: isFilter.data,
         },
         {
-          $limit: limit,
-        },
-        {
           $project: setField,
         },
         {
           $sort: order_by,
         },
-      ]);
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+      ];
+
+      console.log(page * limit - limit);
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+      }
+      // End
+
+      const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
           total: getAll,
           limit,
-          nextPage: page + 1,
-          hasMore: getAll > page * limit ? true : false,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
           data: result,
           filters: stateFilter,
         });
@@ -251,7 +259,9 @@ class WorkflowChangerController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

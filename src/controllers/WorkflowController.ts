@@ -200,7 +200,7 @@ class workflowStateController implements IController {
 
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const prevData = await Db.findOne({ _id: req.params.id }).populate(
+      const prevData: any = await Db.findOne({ _id: req.params.id }).populate(
         "user",
         "name"
       );
@@ -209,16 +209,39 @@ class workflowStateController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
       const update = await Db.findByIdAndUpdate(
         { _id: req.params.id },
         req.body
       ).populate("user", "name");
 
+      if (req.body.status == 1) {
+        if (prevData.status !== 1) {
+          await Db.updateMany(
+            {
+              $and: [
+                { status: 1 },
+                { doc: req.body.doc ? req.body.doc : prevData.doc },
+                {
+                  _id: { $ne: req.params.id },
+                },
+              ],
+            },
+            { status: 0 }
+          );
+        }
+      }
+
+      const resultData: any = await Db.findOne({ _id: req.params.id }).populate(
+        "user",
+        "name"
+      );
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
-        JSON.stringify(update)
+        JSON.stringify(resultData)
       );
-      return res.status(200).json({ status: 200, data: update });
+      return res.status(200).json({ status: 200, data: resultData });
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }

@@ -5,11 +5,12 @@ import {
   EventDeleteContact,
   EventDeleteCustomer,
   EventDeleteRoleProfile,
-  EventDeleteScheduleList,
   EventDeleteTag,
   EventDeleteUser,
   EventDeleteUserGroup,
   EventDeleteWorkflow,
+  EventDeleteWorkflowAction,
+  EventDeleteWorkflowState,
 } from "./EventDeletedMIddleware";
 import { ObjectId } from "mongodb";
 
@@ -53,7 +54,6 @@ const DeletedValidMiddleware = async (
   next: NextFunction
 ): Promise<any> => {
   try {
-    const path = req.path.replace(/\//g, "");
     let doc: string = req.baseUrl.substring(1);
 
     switch (doc) {
@@ -83,6 +83,12 @@ const DeletedValidMiddleware = async (
         break;
       case "workflow":
         EventDeleteWorkflow(req, res, next);
+        break;
+      case "workflowstate":
+        EventDeleteWorkflowState(req, res, next);
+        break;
+      case "workflowaction":
+        EventDeleteWorkflowAction(req, res, next);
         break;
 
       default:

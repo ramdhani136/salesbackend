@@ -8,6 +8,8 @@ import { EventDeleteRoleProfile } from "./EventDeleteRoleProfile";
 import { EventDeleteUserGroup } from "./EventDeleteUserGroup";
 import { EventDeleteTag } from "./EventDeleteTag";
 import { EventDeleteWorkflow } from "./EventDeleteWorkflow";
+import { EventDeleteWorkflowState } from "./EventDeleteWorkflowState";
+import { EventDeleteWorkflowAction } from "./EventDeleteWorkflowAction";
 
 export {
   EventDeleteUser,
@@ -19,5 +21,7 @@ export {
   EventDeleteRoleProfile,
   EventDeleteUserGroup,
   EventDeleteTag,
-  EventDeleteWorkflow
+  EventDeleteWorkflow,
+  EventDeleteWorkflowState,
+  EventDeleteWorkflowAction
 };

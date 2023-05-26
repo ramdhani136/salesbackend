@@ -6,6 +6,7 @@ import {
   EventDeleteCustomer,
   EventDeleteRoleProfile,
   EventDeleteScheduleList,
+  EventDeleteTag,
   EventDeleteUser,
   EventDeleteUserGroup,
 } from "./EventDeletedMIddleware";
@@ -70,9 +71,9 @@ const DeletedValidMiddleware = async (
       case "customer":
         EventDeleteCustomer(req, res, next);
         break;
-      // case "scheduleitem":
-      //   EventDeleteScheduleList(req, res, next);
-      //   break;
+      case "tag":
+        EventDeleteTag(req, res, next);
+        break;
       case "roleprofile":
         EventDeleteRoleProfile(req, res, next);
         break;

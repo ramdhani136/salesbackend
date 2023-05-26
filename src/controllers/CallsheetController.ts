@@ -909,7 +909,7 @@ class CallsheetController implements IController {
               req.body.id_workflow,
               req.userId,
               req.body.id_state,
-              result.createdBy._id
+              result.createdBy
             );
 
           if (checkedWorkflow.status) {

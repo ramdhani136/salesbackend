@@ -208,24 +208,24 @@ class UserController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`user-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": "user" },
-      //       ],
-      //     },
-      //     ["_id", "user", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .sort({ createdAt: -1 })
-      //     .populate("user", "name");
-      //   return res
-      //     .status(200)
-      //     .json({ status: 200, data: JSON.parse(cache), history: getHistory });
-      // }
+      const cache = await Redis.client.get(`user-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": "user" },
+            ],
+          },
+          ["_id", "user", "message", "createdAt", "updatedAt"]
+        )
+          .sort({ createdAt: -1 })
+          .populate("user", "name");
+        return res
+          .status(200)
+          .json({ status: 200, data: JSON.parse(cache), history: getHistory });
+      }
       const users: any = await User.findOne(
         { _id: req.params.id },
         { password: 0 }
@@ -329,8 +329,8 @@ class UserController implements IController {
       );
       // push history semua field yang di update
       await HistoryController.pushUpdateMany(
-        resultData,
         user,
+        resultData,
         req.user,
         req.userId,
         "user"

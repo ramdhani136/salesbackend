@@ -121,7 +121,21 @@ class workflowStateController implements IController {
     }
     req.body.user = req.userId;
     try {
-      const doctype = ["schedule", "visit", "callsheet", "branch"];
+      const doctype = [
+        "visit",
+        "callsheet",
+        "branch",
+        "schedule",
+        "user",
+        "contact",
+        "customergroup",
+        "customer",
+        "roleprofile",
+        "roleuser",
+        "permission",
+        "usergroup",
+        "memo",
+      ];
 
       const cekDocType = doctype.find((item) => item == req.body.doc);
       if (!cekDocType) {

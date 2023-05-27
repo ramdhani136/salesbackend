@@ -314,8 +314,7 @@ class workflowStateController implements IController {
       data = allData.map((item: any) => {
         if (item.stateActive.name == stateActive) {
           return {
-            id_workflow: id_workflow,
-            name: item.action.name,
+            action: item.action.name,
             nextstate: {
               id: item.nextState._id,
               name: item.nextState.name,

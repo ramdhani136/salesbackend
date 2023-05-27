@@ -5,6 +5,7 @@ export enum TypeOfState {
 }
 
 interface IStateFilter {
+  alias: String;
   name: string;
   operator: any[];
   typeOf: TypeOfState;

@@ -26,103 +26,113 @@ class CallsheetNoteController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
+        alias: "Title",
         name: "title",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Name",
         name: "callsheet",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Notes",
         name: "notes",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
 
       {
+        alias: "Tags",
         name: "tags",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-
       {
-        name: "callsheet.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "Type",
         name: "callsheet.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Rate",
         name: "callsheet.rate",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Status",
         name: "callsheet.status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Customer",
         name: "callsheet.customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CreatedBy",
         name: "callsheet.createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CreatedAt",
         name: "callsheet.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "UpdatedAt",
         name: "callsheet.updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CustomerGroup",
         name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CustomerType",
         name: "customer.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CustomerName",
         name: "customer.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Branch",
         name: "customer.branch",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-      {
-        name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
-        typeOf: TypeOfState.Date,
-      },
-      {
-        name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
-        typeOf: TypeOfState.Date,
-      },
+      // {
+      //   name: "createdAt",
+      //   operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+      //   typeOf: TypeOfState.Date,
+      // },
+      // {
+      //   name: "updatedAt",
+      //   operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+      //   typeOf: TypeOfState.Date,
+      // },
     ];
     try {
       const filters: any = req.query.filters

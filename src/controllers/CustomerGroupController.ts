@@ -21,41 +21,42 @@ class CustomerGroupController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Parent",
         name: "parent.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Branch",
         name: "branch._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "branch.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "CreatedBy",
         name: "createdBy._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "createdBy.name",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,

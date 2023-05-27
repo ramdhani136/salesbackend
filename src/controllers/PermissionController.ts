@@ -21,66 +21,69 @@ class PermissionController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Allow",
         name: "allow",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Doc",
         name: "doc",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Alldoc",
         name: "allDoc",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Value",
         name: "value",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "user._id",
+        alias: "User",
+        name: "user",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+
       {
-        name: "user.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "createdBy._id",
+        alias: "CreatedBy",
+        name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "Status",
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "WorkflowState",
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -122,8 +125,8 @@ class PermissionController implements IController {
       // Mengambil hasil filter
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "_id",
-        "createdBy._id",
-        "user._id",
+        "createdBy",
+        "user",
       ]);
       // End
 
@@ -146,6 +149,9 @@ class PermissionController implements IController {
       // End
 
       let pipelineTotal: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $lookup: {
             from: "users",
@@ -171,9 +177,6 @@ class PermissionController implements IController {
         {
           $project: setField,
         },
-        {
-          $match: isFilter.data,
-        },
 
         {
           $count: "total_orders",
@@ -196,6 +199,9 @@ class PermissionController implements IController {
 
       let pipelineResult: any = [
         {
+          $match: isFilter.data,
+        },
+        {
           $lookup: {
             from: "users",
             localField: "createdBy",
@@ -216,9 +222,6 @@ class PermissionController implements IController {
         },
         {
           $unwind: "$user",
-        },
-        {
-          $match: isFilter.data,
         },
 
         {

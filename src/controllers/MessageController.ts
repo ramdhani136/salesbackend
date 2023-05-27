@@ -9,36 +9,42 @@ class MessageController {
   allMessages = async (req: Request | any, res: Response): Promise<any> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias:"Id",
         name: "_id",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Sender",
         name: "sender",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Content",
         name: "content",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Chat",
         name: "chat",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "chat._id",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "chat._id",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias:"UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias:"CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,

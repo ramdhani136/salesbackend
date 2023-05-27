@@ -500,12 +500,12 @@ class ScheduleController implements IController {
 
         // End
 
-        if (req.body.id_workflow && req.body.id_state) {
+        if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
+              redisName,
               req.userId,
-              req.body.id_state,
+              req.body.nextState,
               result.createdBy
             );
 

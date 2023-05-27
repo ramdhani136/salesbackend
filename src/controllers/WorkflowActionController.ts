@@ -174,13 +174,27 @@ class workflowActionController implements IController {
 
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const result = await Db.updateOne({ name: req.params.id }, req.body);
-      const getData = await Db.findOne({ name: req.params.id });
+      const result = await Db.findOne({ _id: req.params.id }).populate(
+        "user",
+        "name"
+      );
+
+      if (!result) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      await Db.updateOne({ name: req.params.id }, req.body);
+      const getData = await Db.findOne({ _id: req.params.id }).populate(
+        "user",
+        "name"
+      );
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(getData)
       );
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({ status: 200, data: getData });
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }

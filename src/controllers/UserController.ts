@@ -12,7 +12,9 @@ import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
 import path from "path";
-import mongoose from "mongoose";
+import fs from "fs";
+
+import WorkflowController from "./WorkflowController";
 
 class UserController implements IController {
   protected prosesUpload = (req: Request | any, name: string) => {
@@ -160,16 +162,22 @@ class UserController implements IController {
     req.body.password = await bcrypt.hash(req.body.password, salt);
 
     try {
+      const user = new User(req.body);
+      const users: any = await user.save();
+
       if (req.file != undefined) {
         let istitik = req.file.originalname.indexOf(".");
         let typeimage = req.file.originalname.slice(istitik, 200);
-        this.prosesUpload(req, `${req.body.name}${typeimage}`);
-        req.body.img = `${req.body.name}${typeimage}`;
+        this.prosesUpload(req, `${users._id}${typeimage}`);
+        req.body.img = `${users._id}${typeimage}`;
       }
 
-      const user = new User(req.body);
-      const users = await user.save();
-      await Redis.client.set(`user-${users._id}`, JSON.stringify(users), {
+      const resultData: any = await User.findOne(
+        { _id: new Object(users._id) },
+        { password: 0 }
+      );
+
+      await Redis.client.set(`user-${users._id}`, JSON.stringify(resultData), {
         EX: 10,
       });
       // push history
@@ -184,39 +192,56 @@ class UserController implements IController {
       });
       // End
 
-      return res.status(200).json({ status: 200, data: users });
+      return res.status(200).json({ status: 200, data: resultData });
     } catch (error) {
+      if (req.file) {
+        // Jika pembuatan user gagal, hapus foto yang telah di-upload
+        fs.unlinkSync(req.file.path);
+        if (fs.existsSync(path.join(__dirname, req.file.path))) {
+          fs.unlinkSync(req.file.path);
+        }
+        // End
+      }
       return res.status(400).json({ status: 400, data: error });
     }
   };
 
-  show = async (req: Request, res: Response): Promise<Response> => {
+  show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`user-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": "user" },
-            ],
-          },
-          ["_id", "user", "message", "createdAt", "updatedAt"]
-        )
-          .sort({ createdAt: -1 })
-          .populate("user", "name");
-        return res
-          .status(200)
-          .json({ status: 200, data: JSON.parse(cache), history: getHistory });
-      }
-      const users: any = await User.findOne({ _id: req.params.id });
+      // const cache = await Redis.client.get(`user-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": "user" },
+      //       ],
+      //     },
+      //     ["_id", "user", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .sort({ createdAt: -1 })
+      //     .populate("user", "name");
+      //   return res
+      //     .status(200)
+      //     .json({ status: 200, data: JSON.parse(cache), history: getHistory });
+      // }
+      const users: any = await User.findOne(
+        { _id: req.params.id },
+        { password: 0 }
+      );
 
       if (!users) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, User tidak ditemukan!" });
       }
+
+      const buttonActions = await WorkflowController.getButtonAction(
+        "user",
+        req.userId,
+        users.workflowState
+      );
 
       const getHistory = await History.find(
         {
@@ -227,56 +252,96 @@ class UserController implements IController {
         .sort({ createdAt: -1 })
         .populate("user", "name");
       await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
-      return res
-        .status(200)
-        .json({ status: 200, data: users, history: getHistory });
+      return res.status(200).json({
+        status: 200,
+        data: users,
+        history: getHistory,
+        workflow: buttonActions,
+      });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });
     }
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    // tidak dapat diubah
+    if (req.body.img) {
+      return res.status(400).json({
+        status: 404,
+        data: "Error update, nama img tidka dapat dirubah",
+      });
+    }
+
+    // End
+
     // Mulai transaksi;
     try {
-      if (req.body.name) {
-        req.body.img = `${req.body.name}.jpg`;
+      if (req.body.password) {
+        const salt = await bcrypt.genSalt();
+        req.body.password = await bcrypt.hash(req.body.password, salt);
       }
 
-      const result = await User.findOneAndUpdate(
+      const user: any = await User.findOne(
         { _id: req.params.id },
-        req.body
+        { password: 0 }
       );
 
-      if (result) {
-        const users: any = await User.findOne({ _id: req.params.id });
-
-        if (req.file != undefined) {
-          let istitik = req.file.originalname.indexOf(".");
-          let typeimage = req.file.originalname.slice(istitik, 200);
-          this.prosesUpload(req, `${users.name}${typeimage}`);
-          req.body.img = `${users.name}${typeimage}`;
-        }
-
-        await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
-        // push history semua field yang di update
-        await HistoryController.pushUpdateMany(
-          result,
-          users,
-          req.user,
-          req.userId,
-          "user"
-        );
-        // End
-
-        // Update Related
-        await this.UpdateRelatedUser(req.params.id);
-        // End
-
-        return res.status(200).json({ status: 200, data: users });
+      if (!user) {
+        return res
+          .status(400)
+          .json({ status: 404, data: "Error update, user tidak ditemukan" });
       }
-      return res
-        .status(400)
-        .json({ status: 404, data: "Error update, user not found" });
+
+      if (req.body.nextState) {
+        const checkedWorkflow = await WorkflowController.permissionUpdateAction(
+          "user",
+          req.userId,
+          req.body.nextState,
+          user.createdBy
+        );
+
+        if (checkedWorkflow.status) {
+          await User.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+        } else {
+          return res
+            .status(403)
+            .json({ status: 403, msg: checkedWorkflow.msg });
+        }
+      } else {
+        await User.updateOne({ _id: req.params.id }, req.body);
+      }
+
+      const resultData: any = await User.findOne(
+        { _id: req.params.id },
+        { password: 0 }
+      );
+
+      if (req.file != undefined) {
+        let istitik = req.file.originalname.indexOf(".");
+        let typeimage = req.file.originalname.slice(istitik, 200);
+        this.prosesUpload(req, `${req.params.id}${typeimage}`);
+        req.body.img = `${req.params.id}${typeimage}`;
+      }
+
+      await Redis.client.set(
+        `user-${req.params.id}`,
+        JSON.stringify(resultData)
+      );
+      // push history semua field yang di update
+      await HistoryController.pushUpdateMany(
+        resultData,
+        user,
+        req.user,
+        req.userId,
+        "user"
+      );
+      // End
+
+      // // Update Related
+      // await this.UpdateRelatedUser(req.params.id);
+      // // End
+
+      return res.status(200).json({ status: 200, data: resultData });
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }

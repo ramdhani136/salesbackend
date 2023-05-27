@@ -1064,10 +1064,6 @@ class CallsheetController implements IController {
           redisName
         );
 
-        // // Ubah semua yang terelasi
-        // await this.updateRelatedData(req.params.id, getData);
-        // // End
-
         return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End
       } else {
@@ -1097,37 +1093,26 @@ class CallsheetController implements IController {
       }
 
       const result: any = await Db.deleteOne({ _id: req.params.id });
+
       await Redis.client.del(`${redisName}-${req.params.id}`);
+      // Delete Child
+      await this.DeletedRelateChild(new ObjectId(req.params.id));
+      // End
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
 
-  protected updateRelatedData = async (
-    id: ObjectId,
-    data: any
-  ): Promise<any> => {
+  protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
     try {
-      // Data callsheetnote
+      await CallSheetNoteModel.deleteMany({
+        callsheet: id,
+      });
 
-      // Menghapus semua data callsheetnote di redis
-      const callsheetKey = await Redis.client.keys("callsheetnote*");
-      if (callsheetKey.length > 0) {
-        await Redis.client.del(callsheetKey);
-      }
-      // End hapus redis
-
-      // Update callsheetnote
-      await CallSheetNoteModel.updateMany(
-        { "callsheet._id": id },
-        { callsheet: data }
-      );
-      // End update callsheetnote
-
-      // End data callsheetnote
+      console.log("ahir");
     } catch (error) {
-      throw new Error("Gagal memperbarui data terkait");
+      throw error;
     }
   };
 }

@@ -344,10 +344,6 @@ class UserController implements IController {
       );
       // End
 
-      // Update Related
-      await this.DeleteRelatedUser(req.params.id);
-      // End
-
       return res.status(200).json({ status: 200, data: resultData });
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
@@ -370,6 +366,11 @@ class UserController implements IController {
           user: req.userId,
         });
         // End
+
+        // Delete Child
+        await this.DeleteRelatedUser(req.params.id);
+        // End
+
         return res.status(200).json({ status: 200, data: users });
       }
       return res.status(404).json({ status: 404, msg: "Error Delete!" });
@@ -516,12 +517,9 @@ class UserController implements IController {
   protected DeleteRelatedUser = async (id: string): Promise<any> => {
     // roleuser
     try {
-      const roleuser = await RoleUserModel.find({
+      await RoleUserModel.deleteMany({
         user: new ObjectId(id),
       });
-      if (roleuser.length > 0) {
-        await RoleUserModel.deleteMany(roleuser);
-      }
     } catch (error) {
       throw error;
     }
@@ -529,12 +527,9 @@ class UserController implements IController {
 
     // Permission
     try {
-      const permission = await PermissionModel.find({
+      await PermissionModel.deleteMany({
         user: new ObjectId(id),
       });
-      if (permission.length > 0) {
-        await PermissionModel.deleteMany(permission);
-      }
     } catch (error) {
       throw error;
     }

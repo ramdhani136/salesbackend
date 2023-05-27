@@ -1344,10 +1344,6 @@ class VistController implements IController {
           redisName
         );
 
-        // // Ubah semua yang terelasi
-        // await this.updateRelatedData(req.params.id, getData);
-        // // End
-
         return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End
       } else {
@@ -1395,34 +1391,24 @@ class VistController implements IController {
           }
         );
       }
+
       await Redis.client.del(`${redisName}-${req.params.id}`);
+      // Delete Child
+      await this.DeletedRelateChild(new ObjectId(req.params.id));
+      // End
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
 
-  protected updateRelatedData = async (
-    id: ObjectId,
-    data: any
-  ): Promise<any> => {
+  protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
     try {
-      // Data visitnote
-
-      // Menghapus semua data visitnote di redis
-      const visitkey = await Redis.client.keys("visitnote*");
-      if (visitkey.length > 0) {
-        await Redis.client.del(visitkey);
-      }
-      // End hapus redis
-
-      // Update visitnote
-      await VisitNoteModel.updateMany({ "visit._id": id }, { visit: data });
-      // End update visitnote
-
-      // End data visitnote
+      await VisitNoteModel.deleteMany({
+        callsheet: new ObjectId(id),
+      });
     } catch (error) {
-      throw new Error("Gagal memperbarui data terkait");
+      throw error;
     }
   };
 }

@@ -134,6 +134,7 @@ class CallsheetController implements IController {
             "workflowState",
             "schedulelist._id",
             "schedulelist.schedule",
+            "schedulelist.notes",
             "rate",
           ];
       const order_by: any = req.query.order_by
@@ -257,6 +258,7 @@ class CallsheetController implements IController {
                 $project: {
                   "schedule._id": 1,
                   "schedule.name": 1,
+                  "schedule.notes": 1,
                   "schedule.closingDate": 1,
                 },
               },
@@ -676,6 +678,7 @@ class CallsheetController implements IController {
                 $project: {
                   "schedule._id": 1,
                   "schedule.name": 1,
+                  "schedule.notes": 1,
                   "schedule.closingDate": 1,
                 },
               },
@@ -692,6 +695,7 @@ class CallsheetController implements IController {
             workflowState: 1,
             "schedulelist._id": 1,
             "schedulelist.schedule": 1,
+            "schedulelist.notes": 1,
             "contact._id": 1,
             "contact.name": 1,
             "contact.phone": 1,
@@ -1013,6 +1017,7 @@ class CallsheetController implements IController {
                   $project: {
                     "schedule._id": 1,
                     "schedule.name": 1,
+                    "schedule.notes": 1,
                     "schedule.closingDate": 1,
                   },
                 },
@@ -1029,6 +1034,7 @@ class CallsheetController implements IController {
               workflowState: 1,
               "schedulelist._id": 1,
               "schedulelist.schedule": 1,
+              "schedulelist.notes": 1,
               "contact._id": 1,
               "contact.name": 1,
               "contact.phone": 1,
@@ -1109,8 +1115,6 @@ class CallsheetController implements IController {
       await CallSheetNoteModel.deleteMany({
         callsheet: id,
       });
-
-      console.log("ahir");
     } catch (error) {
       throw error;
     }

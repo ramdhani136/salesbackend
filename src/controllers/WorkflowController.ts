@@ -279,9 +279,29 @@ class workflowStateController implements IController {
 
       const result = await Db.deleteOne({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);
+      // Delete Child
+      await this.DeletedRelateChild(new ObjectId(req.params.id));
+      // End
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
+    }
+  };
+
+  protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
+    try {
+      await WorkflowTransition.deleteMany({
+        workflow: id,
+      });
+    } catch (error) {
+      throw error;
+    }
+    try {
+      await WorkflowChanger.deleteMany({
+        workflow: id,
+      });
+    } catch (error) {
+      throw error;
     }
   };
 

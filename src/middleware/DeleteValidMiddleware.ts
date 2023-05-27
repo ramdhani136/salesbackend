@@ -81,9 +81,9 @@ const DeletedValidMiddleware = async (
       case "usergroup":
         EventDeleteUserGroup(req, res, next);
         break;
-      case "workflow":
-        EventDeleteWorkflow(req, res, next);
-        break;
+      // case "workflow":
+      //   EventDeleteWorkflow(req, res, next);
+      //   break;
       case "workflowstate":
         EventDeleteWorkflowState(req, res, next);
         break;

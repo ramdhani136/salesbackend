@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { History, RoleProfileModel } from "../models";
+import { History, RoleListModel, RoleProfileModel } from "../models";
 import { ISearch } from "../utils/FilterQuery";
 import WorkflowController from "./WorkflowController";
 import HistoryController from "./HistoryController";
@@ -389,17 +389,25 @@ class RoleProfileController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      // if (getData.status === "1") {
-      //   return res
-      //     .status(404)
-      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      // }
-
       const result = await Db.deleteOne({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);
+
+      // Delete Child
+      await this.DeletedRelateChild(new ObjectId(req.params.id));
+      // End
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
+    }
+  };
+
+  protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
+    try {
+      await RoleListModel.deleteMany({
+        roleprofile: new ObjectId(id),
+      });
+    } catch (error) {
+      throw error;
     }
   };
 }

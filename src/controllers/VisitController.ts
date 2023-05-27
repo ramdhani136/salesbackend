@@ -149,6 +149,7 @@ class VistController implements IController {
             "workflowState",
             "schedulelist._id",
             "schedulelist.schedule",
+            "schedulelist.notes",
             "rate",
             "checkIn",
             "checkOut",
@@ -275,6 +276,7 @@ class VistController implements IController {
                 $project: {
                   "schedule._id": 1,
                   "schedule.name": 1,
+                  "schedule.notes": 1,
                   "schedule.closingDate": 1,
                 },
               },
@@ -787,6 +789,7 @@ class VistController implements IController {
                 $project: {
                   "schedule._id": 1,
                   "schedule.name": 1,
+                  "schedule.note": 1,
                   "schedule.closingDate": 1,
                 },
               },
@@ -807,6 +810,7 @@ class VistController implements IController {
             checkOut: 1,
             "schedulelist._id": 1,
             "schedulelist.schedule": 1,
+            "schedulelist.notes": 1,
             "contact._id": 1,
             "contact.name": 1,
             "contact.phone": 1,
@@ -1289,6 +1293,7 @@ class VistController implements IController {
                   $project: {
                     "schedule._id": 1,
                     "schedule.name": 1,
+                    "schedule.note": 1,
                     "schedule.closingDate": 1,
                   },
                 },
@@ -1309,6 +1314,7 @@ class VistController implements IController {
               checkOut: 1,
               "schedulelist._id": 1,
               "schedulelist.schedule": 1,
+              "schedulelist.notes": 1,
               "contact._id": 1,
               "contact.name": 1,
               "contact.phone": 1,

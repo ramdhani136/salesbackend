@@ -25,8 +25,8 @@ class WorkflowChangerController implements IController {
       },
       {
         alias: "User",
-        name: "user.name",
-        operator: ["=", "!=", "like", "notlike"],
+        name: "user",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -34,12 +34,14 @@ class WorkflowChangerController implements IController {
         name: "selfApproval",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Workflow",
         name: "workflow",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
 
       {
@@ -47,6 +49,7 @@ class WorkflowChangerController implements IController {
         name: "state",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        
       },
 
       {
@@ -60,12 +63,14 @@ class WorkflowChangerController implements IController {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
     ];
     try {

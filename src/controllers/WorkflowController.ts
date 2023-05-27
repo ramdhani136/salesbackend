@@ -33,12 +33,14 @@ class workflowStateController implements IController {
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Doc",
         name: "doc",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "User",
@@ -52,12 +54,14 @@ class workflowStateController implements IController {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
     ];
     try {

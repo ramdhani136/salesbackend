@@ -31,12 +31,14 @@ class NamingSeriesController implements IController {
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort:true,
       },
       {
         alias: "Doc",
         name: "doc",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
 
       {
@@ -51,12 +53,14 @@ class NamingSeriesController implements IController {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
     ];
     try {

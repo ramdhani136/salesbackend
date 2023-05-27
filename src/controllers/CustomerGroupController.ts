@@ -31,6 +31,7 @@ class CustomerGroupController implements IController {
         name: "parent.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Branch",
@@ -54,12 +55,14 @@ class CustomerGroupController implements IController {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
     ];
     try {

@@ -31,18 +31,21 @@ class ContactController implements IController {
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Phone",
         name: "phone",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Email",
         name: "email",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Customer",
@@ -55,12 +58,14 @@ class ContactController implements IController {
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "WorkflowState",
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "CreatedBy",
@@ -73,12 +78,14 @@ class ContactController implements IController {
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
     ];
     try {

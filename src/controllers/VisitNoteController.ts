@@ -37,6 +37,7 @@ class VisitNoteController implements IController {
         name: "title",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Visit",
@@ -49,6 +50,7 @@ class VisitNoteController implements IController {
         name: "notes",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
 
       {
@@ -56,6 +58,7 @@ class VisitNoteController implements IController {
         name: "tags",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "VisitType",
@@ -140,12 +143,14 @@ class VisitNoteController implements IController {
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
       {
         alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
+        isSort: true,
       },
     ];
     try {

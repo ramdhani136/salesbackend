@@ -37,6 +37,7 @@ class CallsheetNoteController implements IController {
         name: "title",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
       {
         alias: "Name",
@@ -49,6 +50,7 @@ class CallsheetNoteController implements IController {
         name: "notes",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
+        isSort: true,
       },
 
       {
@@ -88,13 +90,13 @@ class CallsheetNoteController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        alias: "CreatedAt",
+        alias: "CallsheetCreatedAt",
         name: "callsheet.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
-        alias: "UpdatedAt",
+        alias: "CallsheetUpdatedAt",
         name: "callsheet.updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -123,16 +125,20 @@ class CallsheetNoteController implements IController {
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-      // {
-      //   name: "createdAt",
-      //   operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
-      //   typeOf: TypeOfState.Date,
-      // },
-      // {
-      //   name: "updatedAt",
-      //   operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
-      //   typeOf: TypeOfState.Date,
-      // },
+      {
+        alias: "CreatedAt",
+        name: "createdAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+        isSort: true,
+      },
+      {
+        alias: "UpdatedAt",
+        name: "updatedAt",
+        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+        isSort: true,
+      },
     ];
     try {
       const filters: any = req.query.filters

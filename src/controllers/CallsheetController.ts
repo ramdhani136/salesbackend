@@ -903,10 +903,10 @@ class CallsheetController implements IController {
         }
         // End
 
-        if (req.body.id_workflow && req.body.id_state) {
+        if (req.body.id_state) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
+              redisName,
               req.userId,
               req.body.id_state,
               result.createdBy
@@ -1085,7 +1085,9 @@ class CallsheetController implements IController {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
       if (getData.status === "1") {

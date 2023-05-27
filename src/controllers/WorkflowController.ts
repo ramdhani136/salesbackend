@@ -11,9 +11,10 @@ import {
   WorkflowChanger,
   WorkflowTransition,
 } from "../models";
-import mongoose, { ObjectId } from "mongoose";
+
 import { ISearch } from "../utils/FilterQuery";
 import HistoryController from "./HistoryController";
+import { ObjectId } from "mongodb";
 
 const Db = Workflow;
 const redisName = "workflow";
@@ -209,11 +210,10 @@ class workflowStateController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-
-      const update = await Db.findByIdAndUpdate(
-        { _id: req.params.id },
-        req.body
-      ).populate("user", "name");
+      await Db.findByIdAndUpdate({ _id: req.params.id }, req.body).populate(
+        "user",
+        "name"
+      );
 
       if (req.body.status == 1) {
         if (prevData.status !== 1) {
@@ -295,15 +295,13 @@ class workflowStateController implements IController {
       let allData = [];
       for (const transition of transitions) {
         if (transition.selfApproval) {
-          if (
-            `${new mongoose.Types.ObjectId(`${user}`)}` === `${transition.user}`
-          ) {
+          if (`${new ObjectId(`${user}`)}` === `${transition.user}`) {
             allData.push(transition);
           }
         } else {
           const validAccessRole = await RoleUserModel.findOne({
             $and: [
-              { user: new mongoose.Types.ObjectId(`${user}`) },
+              { user: new ObjectId(`${user}`) },
               { roleprofile: transition.roleprofile },
             ],
           });
@@ -333,24 +331,68 @@ class workflowStateController implements IController {
   };
 
   permissionUpdateAction = async (
-    workflow: string,
+    doc: String,
     user: string,
     state: string,
     createdBy: string
   ) => {
-    const changer: any = await WorkflowChanger.findOne({
-      workflow: workflow,
-      state: state,
-    })
-      .populate("user", "name")
-      .populate("workflow", "name")
-      .populate("state", "name");
+    const getData: any = await WorkflowChanger.aggregate([
+      { $match: { state: new ObjectId(state) } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+          pipeline: [
+            {
+              $project: { _id: 1, name: 1 },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: "$user",
+      },
+      {
+        $lookup: {
+          from: "workflowstates",
+          localField: "state",
+          foreignField: "_id",
+          as: "state",
+          pipeline: [
+            {
+              $project: { _id: 1, name: 1 },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: "$state",
+      },
+      {
+        $lookup: {
+          from: "workflows",
+          localField: "workflow",
+          foreignField: "_id",
+          as: "workflow",
+          pipeline: [
+            {
+              $project: { _id: 1, name: 1, doc: 1 },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: "$workflow",
+      },
+      { $match: { "workflow.doc": doc } },
+    ]);
 
-      console.log('hhhhh')
-
-    if (changer) {
+    if (getData.length > 0) {
+      const changer = getData[0];
       if (changer.selfApproval) {
-        if (`${new mongoose.Types.ObjectId(`${user}`)}` === `${createdBy}`) {
+        if (`${new ObjectId(`${user}`)}` === `${createdBy}`) {
           return {
             status: true,
             data: { status: changer.status, workflowState: changer.state.name },
@@ -364,10 +406,7 @@ class workflowStateController implements IController {
       } else {
         const roleId = changer.roleprofile;
         const validAccessRole = await RoleUserModel.findOne({
-          $and: [
-            { user: new mongoose.Types.ObjectId(`${user}`) },
-            { roleprofile: roleId },
-          ],
+          $and: [{ user: new ObjectId(`${user}`) }, { roleprofile: roleId }],
         });
         if (validAccessRole) {
           return {

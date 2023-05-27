@@ -18,43 +18,51 @@ class WorkflowChangerController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "User",
         name: "user.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "workflow",
+        alias: "selfApproval",
+        name: "selfApproval",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "workflow.name",
-        operator: ["=", "!=", "like", "notlike"],
+        alias: "Workflow",
+        name: "workflow",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
-        name: "state.name",
-        operator: ["=", "!=", "like", "notlike"],
+        alias: "State",
+        name: "state",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
-        name: "roleprofile.name",
-        operator: ["=", "!=", "like", "notlike"],
+        alias: "RoleProfile",
+        name: "roleprofile",
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -87,8 +95,10 @@ class WorkflowChangerController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
         "workflow",
         "_id",
+        "state",
+        "roleprofile",
+        "user",
       ]);
-
       if (!isFilter.status) {
         return res
           .status(400)
@@ -98,6 +108,9 @@ class WorkflowChangerController implements IController {
       const getAll = await Db.find(isFilter.data).count();
 
       let pipelineResult: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $lookup: {
             from: "users",
@@ -142,9 +155,7 @@ class WorkflowChangerController implements IController {
         {
           $unwind: "$workflow",
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $project: setField,
         },

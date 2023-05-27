@@ -15,81 +15,95 @@ class RoleListController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "roleprofile._id",
+        alias: "RoleProfile",
+        name: "roleprofile",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "roleprofile.name",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "roleprofile.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "createdBy._id",
+        alias: "CreatedBy",
+        name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "createdBy.name",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "Doc",
         name: "doc",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Create",
         name: "create",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Read",
         name: "read",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Update",
         name: "update",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Delete",
         name: "delete",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Submit",
         name: "submit",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Amend",
         name: "amend",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Export",
         name: "export",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Report",
         name: "report",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -120,14 +134,14 @@ class RoleListController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let search: ISearch = {
-        filter: ["roleprofile.name"],
-        value: req.query.search || "",
-      };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+      // let search: ISearch = {
+      //   filter: ["roleprofile.name"],
+      //   value: req.query.search || "",
+      // };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
         "_id",
-        "roleprofile._id",
-        "createdBy._id",
+        "roleprofile",
+        "createdBy",
         "user._id",
       ]);
 
@@ -139,6 +153,9 @@ class RoleListController implements IController {
       // End
 
       let pipelineTotal: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $lookup: {
             from: "roleprofiles",
@@ -161,9 +178,7 @@ class RoleListController implements IController {
         {
           $unwind: "$createdBy",
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $project: setField,
         },
@@ -177,6 +192,9 @@ class RoleListController implements IController {
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       const pipelineResult: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $sort: order_by,
         },
@@ -202,9 +220,7 @@ class RoleListController implements IController {
         {
           $unwind: "$createdBy",
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $project: setField,
         },

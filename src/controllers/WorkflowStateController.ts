@@ -14,41 +14,32 @@ class workflowStateController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "user._id",
+        alias: "User",
+        name: "user",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+
       {
-        name: "user.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "workflowState",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "status",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -73,7 +64,7 @@ class workflowStateController implements IController {
       };
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "_id",
-        "user._id",
+        "user",
       ]);
 
       if (!isFilter.status) {
@@ -86,6 +77,9 @@ class workflowStateController implements IController {
 
       let pipelineResult: any = [
         {
+          $match: isFilter.data,
+        },
+        {
           $lookup: {
             from: "users",
             localField: "user",
@@ -96,9 +90,7 @@ class workflowStateController implements IController {
         {
           $unwind: "$user",
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $skip: limit > 0 ? page * limit - limit : 0,
         },

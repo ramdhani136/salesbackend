@@ -26,110 +26,123 @@ class VisitNoteController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
+        alias: "Title",
         name: "title",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Visit",
         name: "visit",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Notes",
         name: "notes",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
 
       {
+        alias: "Tags",
         name: "tags",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-
       {
-        name: "visit.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "VisitType",
         name: "visit.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Rate",
         name: "visit.rate",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Status",
         name: "visit.status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Customer",
         name: "visit.customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CreatedBy",
         name: "visit.createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "VisitCreatedAt",
         name: "visit.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
-        name: "visit.createdAt",
+        alias: "VisitUpdatedAt",
+        name: "visit.updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CheckInAt",
         name: "visit.checkIn.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CheckOutAt",
         name: "visit.checkOut.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
-  
+
       {
+        alias: "CustomerGroup",
         name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CustomerType",
         name: "customer.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "customer.name",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "customer.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "Branch",
         name: "customer.branch",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,

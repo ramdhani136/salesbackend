@@ -22,46 +22,52 @@ class RoleUserController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "_Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "roleprofile._id",
+        alias: "RoleProfile",
+        name: "roleprofile",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "roleprofile.name",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "roleprofile.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "user._id",
+        alias: "User",
+        name: "user",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "user.name",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "user.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "createdBy._id",
+        alias: "CreatedBy",
+        name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   name: "createdBy.name",
+      //   operator: ["=", "!=", "like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -87,15 +93,15 @@ class RoleUserController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let search: ISearch = {
-        filter: ["user.name"],
-        value: req.query.search || "",
-      };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+      // let search: ISearch = {
+      //   filter: ["user.name"],
+      //   value: req.query.search || "",
+      // };
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
         "_id",
-        "createdBy._id",
-        "user._id",
-        "roleprofile._id",
+        "createdBy",
+        "user",
+        "roleprofile",
       ]);
 
       // Mengambil rincian permission user
@@ -114,6 +120,9 @@ class RoleUserController implements IController {
       // End
 
       let pipelineTotal: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $lookup: {
             from: "roleprofiles",
@@ -147,9 +156,7 @@ class RoleUserController implements IController {
         {
           $unwind: "$createdBy",
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $count: "total_orders",
         },
@@ -170,6 +177,9 @@ class RoleUserController implements IController {
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $sort: order_by,
         },
@@ -205,9 +215,6 @@ class RoleUserController implements IController {
         },
         {
           $unwind: "$createdBy",
-        },
-        {
-          $match: isFilter.data,
         },
 
         {

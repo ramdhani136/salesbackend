@@ -9,6 +9,7 @@ interface IStateFilter {
   name: string;
   operator: any[];
   typeOf: TypeOfState;
+  isSort?: Boolean;
 }
 
 export { IStateFilter };

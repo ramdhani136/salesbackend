@@ -22,38 +22,38 @@ class UserGroupListController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
-
       {
-        name: "name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "User",
         name: "user",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "UserGroup",
         name: "userGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CreatedBy",
         name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,

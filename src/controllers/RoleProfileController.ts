@@ -22,41 +22,43 @@ class RoleProfileController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy._d",
+        alias: "CreatedBy",
+        name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "createdBy.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "WorkflowState",
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Status",
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -68,7 +70,7 @@ class RoleProfileController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "createdBy.name", "status", "workflowState"];
+        : ["name", "createdBy.name", "createdBy._id","status", "workflowState"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -89,7 +91,7 @@ class RoleProfileController implements IController {
 
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "_id",
-        "createdBy._id",
+        "createdBy",
       ]);
 
       if (!isFilter.status) {
@@ -101,6 +103,9 @@ class RoleProfileController implements IController {
 
       let pipelineTotal: any = [
         {
+          $match: isFilter.data,
+        },
+        {
           $lookup: {
             from: "users",
             localField: "createdBy",
@@ -110,9 +115,6 @@ class RoleProfileController implements IController {
         },
         {
           $unwind: "$createdBy",
-        },
-        {
-          $match: isFilter.data,
         },
 
         {
@@ -138,6 +140,9 @@ class RoleProfileController implements IController {
 
       let pipelineResult: any = [
         {
+          $match: isFilter.data,
+        },
+        {
           $sort: order_by,
         },
         {
@@ -151,9 +156,7 @@ class RoleProfileController implements IController {
         {
           $unwind: "$createdBy",
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $skip: limit > 0 ? page * limit - limit : 0,
         },

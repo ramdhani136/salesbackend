@@ -38,87 +38,98 @@ class VistController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias:"Id",
         name: "_id",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Type",
         name: "type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"CheckInAt",
         name: "checkIn.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias:"ChecOutAt",
         name: "checkOut.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias:"ScheduleList",
         name: "schedulelist",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Contact",
         name: "contact",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Customer",
         name: "customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "customer.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias:"CustomerType",
         name: "customer.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"CustomerGroup",
         name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Branch",
         name: "customer.branch",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+          alias:"CreatedBy",
         name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"Status",
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias:"WorkflowState",
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
 
       {
+        alias:'UpdatedAt',
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias:"CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,

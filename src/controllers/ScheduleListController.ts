@@ -24,91 +24,97 @@ class ScheduleListController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Schedule",
         name: "schedule",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        name: "schedule.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        name: "name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
+        alias: "ScheduleType",
         name: "schedule.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "ScheduleStatus",
         name: "schedule.status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "WorkflowState",
         name: "schedule.workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "ActiveDate",
         name: "schedule.activeDate",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "ClosingDate",
         name: "schedule.closingDate",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "ScheduleCreatedAt",
         name: "schedule.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "UserGroup",
         name: "schedule.userGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Customer",
         name: "customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CustomerGroup",
         name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Branch",
         name: "customer.branch",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Status",
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CreatedBy",
         name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,

@@ -591,7 +591,7 @@ class ScheduleController implements IController {
       // Delete Child
       await this.DeletedRelateChild(new ObjectId(req.params.id));
       // End
-      return res.status(200).json({ status: 200, data: "d" });
+      return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

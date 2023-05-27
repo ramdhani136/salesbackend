@@ -358,7 +358,6 @@ class ScheduleListController implements IController {
             return item._id;
           });
 
-
           pipeline.unshift({
             $match: {
               customer: { $in: finalFilterCustomer },
@@ -1039,7 +1038,10 @@ class ScheduleListController implements IController {
 
   delete = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne({ _id: req.params.id }).populate(
+        "schedule",
+        "name type"
+      );
 
       if (!getData) {
         return res
@@ -1047,12 +1049,70 @@ class ScheduleListController implements IController {
           .json({ status: 404, msg: "Data tidak ditemukan!!" });
       }
 
-      const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
-      return res.status(200).json({ status: 200, data: result });
+      // const result = await Db.deleteOne({ _id: req.params.id });
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
+      // Delete Child
+      await this.DeletedRelateChild(getData);
+      // End
+      return res.status(200).json({ status: 200, data: "d" });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
+  };
+
+  protected DeletedRelateChild = async (data: any): Promise<any> => {
+    try {
+      // Update Visit
+      if (data.status !== "0" && data.schedule.type === "visit") {
+        const visit = await visitModel.find(
+          {
+            schedulelist: { $in: [data._id] },
+          },
+          { schedulelist: 1 }
+        );
+
+        if (visit.length > 0) {
+          for (const visitItem of visit) {
+            let visitId = visitItem._id;
+            let schedulelist = visitItem.schedulelist.filter((i: any) => {
+              return i.toString() !== data._id.toString();
+            });
+
+            await visitModel.findByIdAndUpdate(visitId, {
+              schedulelist: schedulelist,
+            });
+          }
+        }
+      }
+      // End
+
+      // Update callsheet
+      if (data.status !== "0" && data.schedule.type === "callsheet") {
+        const callsheet = await CallsheetModel.find(
+          {
+            schedulelist: { $in: [data._id] },
+          },
+          { schedulelist: 1 }
+        );
+
+        if (callsheet.length > 0) {
+          for (const callsheetItem of callsheet) {
+            let callsheetId = callsheetItem._id;
+            let schedulelist = callsheetItem.schedulelist.filter((i: any) => {
+              return i.toString() !== data._id.toString();
+            });
+
+            await CallsheetModel.findByIdAndUpdate(callsheetId, {
+              schedulelist: schedulelist,
+            });
+          }
+        }
+      }
+      // End
+    } catch (error) {
+      throw error;
+    }
+    // End
   };
 }
 

@@ -493,12 +493,12 @@ class MemoController implements IController {
         if (req.body.notes) {
           update.notes = req.body.notes;
         }
-        if (req.body.id_workflow && req.body.id_state) {
+        if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
+              redisName,
               req.userId,
-              req.body.id_state,
+              req.body.nextState,
               result.createdBy._id
             );
 

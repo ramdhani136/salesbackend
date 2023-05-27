@@ -188,26 +188,50 @@ class WorkflowChangerController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<any> => {
-    if (!req.body.workflow) {
-      return res.status(400).json({ status: 400, msg: "workflow Required!" });
-    }
-    if (!req.body.state) {
-      return res.status(400).json({ status: 400, msg: "state Required!" });
-    }
-    if (!req.body.roleprofile) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "roleprofile Required!" });
-    }
     if (!req.body.status) {
       return res.status(400).json({ status: 400, msg: "status Required!" });
     }
     req.body.user = req.userId;
 
     try {
-      await Workflow.findById(`${req.body.workflow}`);
-      await WorkflowState.findById(`${req.body.state}`);
-      await RoleProfileModel.findById(`${req.body.roleprofile}`);
+      // Check Workflow
+      if (!req.body.workflow) {
+        return res.status(400).json({ status: 400, msg: "workflow Required!" });
+      }
+      const workflow = await Workflow.findById(`${req.body.workflow}`);
+      if (!workflow) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "workflow tidak ditemukan!" });
+      }
+      // End
+
+      // Check state
+      if (!req.body.state) {
+        return res.status(400).json({ status: 400, msg: "state Required!" });
+      }
+      const workflowState = await WorkflowState.findById(`${req.body.state}`);
+      if (!workflowState) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "workflowState tidak ditemukan!" });
+      }
+      // End
+
+      // Check roleprofile
+      if (!req.body.roleprofile) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "roleprofile Required!" });
+      }
+      const role = await RoleProfileModel.findById(`${req.body.roleprofile}`);
+      if (!role) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "roleprofile tidak ditemukan!" });
+      }
+      // End
+
       const result = new Db(req.body);
       const response = await result.save();
       return res.status(200).json({ status: 200, data: response });
@@ -255,6 +279,42 @@ class WorkflowChangerController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
+      // Check Workflow
+      if (req.body.workflow) {
+        const workflow = await Workflow.findById(`${req.body.workflow}`);
+        if (!workflow) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "workflow tidak ditemukan!" });
+        }
+      }
+
+      // End
+
+      // Check state
+      if (req.body.state) {
+        const workflowState = await WorkflowState.findById(`${req.body.state}`);
+        if (!workflowState) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "workflowState tidak ditemukan!" });
+        }
+      }
+      // End
+
+      // Check roleprofile
+      if (req.body.workflow) {
+        const role = await RoleProfileModel.findById(`${req.body.roleprofile}`);
+        if (!role) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "roleprofile tidak ditemukan!" });
+        }
+      }
+
+      // End
+
       await Db.updateOne({ _id: req.params.id }, req.body);
       const result = await Db.findOne({ _id: req.params.id })
         .populate("user", "name")

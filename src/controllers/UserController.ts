@@ -7,7 +7,13 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { CallsheetModel, History } from "../models";
+import {
+  CallsheetModel,
+  History,
+  PermissionModel,
+  RoleListModel,
+  RoleUserModel,
+} from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
@@ -15,6 +21,7 @@ import path from "path";
 import fs from "fs";
 
 import WorkflowController from "./WorkflowController";
+import { ObjectId } from "mongodb";
 
 class UserController implements IController {
   protected prosesUpload = (req: Request | any, name: string) => {
@@ -337,9 +344,9 @@ class UserController implements IController {
       );
       // End
 
-      // // Update Related
-      // await this.UpdateRelatedUser(req.params.id);
-      // // End
+      // Update Related
+      await this.DeleteRelatedUser(req.params.id);
+      // End
 
       return res.status(200).json({ status: 200, data: resultData });
     } catch (error: any) {
@@ -506,19 +513,32 @@ class UserController implements IController {
     }
   };
 
-  protected UpdateRelatedUser = async (id: string): Promise<any> => {
+  protected DeleteRelatedUser = async (id: string): Promise<any> => {
+    // roleuser
     try {
-      const callsheet = await CallsheetModel.find({
-        $or: [
-          {
-            "createdBy._id": new Object(id),
-          },
-          { "schedule.createdBy._id": new Object(id) },
-        ],
+      const roleuser = await RoleUserModel.find({
+        user: new ObjectId(id),
       });
+      if (roleuser.length > 0) {
+        await RoleUserModel.deleteMany(roleuser);
+      }
     } catch (error) {
       throw error;
     }
+    // End
+
+    // Permission
+    try {
+      const permission = await PermissionModel.find({
+        user: new ObjectId(id),
+      });
+      if (permission.length > 0) {
+        await PermissionModel.deleteMany(permission);
+      }
+    } catch (error) {
+      throw error;
+    }
+    // End
   };
 }
 

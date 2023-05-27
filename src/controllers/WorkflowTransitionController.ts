@@ -114,10 +114,7 @@ class WorkflowTransitionController implements IController {
       }
       // End
 
-     
       const getAll = await Db.find(isFilter.data).count();
-
-
 
       let pipelineResult: any = [
         {
@@ -232,33 +229,85 @@ class WorkflowTransitionController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<any> => {
-    if (!req.body.workflow) {
-      return res.status(400).json({ status: 400, msg: "workflow Required!" });
-    }
-    if (!req.body.stateActive) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "stateActive Required!" });
-    }
-    if (!req.body.action) {
-      return res.status(400).json({ status: 400, msg: "action Required!" });
-    }
-    if (!req.body.nextState) {
-      return res.status(400).json({ status: 400, msg: "nextState Required!" });
-    }
-    if (!req.body.roleprofile) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "roleprofile Required!" });
-    }
     req.body.user = req.userId;
 
     try {
-      await Workflow.findById(`${req.body.workflow}`);
-      await WorkflowAction.findById(`${req.body.action}`);
-      await WorkflowState.findById(`${req.body.stateActive}`);
-      await WorkflowState.findById(`${req.body.nextState}`);
-      await RoleProfileModel.findById(`${req.body.roleprofile}`);
+      // Check workflow
+      if (!req.body.workflow) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "workflow wajib diisi!" });
+      }
+      const workflow = await Workflow.findById(`${req.body.workflow}`);
+      if (!workflow) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "workflow Tidak ditemukan!" });
+      }
+      // End
+
+      // NextState
+      if (!req.body.nextState) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "nextState Required!" });
+      }
+
+      const nextState = await WorkflowState.findById(`${req.body.nextState}`);
+      if (!nextState) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "nextState Tidak ditemukan!" });
+      }
+
+      // End
+
+      // CheckstateActive
+      if (!req.body.stateActive) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "stateActive Required!" });
+      }
+
+      const stateActive = await WorkflowState.findById(
+        `${req.body.stateActive}`
+      );
+      if (!stateActive) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "stateActive Tidak ditemukan!" });
+      }
+
+      // End
+
+      // CheckAction
+      if (!req.body.action) {
+        return res.status(400).json({ status: 400, msg: "action Required!" });
+      }
+      const action = await WorkflowAction.findById(`${req.body.action}`);
+      if (!action) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "action Tidak ditemukan!" });
+      }
+
+      // End
+
+      // Check roleprofile
+      if (!req.body.roleprofile) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "roleprofile Required!" });
+      }
+
+      const role = await RoleProfileModel.findById(`${req.body.roleprofile}`);
+      if (!role) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "roleprofile Tidak ditemukan!" });
+      }
+      // End
+
       const result = new Db(req.body);
       const response = await result.save();
       return res.status(200).json({ status: 200, data: response });
@@ -308,6 +357,68 @@ class WorkflowTransitionController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
+      // Check workflow
+      if (req.body.workflow) {
+        const workflow = await Workflow.findById(`${req.body.workflow}`);
+        if (!workflow) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "workflow Tidak ditemukan!" });
+        }
+      }
+
+      // End
+
+      // NextState
+      if (req.body.nextState) {
+        const nextState = await WorkflowState.findById(`${req.body.nextState}`);
+        if (!nextState) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "nextState Tidak ditemukan!" });
+        }
+      }
+
+      // End
+
+      // CheckstateActive
+      if (req.body.stateActive) {
+        const stateActive = await WorkflowState.findById(
+          `${req.body.stateActive}`
+        );
+        if (!stateActive) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "stateActive Tidak ditemukan!" });
+        }
+      }
+
+      // End
+
+      // CheckAction
+      if (req.body.action) {
+        const action = await WorkflowAction.findById(`${req.body.action}`);
+        if (!action) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "action Tidak ditemukan!" });
+        }
+      }
+
+      // End
+
+      // Check roleprofile
+      if (req.body.roleprofile) {
+        const role = await RoleProfileModel.findById(`${req.body.roleprofile}`);
+        if (!role) {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "roleprofile Tidak ditemukan!" });
+        }
+      }
+
+      // End
 
       await Db.findByIdAndUpdate(req.params.id, req.body);
       const getData = await Db.findOne({ _id: req.params.id })

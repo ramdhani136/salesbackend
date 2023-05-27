@@ -28,6 +28,11 @@ class WorkflowChangerController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        name: "workflow",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         name: "workflow.name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
@@ -79,7 +84,10 @@ class WorkflowChangerController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
-      let isFilter = FilterQuery.getFilter(filters, stateFilter);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, undefined, [
+        "workflow",
+        "_id",
+      ]);
 
       if (!isFilter.status) {
         return res
@@ -90,7 +98,6 @@ class WorkflowChangerController implements IController {
       const getAll = await Db.find(isFilter.data).count();
 
       let pipelineResult: any = [
-      
         {
           $lookup: {
             from: "users",
@@ -241,11 +248,21 @@ class WorkflowChangerController implements IController {
 
   update = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const result = await Db.updateOne({ name: req.params.id }, req.body);
-      const getData = await Db.findOne({ name: req.params.id });
+      const data = await Db.findById(req.params.id);
+
+      if (!data) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+      await Db.updateOne({ _id: req.params.id }, req.body);
+      const result = await Db.findOne({ _id: req.params.id })
+        .populate("user", "name")
+        .populate("workflow", "name")
+        .populate("state", "name");
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
-        JSON.stringify(getData)
+        JSON.stringify(result)
       );
       return res.status(200).json({ status: 200, data: result });
     } catch (error: any) {

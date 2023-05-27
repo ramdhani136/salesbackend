@@ -675,34 +675,34 @@ class VistController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
 
       const getData: any = await Db.aggregate([
         {
@@ -1123,12 +1123,12 @@ class VistController implements IController {
 
         // End
 
-        if (req.body.id_workflow && req.body.id_state) {
+        if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
+              redisName,
               req.userId,
-              req.body.id_state,
+              req.body.nextState,
               result.createdBy
             );
 

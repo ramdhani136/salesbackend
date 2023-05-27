@@ -315,7 +315,7 @@ class workflowStateController implements IController {
         if (item.stateActive.name == stateActive) {
           return {
             action: item.action.name,
-            nextstate: {
+            nextState: {
               id: item.nextState._id,
               name: item.nextState.name,
             },

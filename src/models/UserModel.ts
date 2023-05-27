@@ -32,9 +32,15 @@ const User = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["0", "1", "2"],
+      enum: ["0", "1", "3"],
       default: "0",
       index: true,
+    },
+    workflowState: {
+      type: String,
+      required: true,
+      default: "Draft",
+      index: 1,
     },
   },
   {

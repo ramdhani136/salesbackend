@@ -22,14 +22,14 @@ const RoleUserModel = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["0", "1", "2"],
+      enum: ["0", "1", "2", "3"],
       default: "1",
       index: 1,
     },
     workflowState: {
       type: String,
-      required:true,
-      default:"Submitted",
+      required: true,
+      default: "Submitted",
       index: 1,
     },
   },
@@ -45,7 +45,4 @@ RoleUserModel.index({
   updatedAt: -1,
 });
 
-
-
 export default mongoose.model("RoleUser", RoleUserModel);
-

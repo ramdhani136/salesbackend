@@ -48,7 +48,7 @@ const CustomerModel = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["0", "1", "2"],
+      enum: ["0", "1", "2", "3"],
       default: "1",
       index: true,
     },

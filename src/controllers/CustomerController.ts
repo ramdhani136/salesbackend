@@ -488,12 +488,12 @@ class CustomerController implements IController {
         }
         // End
 
-        if (req.body.id_workflow && req.body.id_state) {
+        if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
+              redisName,
               req.userId,
-              req.body.id_state,
+              req.body.nextState,
               result.createdBy._id
             );
 
@@ -551,7 +551,6 @@ class CustomerController implements IController {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
-     
       if (!getData) {
         return res
           .status(404)
@@ -563,7 +562,6 @@ class CustomerController implements IController {
       //     .status(404)
       //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
       // }
-
 
       const result = await Db.deleteOne({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);

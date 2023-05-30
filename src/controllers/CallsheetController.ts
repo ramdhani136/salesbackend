@@ -185,6 +185,30 @@ class CallsheetController implements IController {
       );
       // End
 
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
       if (!isFilter.status) {
         return res
           .status(400)
@@ -330,7 +354,12 @@ class CallsheetController implements IController {
           return newItem;
         });
 
-      if (customerFIlter.length > 0 || req.query.search) {
+      if (
+        customerFIlter.length > 0 ||
+        req.query.search ||
+        branchPermission.length > 0 ||
+        groupPermission.length > 0
+      ) {
         let search: ISearch = {
           filter: ["name"],
           value: req.query.search || "",
@@ -342,7 +371,17 @@ class CallsheetController implements IController {
           ["_id", "customerGroup", "branch"]
         );
 
-        const customerData = await CustomerModel.find(validCustomer.data, [
+        let pipeline: any = [validCustomer.data];
+
+        if (branchPermission.length > 0) {
+          pipeline.unshift({ branch: { $in: branchPermission } });
+        }
+
+        if (groupPermission.length > 0) {
+          pipeline.unshift({ customerGroup: { $in: groupPermission } });
+        }
+
+        const customerData = await CustomerModel.find({ $and: pipeline }, [
           "_id",
         ]);
 
@@ -366,6 +405,17 @@ class CallsheetController implements IController {
             msg: "Data Not found!",
           });
         }
+      }
+
+      if (customerPermission.length > 0) {
+        pipeline.unshift({
+          $match: {
+            customer: { $in: customerPermission },
+          },
+        });
+        pipelineTotal.unshift({
+          customer: { $in: customerPermission },
+        });
       }
 
       // End
@@ -587,41 +637,68 @@ class CallsheetController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CALLSHEET
+      );
+      // End
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      // Mengambil rincian permission user
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CALLSHEET
+      );
+      // End
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      // Mengambil rincian permission group
+      const GroupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CALLSHEET
+      );
+      // End
 
-      const getData: any = await Db.aggregate([
-        {
-          $match: {
-            _id: new ObjectId(req.params.id),
-          },
-        },
+      // Mengambil rincian permission group
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
+
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
+
+      let pipeline: any[] = [
         {
           $lookup: {
             from: "users",
@@ -733,7 +810,35 @@ class CallsheetController implements IController {
             rate: 1,
           },
         },
-      ]);
+      ];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipeline.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (customerPermission.length > 0) {
+        pipeline.unshift({
+          $match: {
+            customer: { $in: customerPermission },
+          },
+        });
+      }
+      // End
+
+      pipeline.push({
+        $match: {
+          _id: new ObjectId(req.params.id),
+        },
+      });
+
+      const getData: any = await Db.aggregate(pipeline);
 
       if (getData.length === 0) {
         return res

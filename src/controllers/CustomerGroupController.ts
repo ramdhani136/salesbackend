@@ -122,9 +122,9 @@ class CustomerGroupController implements IController {
             as: "branch",
           },
         },
-        {
-          $unwind: "$branch",
-        },
+        // {
+        //   $unwind: "$branch",
+        // },
         {
           $lookup: {
             from: "users",

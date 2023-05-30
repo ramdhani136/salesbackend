@@ -102,20 +102,20 @@ class BranchController implements IController {
       };
 
       // Mengecek permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.BRANCH
-      // );
-      // End
-
-      // Mengecek permission user
-      const CGPermission = await PermissionMiddleware.getPermission(
+      const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
-        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionAllow.USER,
         selPermissionType.BRANCH
       );
       // End
+
+      // // Mengecek permission user
+      // const CGPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.CUSTOMERGROUP,
+      //   selPermissionType.BRANCH
+      // );
+      // // End
 
       // Mengambil hasil fields
       let setField = FilterQuery.getField(fields);
@@ -161,15 +161,15 @@ class BranchController implements IController {
         },
       ];
 
-      // // Menambahkan filter berdasarkan permission user
-      // if (userPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
 
       const totalData = await Db.aggregate(pipelineTotal);
 
@@ -202,15 +202,15 @@ class BranchController implements IController {
         },
       ];
 
-      // // Menambahkan filter berdasarkan permission user
-      // if (userPermission.length > 0) {
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {

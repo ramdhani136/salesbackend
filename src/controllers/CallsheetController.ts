@@ -832,7 +832,38 @@ class CallsheetController implements IController {
       }
       // End
 
-      pipeline.push({
+      if (branchPermission.length > 0 || GroupPermission.length > 0) {
+        let cusPipeline: any[] = [];
+        if (branchPermission.length > 0) {
+          cusPipeline.push({ branch: { $in: branchPermission } });
+        }
+        if (GroupPermission.length > 0) {
+          cusPipeline.push({ customerGroup: { $in: GroupPermission } });
+        }
+
+        const cekCustomer = await CustomerModel.find(
+          { $and: cusPipeline },
+          { _id: 1 }
+        );
+
+        if (cekCustomer.length === 0) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        }
+
+        const finalValidCustomer = cekCustomer.map((item) => {
+          return item._id;
+        });
+
+        pipeline.unshift({
+          $match: {
+            customer: { $in: finalValidCustomer },
+          },
+        });
+      }
+
+      pipeline.unshift({
         $match: {
           _id: new ObjectId(req.params.id),
         },

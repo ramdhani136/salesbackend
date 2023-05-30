@@ -36,7 +36,6 @@ interface hasilCustomerI {
 
 class CallsheetController implements IController {
   protected cekValidCustomer = async (
-    userId: string,
     GroupPermission: any[],
     branchPermission: any[]
   ): Promise<hasilCustomerI> => {
@@ -920,7 +919,6 @@ class CallsheetController implements IController {
 
       if (branchPermission.length > 0 || GroupPermission.length > 0) {
         const getCustomer = await this.cekValidCustomer(
-          req.userId,
           GroupPermission,
           branchPermission
         );
@@ -1081,7 +1079,6 @@ class CallsheetController implements IController {
 
       if (branchPermission.length > 0 || GroupPermission.length > 0) {
         const getCustomer = await this.cekValidCustomer(
-          req.userId,
           GroupPermission,
           branchPermission
         );
@@ -1440,7 +1437,6 @@ class CallsheetController implements IController {
 
       if (branchPermission.length > 0 || GroupPermission.length > 0) {
         const getCustomer = await this.cekValidCustomer(
-          req.userId,
           GroupPermission,
           branchPermission
         );

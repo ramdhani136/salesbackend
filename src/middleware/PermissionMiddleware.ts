@@ -180,17 +180,15 @@ class PermissionMiddleware {
           return item._id;
         });
 
-        console.log(isCGFil);
-        console.log(finalCG);
         const merg = [...isCGFil, ...finalCG];
 
         const uniqueData = this.CheckDuplicateObjectId(merg);
-        console.log(uniqueData);
+        finalPermission = uniqueData;
       }
     }
     // End
 
-    // console.log(finalPermission);
+    console.log(finalPermission);
     return finalPermission;
   };
 }

@@ -669,34 +669,84 @@ class CallsheetController implements IController {
       );
       // End
 
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        console.log(isCache);
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+        if (userPermission.length > 0) {
+          const cekValid = userPermission.find(
+            (item) => item.toString() === isCache.createdBy._id.toString()
+          );
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
+        if (customerPermission.length > 0) {
+          const cekValid = customerPermission.find(
+            (item) => item.toString() === isCache.customer._id.toString()
+          );
+
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
+        if (branchPermission.length > 0) {
+          const cekValid = branchPermission.find(
+            (item) => item.toString() === isCache.branch._id.toString()
+          );
+
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
+        if (GroupPermission.length > 0) {
+          const cekValid = GroupPermission.find(
+            (item) => item.toString() === isCache.customerGroup._id.toString()
+          );
+
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
 
       let pipeline: any[] = [
         {

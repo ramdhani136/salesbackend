@@ -135,6 +135,11 @@ class PermissionMiddleware {
       }
     }
     // End
+
+    // Jika allow customerGroup
+
+    // End
+
     console.log(finalPermission);
     return finalPermission;
   };

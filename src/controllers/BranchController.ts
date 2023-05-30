@@ -109,13 +109,13 @@ class BranchController implements IController {
       );
       // End
 
-      // // Mengecek permission user
-      // const CGPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.CUSTOMERGROUP,
-      //   selPermissionType.BRANCH
-      // );
-      // // End
+      // Mengecek permission user
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+      // End
 
       // Mengambil hasil fields
       let setField = FilterQuery.getField(fields);
@@ -170,6 +170,15 @@ class BranchController implements IController {
         });
       }
       // End
+      // Menambahkan filter berdasarkan permission branch
+      if (branchPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
 
       const totalData = await Db.aggregate(pipelineTotal);
 
@@ -207,6 +216,15 @@ class BranchController implements IController {
         pipelineResult.unshift({
           $match: {
             createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+      // Menambahkan filter berdasarkan permission branch
+      if (branchPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
           },
         });
       }
@@ -289,6 +307,14 @@ class BranchController implements IController {
       );
       // End
 
+      // Mengecek permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+      // End
+
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
       if (cache) {
@@ -300,6 +326,18 @@ class BranchController implements IController {
           });
 
           if (!validPermission) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Data tidak ditemukan!" });
+          }
+        }
+
+        if (branchPermission.length > 0) {
+          const validBranchPermission = branchPermission.find((item) => {
+            return item.toString() === isCache.createdBy._id.toString();
+          });
+
+          if (!validBranchPermission) {
             return res
               .status(404)
               .json({ status: 404, msg: "Data tidak ditemukan!" });
@@ -330,8 +368,19 @@ class BranchController implements IController {
           workflow: buttonActions,
         });
       }
+
+      let pipeline: any = [{ _id: req.params.id }];
+
+      if (userPermission.length > 0) {
+        pipeline.push({ createdBy: { $in: userPermission } });
+      }
+
+      if (branchPermission.length > 0) {
+        pipeline.push({ _id: { $in: branchPermission } });
+      }
+
       const result: any = await Db.findOne({
-        $and: [{ _id: req.params.id }, { createdBy: { $in: userPermission } }],
+        $and: pipeline,
       }).populate("createdBy", "name");
 
       if (!result) {
@@ -387,15 +436,29 @@ class BranchController implements IController {
         selPermissionType.BRANCH
       );
       // End
+      // Mengecek permission user
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+      // End
+      let pipeline: any[] = [
+        {
+          _id: req.params.id,
+        },
+      ];
+
+      if (userPermission.length > 0) {
+        pipeline.push({ createdBy: { $in: userPermission } });
+      }
+
+      if (branchPermission.length > 0) {
+        pipeline.push({ _id: { $in: branchPermission } });
+      }
+
       const result: any = await Db.findOne({
-        $and: [
-          {
-            _id: req.params.id,
-          },
-          {
-            createdBy: { $in: userPermission },
-          },
-        ],
+        $and: pipeline,
       }).populate("createdBy", "name");
 
       if (result) {
@@ -466,16 +529,29 @@ class BranchController implements IController {
         selPermissionType.BRANCH
       );
       // End
-      const result = await Db.findOne({
-        $and: [
-          {
-            _id: req.params.id,
-          },
-          {
-            createdBy: { $in: userPermission },
-          },
-        ],
-      });
+      // Mengecek permission user
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+      // End
+
+      let pipeline: any[] = [
+        {
+          _id: req.params.id,
+        },
+      ];
+
+      if (userPermission.length > 0) {
+        pipeline.push({ createdBy: { $in: userPermission } });
+      }
+
+      if (branchPermission.length > 0) {
+        pipeline.push({ _id: { $in: branchPermission } });
+      }
+
+      const result = await Db.findOne({ $and: pipeline });
 
       if (!result) {
         return res

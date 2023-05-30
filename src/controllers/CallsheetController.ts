@@ -29,7 +29,44 @@ import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "callsheet";
 
+interface hasilCustomerI {
+  status: boolean;
+  data: any[];
+}
+
 class CallsheetController implements IController {
+  protected cekValidCustomer = async (
+    userId: string,
+    GroupPermission: any[],
+    branchPermission: any[]
+  ): Promise<hasilCustomerI> => {
+    if (branchPermission.length > 0 || GroupPermission.length > 0) {
+      let cusPipeline: any[] = [];
+      if (branchPermission.length > 0) {
+        cusPipeline.push({ branch: { $in: branchPermission } });
+      }
+      if (GroupPermission.length > 0) {
+        cusPipeline.push({ customerGroup: { $in: GroupPermission } });
+      }
+
+      const cekCustomer = await CustomerModel.find(
+        { $and: cusPipeline },
+        { _id: 1 }
+      );
+
+      if (cekCustomer.length === 0) {
+        return { status: false, data: [] };
+      }
+
+      const finalValidCustomer = cekCustomer.map((item) => {
+        return item._id;
+      });
+
+      return { status: true, data: finalValidCustomer };
+    }
+    return { status: false, data: [] };
+  };
+
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -672,7 +709,6 @@ class CallsheetController implements IController {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
-        console.log(isCache);
 
         if (userPermission.length > 0) {
           const cekValid = userPermission.find(
@@ -883,32 +919,21 @@ class CallsheetController implements IController {
       // End
 
       if (branchPermission.length > 0 || GroupPermission.length > 0) {
-        let cusPipeline: any[] = [];
-        if (branchPermission.length > 0) {
-          cusPipeline.push({ branch: { $in: branchPermission } });
-        }
-        if (GroupPermission.length > 0) {
-          cusPipeline.push({ customerGroup: { $in: GroupPermission } });
-        }
-
-        const cekCustomer = await CustomerModel.find(
-          { $and: cusPipeline },
-          { _id: 1 }
+        const getCustomer = await this.cekValidCustomer(
+          req.userId,
+          GroupPermission,
+          branchPermission
         );
 
-        if (cekCustomer.length === 0) {
+        if (!getCustomer.status) {
           return res
             .status(404)
             .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
         }
 
-        const finalValidCustomer = cekCustomer.map((item) => {
-          return item._id;
-        });
-
         pipeline.unshift({
           $match: {
-            customer: { $in: finalValidCustomer },
+            customer: { $in: getCustomer.data },
           },
         });
       }
@@ -1004,8 +1029,80 @@ class CallsheetController implements IController {
     // End
 
     try {
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission user
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const GroupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      let pipeline: any[] = [];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipeline.unshift({
+          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (customerPermission.length > 0) {
+        pipeline.unshift({
+          customer: { $in: customerPermission },
+        });
+      }
+      // End
+
+      if (branchPermission.length > 0 || GroupPermission.length > 0) {
+        const getCustomer = await this.cekValidCustomer(
+          req.userId,
+          GroupPermission,
+          branchPermission
+        );
+
+        if (!getCustomer.status) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        }
+
+        pipeline.unshift({
+          customer: { $in: getCustomer.data },
+        });
+      }
+
+      pipeline.unshift({
+        _id: new ObjectId(req.params.id),
+      });
+
       const result: any = await Db.findOne({
-        _id: req.params.id,
+        $and: pipeline,
       })
         .populate("customer", "name")
         .populate("contact", "name")
@@ -1289,9 +1386,81 @@ class CallsheetController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission user
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const GroupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      let pipeline: any[] = [];
+
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipeline.unshift({
+          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (customerPermission.length > 0) {
+        pipeline.unshift({
+          customer: { $in: customerPermission },
+        });
+      }
+      // End
+
+      if (branchPermission.length > 0 || GroupPermission.length > 0) {
+        const getCustomer = await this.cekValidCustomer(
+          req.userId,
+          GroupPermission,
+          branchPermission
+        );
+
+        if (!getCustomer.status) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        }
+
+        pipeline.unshift({
+          customer: { $in: getCustomer.data },
+        });
+      }
+
+      pipeline.unshift({
+        _id: new ObjectId(req.params.id),
+      });
+
+      const getData: any = await Db.findOne({ $and: pipeline });
 
       if (!getData) {
         return res

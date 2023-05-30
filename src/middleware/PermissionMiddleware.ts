@@ -45,6 +45,8 @@ class PermissionMiddleware {
         },
       ],
     });
+
+    console.log(data);
     if (data.length > 0) {
       const isPemission = data.map((item: any) => {
         return item.value;

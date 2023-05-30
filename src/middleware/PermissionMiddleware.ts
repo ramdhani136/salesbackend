@@ -1,5 +1,6 @@
-import { PermissionModel } from "../models";
-const { ObjectId } = require("mongodb");
+import { all } from "axios";
+import { PermissionModel, UserGroupListModel } from "../models";
+import { ObjectId } from "mongodb";
 
 export enum selPermissionAllow {
   BRANCH = "branch",
@@ -27,26 +28,43 @@ export enum selPermissionType {
 }
 
 class PermissionMiddleware {
+  protected CompareObject = (objectId1: any, objectId2: any) => {
+    return objectId1.toString() === objectId2.toString();
+  };
+
+  protected CheckDuplicateObjectId = (data: ObjectId[]): ObjectId[] => {
+    const filter = data.filter((value, index, self) => {
+      return self.findIndex((obj) => this.CompareObject(obj, value)) === index;
+    });
+    return filter;
+  };
+
   public getPermission = async (
     userid: string,
     allow: selPermissionAllow,
     type: selPermissionType
   ): Promise<any[]> => {
+    let finalPermission: any[] = [];
+
     let data = await PermissionModel.find({
-      $or: [
-        { $and: [{ user: userid }, { allow: allow }, { allDoc: true }] },
+      $and: [
         {
-          $and: [
-            { user: userid },
-            { allow: allow },
-            { allDoc: false },
-            { doc: type },
+          $or: [
+            { $and: [{ user: userid }, { allow: allow }, { allDoc: true }] },
+            {
+              $and: [
+                { user: userid },
+                { allow: allow },
+                { allDoc: false },
+                { doc: type },
+              ],
+            },
           ],
         },
+        { status: "1" },
       ],
     });
 
-    console.log(data);
     if (data.length > 0) {
       const isPemission = data.map((item: any) => {
         return item.value;
@@ -60,9 +78,65 @@ class PermissionMiddleware {
           return new ObjectId(id);
         });
 
-      return uniqueData;
+      finalPermission = uniqueData;
     }
-    return [];
+
+    // Jika allow User
+    if (allow === "user") {
+      const userGroup = await PermissionModel.find(
+        {
+          $and: [
+            {
+              $or: [
+                {
+                  $and: [
+                    { user: userid },
+                    { allow: "usergroup" },
+                    { allDoc: true },
+                  ],
+                },
+                {
+                  $and: [
+                    { user: userid },
+                    { allow: "usergroup" },
+                    { allDoc: false },
+                    { doc: type },
+                  ],
+                },
+              ],
+            },
+            { status: "1" },
+          ],
+        },
+        { value: 1 }
+      );
+
+      if (userGroup.length > 0) {
+        const userGroupFil = userGroup.map((item) => {
+          return new ObjectId(item.value);
+        });
+        const getList = await UserGroupListModel.find(
+          {
+            userGroup: { $in: userGroupFil },
+          },
+          { user: 1 }
+        );
+
+        if (getList.length > 0) {
+          const userFrmUserGroup = getList.map((item) => {
+            return item.user;
+          });
+
+          const merg = [...finalPermission, ...userFrmUserGroup];
+
+          const uniqueData = this.CheckDuplicateObjectId(merg);
+          finalPermission = uniqueData;
+        }
+      }
+    }
+    // End
+    console.log(finalPermission);
+    return finalPermission;
   };
 }
 

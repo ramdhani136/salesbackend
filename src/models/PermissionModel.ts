@@ -10,7 +10,7 @@ const Permission = new mongoose.Schema(
     },
     allow: {
       type: String,
-      enum: ["branch", "user", "customer", "customergroup", "userGroup"],
+      enum: ["branch", "user", "customer", "customergroup", "usergroup"],
       require: true,
       index: 1,
     },
@@ -52,7 +52,7 @@ const Permission = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["0", "1", "2"],
+      enum: ["0", "1", "2","3"],
       default: "0",
       index: 1,
     },

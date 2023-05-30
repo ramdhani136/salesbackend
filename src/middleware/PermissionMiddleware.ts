@@ -1,5 +1,9 @@
 import { all } from "axios";
-import { PermissionModel, UserGroupListModel } from "../models";
+import {
+  CustomerGroupModel,
+  PermissionModel,
+  UserGroupListModel,
+} from "../models";
 import { ObjectId } from "mongodb";
 
 export enum selPermissionAllow {
@@ -137,10 +141,56 @@ class PermissionMiddleware {
     // End
 
     // Jika allow customerGroup
+    if (allow === "customergroup") {
+      const result: any = await CustomerGroupModel.aggregate([
+        {
+          $match: { _id: { $in: finalPermission } },
+        },
+        {
+          $project: {
+            parent: 1,
+          },
+        },
+        {
+          $graphLookup: {
+            from: "customergroups",
+            startWith: "$_id",
+            connectFromField: "_id",
+            connectToField: "parent._id",
+            as: "childs",
+            restrictSearchWithMatch: {},
+          },
+        },
+        {
+          $project: {
+            "childs._id": 1,
+          },
+        },
+      ]);
 
+      if (result.length > 0) {
+        let finalCG: any[] = [];
+        const isCGFil = result.map((item: any) => {
+          if (item.childs.length > 0) {
+            let getChild = item.childs.map((ic: any) => {
+              return ic._id;
+            });
+            finalCG = [...finalCG, ...getChild];
+          }
+          return item._id;
+        });
+
+        console.log(isCGFil);
+        console.log(finalCG);
+        const merg = [...isCGFil, ...finalCG];
+
+        const uniqueData = this.CheckDuplicateObjectId(merg);
+        console.log(uniqueData);
+      }
+    }
     // End
 
-    console.log(finalPermission);
+    // console.log(finalPermission);
     return finalPermission;
   };
 }

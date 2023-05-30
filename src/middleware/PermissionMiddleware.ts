@@ -187,7 +187,7 @@ class PermissionMiddleware {
       }
     }
     // End
-    console.log(finalPermission);
+
     return finalPermission;
   };
 }

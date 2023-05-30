@@ -281,10 +281,31 @@ class BranchController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
       if (cache) {
         const isCache = JSON.parse(cache);
+
+        if (userPermission.length > 0) {
+          const validPermission = userPermission.find((item) => {
+            return item.toString() === isCache.createdBy._id.toString();
+          });
+
+          if (!validPermission) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Data tidak ditemukan!" });
+          }
+        }
+
         const getHistory = await History.find(
           {
             $and: [
@@ -310,7 +331,7 @@ class BranchController implements IController {
         });
       }
       const result: any = await Db.findOne({
-        _id: req.params.id,
+        $and: [{ _id: req.params.id }, { createdBy: { $in: userPermission } }],
       }).populate("createdBy", "name");
 
       if (!result) {
@@ -359,8 +380,22 @@ class BranchController implements IController {
 
   update = async (req: Request | any, res: Response): Promise<any> => {
     try {
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
       const result: any = await Db.findOne({
-        _id: req.params.id,
+        $and: [
+          {
+            _id: req.params.id,
+          },
+          {
+            createdBy: { $in: userPermission },
+          },
+        ],
       }).populate("createdBy", "name");
 
       if (result) {
@@ -424,7 +459,23 @@ class BranchController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.findById(req.params.id);
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+      const result = await Db.findOne({
+        $and: [
+          {
+            _id: req.params.id,
+          },
+          {
+            createdBy: { $in: userPermission },
+          },
+        ],
+      });
 
       if (!result) {
         return res

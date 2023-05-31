@@ -1228,7 +1228,7 @@ class CallsheetNoteController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
@@ -1236,6 +1236,32 @@ class CallsheetNoteController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const callsheet: any = await CallsheetModel.findById(
+        getData.callsheet
+      ).populate("customer", "customerGroup branch");
+
+      if (callsheet) {
+        console.log(callsheet);
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: callsheet.createdBy,
+            branch: callsheet.customer.branch,
+            group: callsheet.customer.customerGroup,
+            customer: callsheet.customer._id,
+          },
+          selPermissionType.CALLSHEET
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

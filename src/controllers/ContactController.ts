@@ -486,37 +486,98 @@ class ContactController implements IController {
       //     workflow: buttonActions,
       //   });
       // }
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      })
-        .populate("createdBy", "name")
-        .populate("customer", "name branch customerGroup");
 
-      if (!result) {
+      const getData = await Db.aggregate([
+        {
+          $match: { _id: new ObjectId(req.params.id) },
+        },
+
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+            pipeline: [{ $project: { _id: 1, name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "customergroups",
+                  localField: "customerGroup",
+                  foreignField: "_id",
+                  as: "customerGroup",
+                  pipeline: [{ $project: { _id: 1, name: 1 } }],
+                },
+              },
+              {
+                $unwind: "$customerGroup",
+              },
+              {
+                $lookup: {
+                  from: "branches",
+                  localField: "branch",
+                  foreignField: "_id",
+                  as: "branch",
+                  pipeline: [{ $project: { _id: 1, name: 1 } }],
+                },
+              },
+              {
+                $unwind: "$branch",
+              },
+            ],
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $project: {
+            "customer.createdBy": 0,
+            "customer.status": 0,
+            "customer.workflowState": 0,
+            "customer.createdAt": 0,
+            "customer.updatedAt": 0,
+            "customer.__v": 0,
+          },
+        },
+      ]);
+
+      if (getData.length === 0) {
         return res
           .status(404)
           .json({ status: 404, msg: "Data tidak ditemukan!" });
       }
 
-      console.log(result);
+      const result = getData[0];
 
-      // const cekPermission = await cekValidPermission(
-      //   req.userId,
-      //   {
-      //     user: result.createdBy._id,
-      //     branch: result.branch._id,
-      //     group: result.customerGroup._id,
-      //     customer: result.customer._id,
-      //   },
-      //   selPermissionType.CALLSHEET
-      // );
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.createdBy._id,
+          branch: result.customer.branch._id,
+          group: result.customer.customerGroup._id,
+          customer: result.customer._id,
+        },
+        selPermissionType.CONTACT
+      );
 
-      // if (!cekPermission) {
-      //   return res.status(403).json({
-      //     status: 403,
-      //     msg: "Anda tidak mempunyai akses untuk dok ini!",
-      //   });
-      // }
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

@@ -572,7 +572,9 @@ class CallsheetNoteController implements IController {
           .json({ status: 400, msg: "Error, callsheetId wajib diisi!" });
       }
 
-      const callsheet = await CallsheetModel.findById(req.body.callsheetId);
+      const callsheet: any = await CallsheetModel.findById(
+        req.body.callsheetId
+      ).populate("customer", "customerGroup branch");
 
       if (!callsheet) {
         return res
@@ -584,6 +586,24 @@ class CallsheetNoteController implements IController {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, callsheet bukan draft!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: callsheet.createdBy,
+          branch: callsheet.customer.branch,
+          group: callsheet.customer.customerGroup,
+          customer: callsheet.customer._id,
+        },
+        selPermissionType.CALLSHEET
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       req.body.callsheet = callsheet._id;

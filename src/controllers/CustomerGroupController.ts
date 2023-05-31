@@ -105,6 +105,20 @@ class CustomerGroupController implements IController {
         selPermissionType.CUSTOMERGROUP
       );
       // End
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+      // Mengambil rincian permission customerGroup
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
 
       if (!isFilter.status) {
         return res
@@ -122,9 +136,7 @@ class CustomerGroupController implements IController {
             as: "branch",
           },
         },
-        // {
-        //   $unwind: "$branch",
-        // },
+
         {
           $lookup: {
             from: "users",
@@ -144,7 +156,7 @@ class CustomerGroupController implements IController {
         },
       ];
 
-      // // Menambahkan filter berdasarkan permission user
+      // Menambahkan filter berdasarkan permission user
       if (userPermission.length > 0) {
         pipelineTotal.unshift({
           $match: {
@@ -152,7 +164,27 @@ class CustomerGroupController implements IController {
           },
         });
       }
-      // // End
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (branchPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            branch: { $in: branchPermission },
+          },
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (groupPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            _id: { $in: groupPermission },
+          },
+        });
+      }
+      // End
 
       const totalData = await Db.aggregate(pipelineTotal);
 
@@ -207,6 +239,26 @@ class CustomerGroupController implements IController {
         pipelineResult.unshift({
           $match: {
             createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (branchPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            branch: { $in: branchPermission },
+          },
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission user
+      if (groupPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            _id: { $in: groupPermission },
           },
         });
       }

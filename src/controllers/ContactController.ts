@@ -99,6 +99,8 @@ class ContactController implements IController {
             "phone",
             "customer._id",
             "customer.name",
+            "customer.customerGroup",
+            "customer.branch",
             "createdBy._id",
             "createdBy.name",
             "status",
@@ -217,6 +219,32 @@ class ContactController implements IController {
             localField: "customer",
             foreignField: "_id",
             as: "customer",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "customergroups",
+                  localField: "customerGroup",
+                  foreignField: "_id",
+                  as: "customerGroup",
+                  pipeline: [{ $project: { _id: 1, name: 1 } }],
+                },
+              },
+              {
+                $unwind: "$customerGroup",
+              },
+              {
+                $lookup: {
+                  from: "branches",
+                  localField: "branch",
+                  foreignField: "_id",
+                  as: "branch",
+                  pipeline: [{ $project: { _id: 1, name: 1 } }],
+                },
+              },
+              {
+                $unwind: "$branch",
+              },
+            ],
           },
         },
         {

@@ -730,83 +730,81 @@ class CallsheetNoteController implements IController {
       );
       // End
 
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        console.log(isCache);
+      //   if (userPermission.length > 0) {
+      //     const cekValid = userPermission.find(
+      //       (item) =>
+      //         item.toString() === isCache.callsheet.createdBy._id.toString()
+      //     );
 
-        if (userPermission.length > 0) {
-          const cekValid = userPermission.find(
-            (item) =>
-              item.toString() === isCache.callsheet.createdBy._id.toString()
-          );
+      //     if (!cekValid) {
+      //       return res
+      //         .status(404)
+      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      //     }
+      //   }
 
-          if (!cekValid) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-          }
-        }
+      //   if (customerPermission.length > 0) {
+      //     const cekValid = customerPermission.find(
+      //       (item) =>
+      //         item.toString() === isCache.callsheet.customer._id.toString()
+      //     );
 
-        if (customerPermission.length > 0) {
-          const cekValid = customerPermission.find(
-            (item) =>
-              item.toString() === isCache.callsheet.customer._id.toString()
-          );
+      //     if (!cekValid) {
+      //       return res
+      //         .status(404)
+      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      //     }
+      //   }
 
-          if (!cekValid) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-          }
-        }
+      //   if (branchPermission.length > 0) {
+      //     const cekValid = branchPermission.find(
+      //       (item) =>
+      //         item.toString() === isCache.callsheet.branch._id.toString()
+      //     );
 
-        if (branchPermission.length > 0) {
-          const cekValid = branchPermission.find(
-            (item) =>
-              item.toString() === isCache.callsheet.branch._id.toString()
-          );
+      //     if (!cekValid) {
+      //       return res
+      //         .status(404)
+      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      //     }
+      //   }
 
-          if (!cekValid) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-          }
-        }
+      //   if (groupPermission.length > 0) {
+      //     const cekValid = groupPermission.find(
+      //       (item) =>
+      //         item.toString() === isCache.callsheet.customerGroup._id.toString()
+      //     );
 
-        if (groupPermission.length > 0) {
-          const cekValid = groupPermission.find(
-            (item) =>
-              item.toString() === isCache.callsheet.customerGroup._id.toString()
-          );
+      //     if (!cekValid) {
+      //       return res
+      //         .status(404)
+      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      //     }
+      //   }
 
-          if (!cekValid) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-          }
-        }
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
-
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-        });
-      }
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //   });
+      // }
 
       const getData: any = await Db.aggregate([
         {
@@ -975,6 +973,56 @@ class CallsheetNoteController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      if (userPermission.length > 0) {
+        const cekValid = userPermission.find(
+          (item) =>
+            item.toString() === result.callsheet.createdBy._id.toString()
+        );
+
+        if (!cekValid) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        }
+      }
+
+      if (customerPermission.length > 0) {
+        const cekValid = customerPermission.find(
+          (item) => item.toString() === result.callsheet.customer._id.toString()
+        );
+
+        if (!cekValid) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        }
+      }
+
+      if (branchPermission.length > 0) {
+        const cekValid = branchPermission.find(
+          (item) => item.toString() === result.callsheet.branch._id.toString()
+        );
+
+        if (!cekValid) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        }
+      }
+
+      if (groupPermission.length > 0) {
+        const cekValid = groupPermission.find(
+          (item) =>
+            item.toString() === result.callsheet.customerGroup._id.toString()
+        );
+
+        if (!cekValid) {
+          return res
+            .status(404)
+            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        }
       }
 
       const getHistory = await History.find(

@@ -374,52 +374,52 @@ class CustomerGroupController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.createdBy._id,
-            branch: isCache.branch._id,
-            group: isCache._id,
-          },
-          selPermissionType.CUSTOMERGROUP
-        );
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.createdBy._id,
+      //       branch: isCache.branch._id,
+      //       group: isCache._id,
+      //     },
+      //     selPermissionType.CUSTOMERGROUP
+      //   );
 
-        if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
-        }
+      //   if (!cekPermission) {
+      //     return res.status(403).json({
+      //       status: 403,
+      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //     });
+      //   }
 
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
       const result: any = await Db.aggregate([
         {
           $match: { _id: new ObjectId(req.params.id) },
@@ -482,11 +482,25 @@ class CustomerGroupController implements IController {
 
       const data = result[0];
 
+      // Mengambil rincian permission user
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+
+      if (branchPermission.length > 0) {
+        const cekPermissionbranch = branchPermission.find((item) => {
+          console.log(item._id);
+          console.log(data.branch);
+        });
+      }
+
       const cekPermission = await cekValidPermission(
         req.userId,
         {
           user: data.createdBy._id,
-          branch: data.branch._id,
           group: data._id,
         },
         selPermissionType.CUSTOMERGROUP
@@ -693,15 +707,34 @@ class CustomerGroupController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
+      console.log(getData);
+
+      // const cekPermission = await cekValidPermission(
+      //   req.userId,
+      //   {
+      //     user: isCache.createdBy._id,
+      //     branch: isCache.branch._id,
+      //     group: isCache._id,
+      //   },
+      //   selPermissionType.CUSTOMERGROUP
+      // );
+
+      // if (!cekPermission) {
+      //   return res.status(403).json({
+      //     status: 403,
+      //     msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //   });
+      // }
+
       // if (getData.status === "1") {
       //   return res
       //     .status(404)
       //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
       // }
 
-      const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
-      return res.status(200).json({ status: 200, data: result });
+      // const result = await Db.deleteOne({ _id: req.params.id });
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
+      return res.status(200).json({ status: 200, data: "result" });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

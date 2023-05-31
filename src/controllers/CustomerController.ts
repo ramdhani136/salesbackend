@@ -99,7 +99,7 @@ class CustomerController implements IController {
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
-      const limit: number | string = parseInt(`${req.query.limit}`) || 0;
+      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
       let search: ISearch = {
@@ -128,6 +128,28 @@ class CustomerController implements IController {
       );
       // End
 
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CUSTOMER
+      );
+      // End
+      // Mengambil rincian permission customerGroup
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CUSTOMER
+      );
+      // End
+
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CUSTOMER
+      );
+      // End
+
       let pipelineTotal: any = [
         {
           $match: isFilter.data,
@@ -139,40 +161,6 @@ class CustomerController implements IController {
           $count: "total_orders",
         },
       ];
-
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineTotal.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
-
-      // Menambahkan filter nearby gps
-      if (nearby.length === 3) {
-        const targetLatitude = parseFloat(`${nearby[0]}`);
-        const targetLongitude = parseFloat(`${nearby[1]}`);
-        const maxDistance = parseInt(`${nearby[2]}`);
-        pipelineTotal.unshift({
-          $geoNear: {
-            near: {
-              type: "Point",
-              coordinates: [targetLongitude, targetLatitude],
-            },
-            distanceField: "distance",
-            maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
-            spherical: true,
-          },
-        });
-      }
-
-      // End
-
-      const totalData = await Db.aggregate(pipelineTotal);
-
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [
         {
@@ -223,19 +211,93 @@ class CustomerController implements IController {
         },
       ];
 
-      // Menambahkan limit ketika terdapat limit
-      if (limit > 0) {
-        pipelineResult.splice(2, 0, { $limit: limit });
+      // Menambahkan filter berdasarkan permission branch
+      if (branchPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            branch: { $in: branchPermission },
+          },
+        });
+
+        pipelineResult.unshift({
+          $match: {
+            branch: { $in: branchPermission },
+          },
+        });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission branch
+      if (groupPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            customerGroup: { $in: groupPermission },
+          },
+        });
+
+        pipelineResult.unshift({
+          $match: {
+            customerGroup: { $in: groupPermission },
+          },
+        });
       }
       // End
 
       // Menambahkan filter berdasarkan permission user
       if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+
         pipelineResult.unshift({
           $match: {
             createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
           },
         });
+      }
+      // End
+
+      // Menambahkan filter berdasarkan permission branch
+      if (customerPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            _id: { $in: customerPermission },
+          },
+        });
+
+        pipelineResult.unshift({
+          $match: {
+            _id: { $in: customerPermission },
+          },
+        });
+      }
+      // End
+
+      // Menambahkan filter nearby gps
+      if (nearby.length === 3) {
+        const targetLatitude = parseFloat(`${nearby[0]}`);
+        const targetLongitude = parseFloat(`${nearby[1]}`);
+        const maxDistance = parseInt(`${nearby[2]}`);
+        pipelineTotal.unshift({
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [targetLongitude, targetLatitude],
+            },
+            distanceField: "distance",
+            maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
+            spherical: true,
+          },
+        });
+      }
+
+      // End
+
+      // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.splice(2, 0, { $limit: limit });
       }
       // End
 
@@ -258,6 +320,10 @@ class CustomerController implements IController {
       }
 
       // End
+
+      const totalData = await Db.aggregate(pipelineTotal);
+
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {

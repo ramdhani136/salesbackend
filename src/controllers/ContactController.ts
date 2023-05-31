@@ -389,7 +389,7 @@ class ContactController implements IController {
         {
           $and: [{ _id: req.body.customer }],
         },
-        ["name", "customerGroup", "status"]
+        ["name", "customerGroup", "branch", "status", "createdBy"]
       );
 
       if (!cekCustomer) {
@@ -406,6 +406,23 @@ class ContactController implements IController {
         });
       }
       // End
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          branch: cekCustomer.branch,
+          group: cekCustomer.customerGroup,
+          customer: cekCustomer._id,
+        },
+        selPermissionType.CONTACT
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk customer ini!",
+        });
+      }
 
       // set CreatedAt
       req.body.createdBy = req.userId;
@@ -458,34 +475,52 @@ class ContactController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.createdBy._id,
+            branch: isCache.customer.branch._id,
+            group: isCache.customer.customerGroup._id,
+            customer: isCache.customer._id,
+          },
+          selPermissionType.CONTACT
+        );
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
 
       const getData = await Db.aggregate([
         {

@@ -651,14 +651,6 @@ class CustomerGroupController implements IController {
             .json({ status: 400, msg: "Error, parent tidak aktif!" });
         }
 
-        // // Cek branch harus sama dengan parent
-        // if (`${cekParent.branch}` !== `${new ObjectId(req.body.branch)}`) {
-        //   return res.status(400).json({
-        //     status: 400,
-        //     msg: "Error, branch harus sama dengan parent!",
-        //   });
-        // }
-        // // End
         req.body.parent = {
           _id: new ObjectId(req.body.parent),
           name: cekParent.name,

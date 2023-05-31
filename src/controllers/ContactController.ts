@@ -129,6 +129,30 @@ class ContactController implements IController {
       );
       // End
 
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CONTACT
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CONTACT
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CONTACT
+      );
+      // End
+
       if (!isFilter.status) {
         return res
           .status(400)
@@ -158,9 +182,16 @@ class ContactController implements IController {
       }
       // End
 
-      const totalData = await Db.aggregate(pipelineTotal);
+      // Menambahkan filter berdasarkan permission user
 
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
+      if (customerPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            customer: { $in: customerPermission },
+          },
+        });
+      }
+      // End
 
       let pipelineResult: any = [
         {
@@ -222,6 +253,64 @@ class ContactController implements IController {
       }
       // End
 
+      // Menambahkan filter berdasarkan permission user
+      if (customerPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            customer: { $in: customerPermission },
+          },
+        });
+      }
+      // End
+
+      // Cek jika terdapat permission branch dan customergroup
+
+      if (groupPermission.length > 0 || branchPermission.length > 0) {
+        let pipelineCustomer: any[] = [];
+
+        if (groupPermission.length > 0) {
+          pipelineCustomer.push({
+            customerGroup: {
+              $in: groupPermission,
+            },
+          });
+        }
+
+        if (branchPermission.length > 0) {
+          pipelineCustomer.push({
+            branch: {
+              $in: branchPermission,
+            },
+          });
+        }
+
+        const validCustomer = await CustomerModel.find(
+          {
+            $and: pipelineCustomer,
+          },
+          { _id: 1 }
+        );
+
+        const finalFilterCustomer = validCustomer.map((item) => {
+          return item._id;
+        });
+
+        pipelineResult.unshift({
+          $match: {
+            customer: { $in: finalFilterCustomer },
+          },
+        });
+
+        pipelineTotal.unshift({
+          $match: {
+            customer: { $in: finalFilterCustomer },
+          },
+        });
+      }
+      //End
+
+      const totalData = await Db.aggregate(pipelineTotal);
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {

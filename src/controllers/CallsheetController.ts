@@ -34,83 +34,58 @@ interface hasilCustomerI {
   data: any[];
 }
 
+interface dataI {
+  user?: any;
+  customer?: any;
+  branch?: any;
+  group?: any;
+}
+
 class CallsheetController implements IController {
   protected cekValidPermission = async (
     userId: string,
-    data: any
+    dataCheck: dataI,
+    doc: selPermissionType
   ): Promise<boolean> => {
-    // Mengambil rincian permission user
-    const userPermission = await PermissionMiddleware.getPermission(
-      userId,
-      selPermissionAllow.USER,
-      selPermissionType.CALLSHEET
-    );
-    // End
+    const ListData: any = [
+      {
+        documentCheck: selPermissionAllow.USER,
+        data: dataCheck.user,
+      },
+      {
+        documentCheck: selPermissionAllow.BRANCH,
+        data: dataCheck.branch,
+      },
+      {
+        documentCheck: selPermissionAllow.CUSTOMER,
+        data: dataCheck.customer,
+      },
+      {
+        documentCheck: selPermissionAllow.CUSTOMERGROUP,
+        data: dataCheck.group,
+      },
+    ];
 
-    // Mengambil rincian permission user
-    const customerPermission = await PermissionMiddleware.getPermission(
-      userId,
-      selPermissionAllow.CUSTOMER,
-      selPermissionType.CALLSHEET
-    );
-    // End
+    for (const item of ListData) {
+      // Mengambil rincian permission user
+      if (item.data) {
+        const checkData = await PermissionMiddleware.getPermission(
+          userId,
+          item.documentCheck,
+          doc
+        );
 
-    // Mengambil rincian permission group
-    const GroupPermission = await PermissionMiddleware.getPermission(
-      userId,
-      selPermissionAllow.CUSTOMERGROUP,
-      selPermissionType.CALLSHEET
-    );
-    // End
+        if (checkData.length > 0) {
+          const cekValid = checkData.find(
+            (i) => i.toString() === item.data.toString()
+          );
 
-    // Mengambil rincian permission group
-    const branchPermission = await PermissionMiddleware.getPermission(
-      userId,
-      selPermissionAllow.BRANCH,
-      selPermissionType.CALLSHEET
-    );
-    // End
-
-    if (userPermission.length > 0) {
-      const cekValid = userPermission.find(
-        (item) => item.toString() === data.createdBy._id.toString()
-      );
-
-      if (!cekValid) {
-        return false;
-      }
-    }
-
-    if (customerPermission.length > 0) {
-      const cekValid = customerPermission.find(
-        (item) => item.toString() === data.customer._id.toString()
-      );
-
-      if (!cekValid) {
-        return false;
-      }
-    }
-
-    if (branchPermission.length > 0) {
-      const cekValid = branchPermission.find(
-        (item) => item.toString() === data.branch._id.toString()
-      );
-
-      if (!cekValid) {
-        return false;
-      }
-    }
-
-    if (GroupPermission.length > 0) {
-      const cekValid = GroupPermission.find(
-        (item) => item.toString() === data.customerGroup._id.toString()
-      );
-
-      if (!cekValid) {
-        if (!cekValid) {
-          return false;
+          if (!cekValid) {
+            return false;
+          }
         }
       }
+      // End
     }
 
     return true;
@@ -760,7 +735,13 @@ class CallsheetController implements IController {
 
         const cekPermission = await this.cekValidPermission(
           req.userId,
-          isCache
+          {
+            user: isCache.createdBy._id,
+            branch: isCache.branch._id,
+            group: isCache.customerGroup._id,
+            customer: isCache.customer._id,
+          },
+          selPermissionType.CALLSHEET
         );
 
         if (!cekPermission) {
@@ -926,7 +907,16 @@ class CallsheetController implements IController {
 
       const result = getData[0];
 
-      const cekPermission = await this.cekValidPermission(req.userId, result);
+      const cekPermission = await this.cekValidPermission(
+        req.userId,
+        {
+          user: result.createdBy._id,
+          branch: result.branch._id,
+          group: result.customerGroup._id,
+          customer: result.customer._id,
+        },
+        selPermissionType.CALLSHEET
+      );
 
       if (!cekPermission) {
         return res.status(403).json({

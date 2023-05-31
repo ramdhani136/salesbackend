@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { BranchModel, CustomerGroupModel as Db, History } from "../models";
@@ -413,6 +413,7 @@ class CustomerGroupController implements IController {
             localField: "branch",
             foreignField: "_id",
             as: "branch",
+            pipeline: [{ $project: { _id: 1, name: 1 } }],
           },
         },
 
@@ -422,6 +423,7 @@ class CustomerGroupController implements IController {
             localField: "createdBy",
             foreignField: "_id",
             as: "createdBy",
+            pipeline: [{ $project: { _id: 1, name: 1 } }],
           },
         },
         {
@@ -434,9 +436,6 @@ class CustomerGroupController implements IController {
             connectFromField: "_id",
             connectToField: "parent._id",
             as: "childs",
-            restrictSearchWithMatch: {
-              // branch: { $in: [new ObjectId("646c353c69a4a9f161e32761")] },
-            },
           },
         },
 
@@ -444,12 +443,10 @@ class CustomerGroupController implements IController {
           $project: {
             name: 1,
             parent: 1,
-            "branch._id": 1,
-            "branch.name": 1,
+            branch: 1,
             status: 1,
             workflowState: 1,
-            "createdBy._id": 1,
-            "createdBy.name": 1,
+            createdBy: 1,
             childs: {
               _id: 1,
               name: 1,
@@ -459,15 +456,30 @@ class CustomerGroupController implements IController {
         },
       ]);
 
-      let data: any = {};
-      if (result.length > 0) {
-        data = result[0];
-      } else {
+      if (result.length === 0) {
         return res
           .status(404)
           .json({ status: 404, msg: "Data tidak ditemukan!" });
       }
 
+      const data = result[0];
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: data.createdBy._id,
+          branch: data.branch._id,
+          group: data._id,
+        },
+        selPermissionType.CUSTOMERGROUP
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,

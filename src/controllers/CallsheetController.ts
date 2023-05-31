@@ -6,6 +6,7 @@ import {
   FilterQuery,
   HapusKarakter,
   PaddyData,
+  cekValidPermission,
 } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
@@ -29,67 +30,62 @@ import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "callsheet";
 
-interface hasilCustomerI {
-  status: boolean;
-  data: any[];
-}
-
-interface dataI {
-  user?: any;
-  customer?: any;
-  branch?: any;
-  group?: any;
-}
+// interface dataI {
+//   user?: any;
+//   customer?: any;
+//   branch?: any;
+//   group?: any;
+// }
 
 class CallsheetController implements IController {
-  protected cekValidPermission = async (
-    userId: string,
-    dataCheck: dataI,
-    doc: selPermissionType
-  ): Promise<boolean> => {
-    const ListData: any = [
-      {
-        documentCheck: selPermissionAllow.USER,
-        data: dataCheck.user,
-      },
-      {
-        documentCheck: selPermissionAllow.BRANCH,
-        data: dataCheck.branch,
-      },
-      {
-        documentCheck: selPermissionAllow.CUSTOMER,
-        data: dataCheck.customer,
-      },
-      {
-        documentCheck: selPermissionAllow.CUSTOMERGROUP,
-        data: dataCheck.group,
-      },
-    ];
+  // protected cekValidPermission = async (
+  //   userId: string,
+  //   dataCheck: dataI,
+  //   doc: selPermissionType
+  // ): Promise<boolean> => {
+  //   const ListData: any = [
+  //     {
+  //       documentCheck: selPermissionAllow.USER,
+  //       data: dataCheck.user,
+  //     },
+  //     {
+  //       documentCheck: selPermissionAllow.BRANCH,
+  //       data: dataCheck.branch,
+  //     },
+  //     {
+  //       documentCheck: selPermissionAllow.CUSTOMER,
+  //       data: dataCheck.customer,
+  //     },
+  //     {
+  //       documentCheck: selPermissionAllow.CUSTOMERGROUP,
+  //       data: dataCheck.group,
+  //     },
+  //   ];
 
-    for (const item of ListData) {
-      // Mengambil rincian permission user
-      if (item.data) {
-        const checkData = await PermissionMiddleware.getPermission(
-          userId,
-          item.documentCheck,
-          doc
-        );
+  //   for (const item of ListData) {
+  //     // Mengambil rincian permission user
+  //     if (item.data) {
+  //       const checkData = await PermissionMiddleware.getPermission(
+  //         userId,
+  //         item.documentCheck,
+  //         doc
+  //       );
 
-        if (checkData.length > 0) {
-          const cekValid = checkData.find(
-            (i) => i.toString() === item.data.toString()
-          );
+  //       if (checkData.length > 0) {
+  //         const cekValid = checkData.find(
+  //           (i) => i.toString() === item.data.toString()
+  //         );
 
-          if (!cekValid) {
-            return false;
-          }
-        }
-      }
-      // End
-    }
+  //         if (!cekValid) {
+  //           return false;
+  //         }
+  //       }
+  //     }
+  //     // End
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
 
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
@@ -702,7 +698,7 @@ class CallsheetController implements IController {
       if (cache) {
         const isCache = JSON.parse(cache);
 
-        const cekPermission = await this.cekValidPermission(
+        const cekPermission = await cekValidPermission(
           req.userId,
           {
             user: isCache.createdBy._id,
@@ -876,7 +872,7 @@ class CallsheetController implements IController {
 
       const result = getData[0];
 
-      const cekPermission = await this.cekValidPermission(
+      const cekPermission = await cekValidPermission(
         req.userId,
         {
           user: result.createdBy._id,
@@ -980,7 +976,7 @@ class CallsheetController implements IController {
         .populate("contact", "name")
         .populate("createdBy", "name");
 
-      const cekPermission = await this.cekValidPermission(
+      const cekPermission = await cekValidPermission(
         req.userId,
         {
           user: getDataPermit.createdBy,
@@ -1301,7 +1297,7 @@ class CallsheetController implements IController {
           .json({ status: 404, msg: "Error, status dokumen aktif!" });
       }
 
-      const cekPermission = await this.cekValidPermission(
+      const cekPermission = await cekValidPermission(
         req.userId,
         {
           user: getData.createdBy,

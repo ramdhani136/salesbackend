@@ -5,6 +5,7 @@ import PaddyData from "./PaddyData.ts";
 import FilterKata from "./FilterKata";
 import CekKarakterSama from "./CekKarakterSama";
 import HapusKarakter from "./HapusKarakter";
+import { cekValidPermission } from "./CekValidPermissionController";
 
 export {
   FilterQuery,
@@ -13,5 +14,6 @@ export {
   PaddyData,
   FilterKata,
   CekKarakterSama,
-  HapusKarakter
+  HapusKarakter,
+  cekValidPermission
 };

@@ -658,11 +658,33 @@ class ContactController implements IController {
     }
     // End
     try {
-      const result: any = await Db.findOne({
+      const prev: any = await Db.findOne({
         _id: req.params.id,
-      });
+      }).populate("customer", "name");
 
-      if (result) {
+      if (prev) {
+        const validPermission: any = await Db.findOne({
+          _id: req.params.id,
+        }).populate("customer", "customerGroup branch");
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: validPermission.createdBy,
+            branch: validPermission.customer.branch,
+            group: validPermission.customer.customerGroup,
+            customer: validPermission.customer._id,
+          },
+          selPermissionType.CONTACT
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
         // Cek duplicate
         if (req.body.name) {
           const duplc = await Db.findOne({
@@ -737,7 +759,7 @@ class ContactController implements IController {
               redisName,
               req.userId,
               req.body.nextState,
-              result.createdBy._id
+              prev.createdBy._id
             );
 
           if (checkedWorkflow.status) {
@@ -757,13 +779,79 @@ class ContactController implements IController {
           );
         }
 
-        const getData: any = await Db.findOne({
+        const nextResult: any = await Db.findOne({
           _id: req.params.id,
-        });
+        }).populate("customer", "name");
+
+        const resultData = await Db.aggregate([
+          {
+            $match: { _id: new ObjectId(req.params.id) },
+          },
+
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdBy",
+              pipeline: [{ $project: { _id: 1, name: 1 } }],
+            },
+          },
+          {
+            $unwind: "$createdBy",
+          },
+          {
+            $lookup: {
+              from: "customers",
+              localField: "customer",
+              foreignField: "_id",
+              as: "customer",
+              pipeline: [
+                {
+                  $lookup: {
+                    from: "customergroups",
+                    localField: "customerGroup",
+                    foreignField: "_id",
+                    as: "customerGroup",
+                    pipeline: [{ $project: { _id: 1, name: 1 } }],
+                  },
+                },
+                {
+                  $unwind: "$customerGroup",
+                },
+                {
+                  $lookup: {
+                    from: "branches",
+                    localField: "branch",
+                    foreignField: "_id",
+                    as: "branch",
+                    pipeline: [{ $project: { _id: 1, name: 1 } }],
+                  },
+                },
+                {
+                  $unwind: "$branch",
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$customer",
+          },
+          {
+            $project: {
+              "customer.createdBy": 0,
+              "customer.status": 0,
+              "customer.workflowState": 0,
+              "customer.createdAt": 0,
+              "customer.updatedAt": 0,
+              "customer.__v": 0,
+            },
+          },
+        ]);
 
         await Redis.client.set(
           `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
+          JSON.stringify(resultData[0]),
           {
             EX: 30,
           }
@@ -771,14 +859,14 @@ class ContactController implements IController {
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
-          result,
-          getData,
+          prev,
+          nextResult,
           req.user,
           req.userId,
           redisName
         );
 
-        return res.status(200).json({ status: 200, data: getData });
+        return res.status(200).json({ status: 200, data: resultData[0] });
         // End
       } else {
         return res
@@ -790,14 +878,34 @@ class ContactController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne({ _id: req.params.id }).populate(
+        "customer",
+        "status customerGroup branch"
+      );
 
       if (!getData) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          branch: getData.customer.branch,
+          group: getData.customer.customerGroup,
+          customer: getData.customer._id,
+        },
+        selPermissionType.CONTACT
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       // if (getData.status === "1") {

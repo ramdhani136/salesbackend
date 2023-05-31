@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { CustomerModel, ContactModel as Db, History } from "../models";
@@ -430,45 +430,65 @@ class ContactController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
         .populate("createdBy", "name")
-        .populate("customer", ["name", "branch"]);
+        .populate("customer", "name branch customerGroup");
 
       if (!result) {
         return res
           .status(404)
           .json({ status: 404, msg: "Data tidak ditemukan!" });
       }
+
+      console.log(result);
+
+      // const cekPermission = await cekValidPermission(
+      //   req.userId,
+      //   {
+      //     user: result.createdBy._id,
+      //     branch: result.branch._id,
+      //     group: result.customerGroup._id,
+      //     customer: result.customer._id,
+      //   },
+      //   selPermissionType.CALLSHEET
+      // );
+
+      // if (!cekPermission) {
+      //   return res.status(403).json({
+      //     status: 403,
+      //     msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //   });
+      // }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

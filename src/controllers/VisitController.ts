@@ -38,91 +38,91 @@ class VistController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias:"Id",
+        alias: "Id",
         name: "_id",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"Name",
+        alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },
       {
-        alias:"Type",
+        alias: "Type",
         name: "type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },
-      
+
       {
-        alias:"CheckInAt",
+        alias: "CheckInAt",
         name: "checkIn.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
-        alias:"ChecOutAt",
+        alias: "ChecOutAt",
         name: "checkOut.createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
-        alias:"ScheduleList",
+        alias: "ScheduleList",
         name: "schedulelist",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"Contact",
+        alias: "Contact",
         name: "contact",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"Customer",
+        alias: "Customer",
         name: "customer",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"CustomerType",
+        alias: "CustomerType",
         name: "customer.type",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"CustomerGroup",
+        alias: "CustomerGroup",
         name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"Branch",
+        alias: "Branch",
         name: "customer.branch",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-          alias:"CreatedBy",
+        alias: "CreatedBy",
         name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"Status",
+        alias: "Status",
         name: "status",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },
       {
-        alias:"WorkflowState",
+        alias: "WorkflowState",
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
@@ -130,14 +130,14 @@ class VistController implements IController {
       },
 
       {
-        alias:'UpdatedAt',
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
-        alias:"CreatedAt",
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -198,6 +198,30 @@ class VistController implements IController {
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
+        selPermissionType.VISIT
+      );
+      // End
+
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.VISIT
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.VISIT
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
         selPermissionType.VISIT
       );
       // End
@@ -347,7 +371,12 @@ class VistController implements IController {
           return newItem;
         });
 
-      if (customerFIlter.length > 0 || req.query.search) {
+      if (
+        customerFIlter.length > 0 ||
+        req.query.search ||
+        branchPermission.length > 0 ||
+        groupPermission.length > 0
+      ) {
         let search: ISearch = {
           filter: ["name"],
           value: req.query.search || "",
@@ -359,7 +388,17 @@ class VistController implements IController {
           ["_id", "customerGroup", "branch"]
         );
 
-        const customerData = await CustomerModel.find(validCustomer.data, [
+        let pipeline: any = [validCustomer.data];
+
+        if (branchPermission.length > 0) {
+          pipeline.unshift({ branch: { $in: branchPermission } });
+        }
+
+        if (groupPermission.length > 0) {
+          pipeline.unshift({ customerGroup: { $in: groupPermission } });
+        }
+
+        const customerData = await CustomerModel.find({ $and: pipeline }, [
           "_id",
         ]);
 
@@ -383,6 +422,20 @@ class VistController implements IController {
             msg: "Data Not found!",
           });
         }
+      }
+
+      // End
+
+      // Cek permission customer
+      if (customerPermission.length > 0) {
+        pipeline.unshift({
+          $match: {
+            customer: { $in: customerPermission },
+          },
+        });
+        pipelineTotal.unshift({
+          customer: { $in: customerPermission },
+        });
       }
 
       // End

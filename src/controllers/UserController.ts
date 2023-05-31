@@ -21,6 +21,11 @@ import fs from "fs";
 
 import WorkflowController from "./WorkflowController";
 import { ObjectId } from "mongodb";
+import { PermissionMiddleware } from "../middleware";
+import {
+  selPermissionAllow,
+  selPermissionType,
+} from "../middleware/PermissionMiddleware";
 
 class UserController implements IController {
   protected prosesUpload = (req: Request | any, name: string) => {
@@ -45,7 +50,7 @@ class UserController implements IController {
       });
   };
 
-  index = async (req: Request, res: Response): Promise<Response> => {
+  index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
         alias: "Id",
@@ -145,8 +150,24 @@ class UserController implements IController {
       }
       // End
 
-      const getAll = await User.find(isFilter.data).count();
-      const users = await User.find(isFilter.data, setField)
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.USER
+      );
+      // End
+
+      let pipeline: any = [isFilter.data];
+
+      if (userPermission.length > 0) {
+        pipeline.push({
+          _id: { $in: userPermission.map((id) => new ObjectId(id)) },
+        });
+      }
+
+      const getAll = await User.find({ $and: pipeline }).count();
+      const users = await User.find({ $and: pipeline }, setField)
         .skip(page * limit - limit)
         .limit(limit)
         .sort(order_by);

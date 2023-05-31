@@ -994,76 +994,15 @@ class CallsheetController implements IController {
     // End
 
     try {
-      // Mengambil rincian permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.CALLSHEET
-      );
-      // End
-
-      // Mengambil rincian permission user
-      const customerPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.CUSTOMER,
-        selPermissionType.CALLSHEET
-      );
-      // End
-
-      // Mengambil rincian permission group
-      const GroupPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.CUSTOMERGROUP,
-        selPermissionType.CALLSHEET
-      );
-      // End
-
-      // Mengambil rincian permission group
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.CALLSHEET
-      );
-      // End
-
       let pipeline: any[] = [];
-
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipeline.unshift({
-          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-        });
-      }
-      // End
-
-      // Menambahkan filter berdasarkan permission user
-      if (customerPermission.length > 0) {
-        pipeline.unshift({
-          customer: { $in: customerPermission },
-        });
-      }
-      // End
-
-      if (branchPermission.length > 0 || GroupPermission.length > 0) {
-        const getCustomer = await this.cekValidCustomer(
-          GroupPermission,
-          branchPermission
-        );
-
-        if (!getCustomer.status) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-        }
-
-        pipeline.unshift({
-          customer: { $in: getCustomer.data },
-        });
-      }
 
       pipeline.unshift({
         _id: new ObjectId(req.params.id),
       });
+
+      const getDataPermit: any = await Db.findOne({
+        $and: pipeline,
+      }).populate("customer", "customerGroup branch");
 
       const result: any = await Db.findOne({
         $and: pipeline,
@@ -1071,6 +1010,24 @@ class CallsheetController implements IController {
         .populate("customer", "name")
         .populate("contact", "name")
         .populate("createdBy", "name");
+
+      const cekPermission = await this.cekValidPermission(
+        req.userId,
+        {
+          user: getDataPermit.createdBy,
+          branch: getDataPermit.customer.branch,
+          group: getDataPermit.customer.customerGroup,
+          customer: getDataPermit.customer._id,
+        },
+        selPermissionType.CALLSHEET
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
 
       if (result) {
         if (result.status !== "0") {
@@ -1163,15 +1120,15 @@ class CallsheetController implements IController {
             });
           }
 
-          if (contact.status !== "1") {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, kontak tidak aktif!",
-            });
-          }
+          // if (contact.status !== "1") {
+          //   return res.status(404).json({
+          //     status: 404,
+          //     msg: "Error, kontak tidak aktif!",
+          //   });
+          // }
 
-          // set contact
-          req.body.contact = contact._id;
+          // // set contact
+          // req.body.contact = contact._id;
         }
         // End
 

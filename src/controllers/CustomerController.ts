@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
@@ -428,6 +428,25 @@ class CustomerController implements IController {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.createdBy._id,
+            group: isCache.customerGroup._id,
+            customer: isCache._id,
+            branch: isCache.branch._id,
+          },
+          selPermissionType.CUSTOMER
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
         const getHistory = await History.find(
           {
             $and: [
@@ -464,6 +483,24 @@ class CustomerController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.createdBy._id,
+          group: result.customerGroup._id,
+          customer: result._id,
+          branch: result.branch._id,
+        },
+        selPermissionType.CUSTOMER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -529,6 +566,24 @@ class CustomerController implements IController {
       });
 
       if (result) {
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: result.createdBy,
+            group: result.customerGroup,
+            customer: result._id,
+            branch: result.branch,
+          },
+          selPermissionType.CUSTOMER
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
         //Mengecek jika Customer Group dirubah
         if (req.body.customerGroup) {
           if (typeof req.body.customerGroup !== "string") {
@@ -621,7 +676,7 @@ class CustomerController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
@@ -629,6 +684,24 @@ class CustomerController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.createdBy,
+          group: getData.customerGroup,
+          customer: getData._id,
+          branch: getData.branch,
+        },
+        selPermissionType.CUSTOMER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       // if (getData.status === "1") {

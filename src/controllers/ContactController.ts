@@ -894,6 +894,7 @@ class ContactController implements IController {
       const cekPermission = await cekValidPermission(
         req.userId,
         {
+          user: getData.createdBy,
           branch: getData.customer.branch,
           group: getData.customer.customerGroup,
           customer: getData.customer._id,

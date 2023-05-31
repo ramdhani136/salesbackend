@@ -904,10 +904,6 @@ class CallsheetController implements IController {
         _id: new ObjectId(req.params.id),
       });
 
-      const getDataPermit: any = await Db.findOne({
-        $and: pipeline,
-      }).populate("customer", "customerGroup branch");
-
       const result: any = await Db.findOne({
         $and: pipeline,
       })
@@ -915,57 +911,63 @@ class CallsheetController implements IController {
         .populate("contact", "name")
         .populate("createdBy", "name");
 
-      const cekPermission = await cekValidPermission(
-        req.userId,
-        {
-          user: getDataPermit.createdBy,
-          branch: getDataPermit.customer.branch,
-          group: getDataPermit.customer.customerGroup,
-          customer: getDataPermit.customer._id,
-        },
-        selPermissionType.CALLSHEET
-      );
-
-      if (!cekPermission) {
-        return res.status(403).json({
-          status: 403,
-          msg: "Anda tidak mempunyai akses untuk dok ini!",
-        });
+      if (result.status !== "0") {
+        if (req.body.type) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, Gagal merubah type, status dokumen bukan draft",
+          });
+        }
+        if (req.body.customer) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, Gagal merubah customer, status dokumen bukan draft",
+          });
+        }
+        if (req.body.rate) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, Gagal merubah rate, status dokumen bukan draft",
+          });
+        }
+        if (req.body.contact) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, Gagal merubah contact, status dokumen bukan draft",
+          });
+        }
+      }
+      if (req.body.type) {
+        if (req.body.type !== "in" && req.body.type !== "out") {
+          return res
+            .status(400)
+            .json({ status: 400, msg: "Error, Type pilih in atau out !" });
+        }
       }
 
       if (result) {
-        if (result.status !== "0") {
-          if (req.body.type) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, Gagal merubah type, status dokumen bukan draft",
-            });
-          }
-          if (req.body.customer) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, Gagal merubah customer, status dokumen bukan draft",
-            });
-          }
-          if (req.body.rate) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, Gagal merubah rate, status dokumen bukan draft",
-            });
-          }
-          if (req.body.contact) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, Gagal merubah contact, status dokumen bukan draft",
-            });
-          }
-        }
-        if (req.body.type) {
-          if (req.body.type !== "in" && req.body.type !== "out") {
-            return res
-              .status(400)
-              .json({ status: 400, msg: "Error, Type pilih in atau out !" });
-          }
+        const getDataPermit: any = await Db.findOne(
+          {
+            $and: pipeline,
+          },
+          { _id: 1, customer: 1, createdBy: 1 }
+        ).populate("customer", "customerGroup branch");
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: getDataPermit.createdBy,
+            branch: getDataPermit.customer.branch,
+            group: getDataPermit.customer.customerGroup,
+            customer: getDataPermit.customer._id,
+          },
+          selPermissionType.CALLSHEET
+        );
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
         }
 
         //Mengecek Customer

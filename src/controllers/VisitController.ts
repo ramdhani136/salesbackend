@@ -6,6 +6,7 @@ import {
   FilterQuery,
   HapusKarakter,
   PaddyData,
+  cekValidPermission,
 } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
@@ -750,34 +751,52 @@ class VistController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.createdBy._id,
+            branch: isCache.branch._id,
+            group: isCache.customerGroup._id,
+            customer: isCache.customer._id,
+          },
+          selPermissionType.VISIT
+        );
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
 
       const getData: any = await Db.aggregate([
         {
@@ -910,10 +929,22 @@ class VistController implements IController {
 
       const result = getData[0];
 
-      if (!result) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.createdBy._id,
+          branch: result.branch._id,
+          group: result.customerGroup._id,
+          customer: result.customer._id,
+        },
+        selPermissionType.VISIT
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -1031,6 +1062,32 @@ class VistController implements IController {
               msg: "Error, Gagal merubah checkOut, status dokumen bukan draft",
             });
           }
+        }
+
+        const getDataPermit: any = await Db.findOne(
+          {
+            _id: new ObjectId(req.params.id),
+          },
+          { _id: 1, customer: 1, createdBy: 1 }
+        ).populate("customer", "customerGroup branch");
+
+
+        
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: getDataPermit.createdBy,
+            branch: getDataPermit.customer.branch,
+            group: getDataPermit.customer.customerGroup,
+            customer: getDataPermit.customer._id,
+          },
+          selPermissionType.VISIT
+        );
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
         }
 
         // Type dirubah
@@ -1435,7 +1492,7 @@ class VistController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
@@ -1449,6 +1506,24 @@ class VistController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, status dokumen aktif!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.createdBy,
+          branch: getData.customer.branch,
+          group: getData.customer.customerGroup,
+          customer: getData.customer._id,
+        },
+        selPermissionType.VISIT
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const result: any = await Db.deleteOne({ _id: req.params.id });
@@ -1484,7 +1559,7 @@ class VistController implements IController {
   protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
     try {
       await VisitNoteModel.deleteMany({
-        callsheet: new ObjectId(id),
+        viist: new ObjectId(id),
       });
     } catch (error) {
       throw error;

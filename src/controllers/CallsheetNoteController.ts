@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
@@ -28,37 +28,6 @@ interface hasilCustomerI {
 }
 
 class CallsheetNoteController implements IController {
-  protected cekValidCustomer = async (
-    GroupPermission: any[],
-    branchPermission: any[]
-  ): Promise<hasilCustomerI> => {
-    if (branchPermission.length > 0 || GroupPermission.length > 0) {
-      let cusPipeline: any[] = [];
-      if (branchPermission.length > 0) {
-        cusPipeline.push({ branch: { $in: branchPermission } });
-      }
-      if (GroupPermission.length > 0) {
-        cusPipeline.push({ customerGroup: { $in: GroupPermission } });
-      }
-
-      const cekCustomer = await CustomerModel.find(
-        { $and: cusPipeline },
-        { _id: 1 }
-      );
-
-      if (cekCustomer.length === 0) {
-        return { status: false, data: [] };
-      }
-
-      const finalValidCustomer = cekCustomer.map((item) => {
-        return item._id;
-      });
-
-      return { status: true, data: finalValidCustomer };
-    }
-    return { status: false, data: [] };
-  };
-
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -698,113 +667,47 @@ class CallsheetNoteController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // Mengambil rincian permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.CALLSHEET
-      );
-      // End
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
 
-      // Mengambil rincian permission customer
-      const customerPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.CUSTOMER,
-        selPermissionType.CALLSHEET
-      );
-      // End
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.callsheet.createdBy._id,
+            branch: isCache.callsheet.branch._id,
+            group: isCache.callsheet.customerGroup._id,
+            customer: isCache.callsheet.customer._id,
+          },
+          selPermissionType.CALLSHEET
+        );
 
-      // Mengambil rincian permission group
-      const groupPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.CUSTOMERGROUP,
-        selPermissionType.CALLSHEET
-      );
-      // End
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
 
-      // Mengambil rincian permission branch
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.CALLSHEET
-      );
-      // End
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
 
-      //   if (userPermission.length > 0) {
-      //     const cekValid = userPermission.find(
-      //       (item) =>
-      //         item.toString() === isCache.callsheet.createdBy._id.toString()
-      //     );
-
-      //     if (!cekValid) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   if (customerPermission.length > 0) {
-      //     const cekValid = customerPermission.find(
-      //       (item) =>
-      //         item.toString() === isCache.callsheet.customer._id.toString()
-      //     );
-
-      //     if (!cekValid) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   if (branchPermission.length > 0) {
-      //     const cekValid = branchPermission.find(
-      //       (item) =>
-      //         item.toString() === isCache.callsheet.branch._id.toString()
-      //     );
-
-      //     if (!cekValid) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   if (groupPermission.length > 0) {
-      //     const cekValid = groupPermission.find(
-      //       (item) =>
-      //         item.toString() === isCache.callsheet.customerGroup._id.toString()
-      //     );
-
-      //     if (!cekValid) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
-
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //   });
-      // }
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+        });
+      }
 
       const getData: any = await Db.aggregate([
         {
@@ -975,54 +878,22 @@ class CallsheetNoteController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      if (userPermission.length > 0) {
-        const cekValid = userPermission.find(
-          (item) =>
-            item.toString() === result.callsheet.createdBy._id.toString()
-        );
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.callsheet.createdBy._id,
+          branch: result.callsheet.branch._id,
+          group: result.callsheet.customerGroup._id,
+          customer: result.callsheet.customer._id,
+        },
+        selPermissionType.CALLSHEET
+      );
 
-        if (!cekValid) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-        }
-      }
-
-      if (customerPermission.length > 0) {
-        const cekValid = customerPermission.find(
-          (item) => item.toString() === result.callsheet.customer._id.toString()
-        );
-
-        if (!cekValid) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-        }
-      }
-
-      if (branchPermission.length > 0) {
-        const cekValid = branchPermission.find(
-          (item) => item.toString() === result.callsheet.branch._id.toString()
-        );
-
-        if (!cekValid) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-        }
-      }
-
-      if (groupPermission.length > 0) {
-        const cekValid = groupPermission.find(
-          (item) =>
-            item.toString() === result.callsheet.customerGroup._id.toString()
-        );
-
-        if (!cekValid) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
-        }
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const getHistory = await History.find(

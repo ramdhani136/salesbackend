@@ -3,16 +3,11 @@ import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import User from "../models/UserModel";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import {
-  CallsheetModel,
-  History,
-  PermissionModel,
-  RoleUserModel,
-} from "../models";
+import { History } from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
@@ -260,6 +255,21 @@ class UserController implements IController {
       const cache = await Redis.client.get(`user-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache._id,
+          },
+          selPermissionType.USER
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
         const getHistory = await History.find(
           {
             $and: [
@@ -284,6 +294,21 @@ class UserController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, User tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: users._id,
+        },
+        selPermissionType.USER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -313,6 +338,21 @@ class UserController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    const cekPermission = await cekValidPermission(
+      req.userId,
+      {
+        user: req.params.id,
+      },
+      selPermissionType.USER
+    );
+
+    if (!cekPermission) {
+      return res.status(403).json({
+        status: 403,
+        msg: "Anda tidak mempunyai akses untuk dok ini!",
+      });
+    }
+
     // tidak dapat diubah
     if (req.body.img) {
       return res.status(400).json({
@@ -394,6 +434,21 @@ class UserController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: req.params.id,
+        },
+        selPermissionType.USER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
+
       const users = await User.findOneAndDelete({ _id: req.params.id });
       if (users) {
         await Redis.client.del(`user-${req.params.id}`);
@@ -407,10 +462,6 @@ class UserController implements IController {
           message: `${req.user} menghapus user ${users.name}`,
           user: req.userId,
         });
-        // End
-
-        // Delete Child
-        await this.DeleteRelatedUser(req.params.id);
         // End
 
         return res.status(200).json({ status: 200, data: users });
@@ -556,27 +607,27 @@ class UserController implements IController {
     }
   };
 
-  protected DeleteRelatedUser = async (id: string): Promise<any> => {
-    // roleuser
-    try {
-      await RoleUserModel.deleteMany({
-        user: new ObjectId(id),
-      });
-    } catch (error) {
-      throw error;
-    }
-    // End
+  // protected DeleteRelatedUser = async (id: string): Promise<any> => {
+  //   // roleuser
+  //   try {
+  //     await RoleUserModel.deleteMany({
+  //       user: new ObjectId(id),
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  //   // End
 
-    // Permission
-    try {
-      await PermissionModel.deleteMany({
-        user: new ObjectId(id),
-      });
-    } catch (error) {
-      throw error;
-    }
-    // End
-  };
+  //   // Permission
+  //   try {
+  //     await PermissionModel.deleteMany({
+  //       user: new ObjectId(id),
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  //   // End
+  // };
 }
 
 export default new UserController();

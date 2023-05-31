@@ -237,7 +237,7 @@ class CallsheetController implements IController {
       );
       // End
 
-      // Mengambil rincian permission group
+      // Mengambil rincian permission branch
       const branchPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.BRANCH,
@@ -648,24 +648,24 @@ class CallsheetController implements IController {
 
       req.body.createdBy = req.userId;
 
-      for (let index = 0; index < 40000; index++) {
+   
         const result = new Db(req.body);
         const response: any = await result.save({});
-      }
+      
 
-      // //push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `${req.user} menambahkan callsheet ${response.name} `,
-      //   user: req.userId,
-      // });
-      // //End
+      //push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `${req.user} menambahkan callsheet ${response.name} `,
+        user: req.userId,
+      });
+      //End
 
-      return res.status(200).json({ status: 200, data: "response" });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res
         .status(400)

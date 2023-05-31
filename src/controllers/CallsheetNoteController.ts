@@ -22,7 +22,43 @@ import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "callsheetnote";
 
+interface hasilCustomerI {
+  status: boolean;
+  data: any[];
+}
+
 class CallsheetNoteController implements IController {
+  protected cekValidCustomer = async (
+    GroupPermission: any[],
+    branchPermission: any[]
+  ): Promise<hasilCustomerI> => {
+    if (branchPermission.length > 0 || GroupPermission.length > 0) {
+      let cusPipeline: any[] = [];
+      if (branchPermission.length > 0) {
+        cusPipeline.push({ branch: { $in: branchPermission } });
+      }
+      if (GroupPermission.length > 0) {
+        cusPipeline.push({ customerGroup: { $in: GroupPermission } });
+      }
+
+      const cekCustomer = await CustomerModel.find(
+        { $and: cusPipeline },
+        { _id: 1 }
+      );
+
+      if (cekCustomer.length === 0) {
+        return { status: false, data: [] };
+      }
+
+      const finalValidCustomer = cekCustomer.map((item) => {
+        return item._id;
+      });
+
+      return { status: true, data: finalValidCustomer };
+    }
+    return { status: false, data: [] };
+  };
+
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -168,14 +204,6 @@ class CallsheetNoteController implements IController {
         "tags",
         "callsheet",
       ]);
-
-      // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
-      // End
 
       if (!isFilter.status) {
         return res
@@ -388,10 +416,46 @@ class CallsheetNoteController implements IController {
           return newItem;
         });
 
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
       if (
         callsheetFilter.length > 0 ||
         req.query.search ||
-        customerFIlter.length > 0
+        customerFIlter.length > 0 ||
+        userPermission.length > 0 ||
+        branchPermission.length > 0 ||
+        customerPermission.length > 0 ||
+        groupPermission.length > 0
       ) {
         // Cek Customer
 
@@ -406,7 +470,17 @@ class CallsheetNoteController implements IController {
           ["_id", "customerGroup", "branch"]
         );
 
-        const customerData = await CustomerModel.find(validCustomer.data, [
+        let custPipeline: any[] = [validCustomer.data];
+
+        if (branchPermission.length > 0) {
+          custPipeline.unshift({ branch: { $in: branchPermission } });
+        }
+
+        if (groupPermission.length > 0) {
+          custPipeline.unshift({ customerGroup: { $in: groupPermission } });
+        }
+
+        const customerData = await CustomerModel.find({ $and: custPipeline }, [
           "_id",
         ]);
 
@@ -435,6 +509,19 @@ class CallsheetNoteController implements IController {
 
         if (finalFilterCustomer.length > 0) {
           pipelineCallsheet.push({ customer: { $in: finalFilterCustomer } });
+        }
+
+        if (userPermission.length > 0) {
+          pipelineCallsheet.unshift({
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          });
+        }
+        // End
+
+        if (customerPermission.length > 0) {
+          pipelineCallsheet.unshift({
+            customer: { $in: customerPermission },
+          });
         }
 
         const callsheetData = await CallsheetModel.find(
@@ -611,9 +698,96 @@ class CallsheetNoteController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+
+        console.log(isCache);
+
+        if (userPermission.length > 0) {
+          const cekValid = userPermission.find(
+            (item) =>
+              item.toString() === isCache.callsheet.createdBy._id.toString()
+          );
+
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
+        if (customerPermission.length > 0) {
+          const cekValid = customerPermission.find(
+            (item) =>
+              item.toString() === isCache.callsheet.customer._id.toString()
+          );
+
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
+        if (branchPermission.length > 0) {
+          const cekValid = branchPermission.find(
+            (item) =>
+              item.toString() === isCache.callsheet.branch._id.toString()
+          );
+
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
+        if (groupPermission.length > 0) {
+          const cekValid = groupPermission.find(
+            (item) =>
+              item.toString() === isCache.callsheet.customerGroup._id.toString()
+          );
+
+          if (!cekValid) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+          }
+        }
+
         const getHistory = await History.find(
           {
             $and: [

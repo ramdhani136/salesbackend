@@ -420,11 +420,16 @@ class CustomerGroupController implements IController {
       //     workflow: buttonActions,
       //   });
       // }
-      const result: any = await Db.aggregate([
-        {
-          $match: { _id: new ObjectId(req.params.id) },
-        },
 
+      // Mengambil rincian permission user
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+
+      let pipeline: any = [
         {
           $lookup: {
             from: "branches",
@@ -472,7 +477,21 @@ class CustomerGroupController implements IController {
             },
           },
         },
-      ]);
+      ];
+
+      if (branchPermission.length > 0) {
+        pipeline.unshift({
+          $match: {
+            branch: { $in: branchPermission },
+          },
+        });
+      }
+
+      pipeline.unshift({
+        $match: { _id: new ObjectId(req.params.id) },
+      });
+
+      const result: any = await Db.aggregate(pipeline);
 
       if (result.length === 0) {
         return res
@@ -481,21 +500,6 @@ class CustomerGroupController implements IController {
       }
 
       const data = result[0];
-
-      // Mengambil rincian permission user
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.BRANCH
-      );
-      // End
-
-      if (branchPermission.length > 0) {
-        const cekPermissionbranch = branchPermission.find((item) => {
-          console.log(item._id);
-          console.log(data.branch);
-        });
-      }
 
       const cekPermission = await cekValidPermission(
         req.userId,

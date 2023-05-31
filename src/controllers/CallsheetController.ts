@@ -1085,15 +1085,15 @@ class CallsheetController implements IController {
             });
           }
 
-          // if (contact.status !== "1") {
-          //   return res.status(404).json({
-          //     status: 404,
-          //     msg: "Error, kontak tidak aktif!",
-          //   });
-          // }
+          if (contact.status !== "1") {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, kontak tidak aktif!",
+            });
+          }
 
-          // // set contact
-          // req.body.contact = contact._id;
+          // set contact
+          req.body.contact = contact._id;
         }
         // End
 

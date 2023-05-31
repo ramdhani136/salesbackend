@@ -728,9 +728,26 @@ class CustomerGroupController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      let pipeline: any[] = [];
+
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+
+      if (branchPermission.length > 0) {
+        pipeline.push({
+          branch: { $in: branchPermission },
+        });
+      }
+
+      pipeline.push({ _id: req.params.id });
+
+      const getData: any = await Db.findOne({ $and: pipeline });
 
       if (!getData) {
         return res
@@ -738,24 +755,23 @@ class CustomerGroupController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      console.log(getData);
+      // Mengambil rincian permission user
 
-      // const cekPermission = await cekValidPermission(
-      //   req.userId,
-      //   {
-      //     user: isCache.createdBy._id,
-      //     branch: isCache.branch._id,
-      //     group: isCache._id,
-      //   },
-      //   selPermissionType.CUSTOMERGROUP
-      // );
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.createdBy._id,
+          group: getData._id,
+        },
+        selPermissionType.CUSTOMERGROUP
+      );
 
-      // if (!cekPermission) {
-      //   return res.status(403).json({
-      //     status: 403,
-      //     msg: "Anda tidak mempunyai akses untuk dok ini!",
-      //   });
-      // }
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
 
       // if (getData.status === "1") {
       //   return res
@@ -765,7 +781,7 @@ class CustomerGroupController implements IController {
 
       // const result = await Db.deleteOne({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
-      return res.status(200).json({ status: 200, data: "result" });
+      return res.status(200).json({ status: 200, data: getData });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

@@ -334,34 +334,87 @@ class NamingSeriesController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      if (cache) {
+        const isCache = JSON.parse(cache);
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        // Mengambil rincian permission user
+        const branchPermission = await PermissionMiddleware.getPermission(
+          req.userId,
+          selPermissionAllow.BRANCH,
+          selPermissionType.BRANCH
+        );
+        // End
+        // Mengambil rincian permission user
+        const userPermission = await PermissionMiddleware.getPermission(
+          req.userId,
+          selPermissionAllow.USER,
+          selPermissionType.BRANCH
+        );
+        // End
+
+        if (branchPermission.length > 0) {
+          const data = isCache.branch;
+
+          const parseString: any[] = branchPermission.map((i) => {
+            return `${i}`;
+          });
+
+          const found = data.some((item: any) => {
+            return parseString.includes(`${item._id}`);
+          });
+
+          if (!found) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
+        if (userPermission.length > 0) {
+          const data = isCache.branch;
+
+          const parseString: any[] = userPermission.map((i) => {
+            return `${i}`;
+          });
+
+          const found = data.some((item: any) => {
+            return parseString.includes(`${item.createdBy}`);
+          });
+
+          if (!found) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
+
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const result: any = await Db.findOne({
         _id: req.params.id,
       }).populate("branch", "name createdBy");

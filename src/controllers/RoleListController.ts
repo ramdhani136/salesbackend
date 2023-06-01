@@ -12,6 +12,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
+import { ObjectId } from "mongodb";
 
 const Db = RoleListModel;
 const redisName = "rolelist";
@@ -132,7 +133,9 @@ class RoleListController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
+            "roleprofile._id",
             "roleprofile.name",
+            "createdBy._id",
             "createdBy.name",
             "doc",
             "create",
@@ -166,34 +169,6 @@ class RoleListController implements IController {
           .status(400)
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
-      // End
-
-      // Cek akses roleprofile
-
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.ROLEPROFILE
-      );
-
-      if (userPermission.length > 0) {
-        const roleProfile = await RoleProfileModel.find(
-          {
-            createdBy: { $in: userPermission },
-          },
-          { _id: 1 }
-        );
-
-        console.log(roleProfile);
-
-        if (roleProfile.length === 0) {
-          return res.status(400).json({
-            status: 404,
-            msg: "Anda tidak punya akses untuk dokumen ini!",
-          });
-        }
-      }
-
       // End
 
       let pipelineTotal: any = [
@@ -230,10 +205,6 @@ class RoleListController implements IController {
           $count: "total_orders",
         },
       ];
-
-      const totalData = await Db.aggregate(pipelineTotal);
-
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       const pipelineResult: any = [
         {
@@ -273,12 +244,49 @@ class RoleListController implements IController {
         },
       ];
 
+      // Cek akses roleprofile
+
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.ROLEPROFILE
+      );
+
+      if (userPermission.length > 0) {
+        const roleProfile = await RoleProfileModel.find(
+          {
+            createdBy: { $in: userPermission },
+          },
+          { _id: 1 }
+        );
+
+        if (roleProfile.length === 0) {
+          return res.status(400).json({
+            status: 404,
+            msg: "Anda tidak punya akses untuk dokumen ini!",
+          });
+        }
+
+        const validRole = roleProfile.map((item: any) => {
+          return item._id;
+        });
+
+        pipelineResult.unshift({ $match: { roleprofile: { $in: validRole } } });
+        pipelineTotal.unshift({ $match: { roleprofile: { $in: validRole } } });
+      }
+
+      // End
+
+      console.log(JSON.stringify(pipelineResult));
+
+      const totalData = await Db.aggregate(pipelineTotal);
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
+
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
         pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
       }
       // End
-
       const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {

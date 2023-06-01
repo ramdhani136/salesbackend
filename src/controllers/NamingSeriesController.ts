@@ -153,9 +153,6 @@ class NamingSeriesController implements IController {
             as: "branch",
           },
         },
-        {
-          $unwind: "$branch",
-        },
 
         {
           $project: setField,
@@ -164,8 +161,6 @@ class NamingSeriesController implements IController {
 
       if (userPermission.length > 0 || branchPermission.length > 0) {
         let branchPipeline: any = [];
-
-        console.log(branchPermission);
 
         if (userPermission.length > 0) {
           branchPipeline.push({ createdBy: { $in: userPermission } });
@@ -190,8 +185,6 @@ class NamingSeriesController implements IController {
         const finalPermission = branchValid.map((item) => {
           return item._id;
         });
-
-        console.log(finalPermission);
 
         pipelineResult.unshift({
           $match: { branch: { $in: finalPermission } },

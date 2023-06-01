@@ -349,8 +349,6 @@ class RoleProfileController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
-        console.log(result);
-
         const cekPermission = await cekValidPermission(
           req.userId,
           {

@@ -23,8 +23,6 @@ const Permission = new mongoose.Schema(
         "",
         "customergroup",
         "roleprofile",
-        "roleuser",
-        "rolelist",
         "permission",
         "memo",
         "contact",

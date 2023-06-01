@@ -8,14 +8,17 @@ const NamingSeriesModel = new mongoose.Schema(
       unique: true,
       index: 1,
     },
-    branch: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "branch",
-        required: true,
-        index: 1,
-      },
-    ],
+    branch: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "branch",
+          required: true,
+          index: 1,
+        },
+      ],
+      required: true,
+    },
     doc: {
       type: String,
       enum: ["visit", "callsheet", "schedule"],

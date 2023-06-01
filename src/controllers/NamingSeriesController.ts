@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { BranchModel, History, namingSeriesModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
@@ -31,7 +31,7 @@ class NamingSeriesController implements IController {
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
-        isSort:true,
+        isSort: true,
       },
       {
         alias: "Doc",
@@ -72,12 +72,9 @@ class NamingSeriesController implements IController {
         ? JSON.parse(`${req.query.fields}`)
         : [
             "name",
-            "lat",
-            "lng",
-            "desc",
-            "workflowState",
-            "createdBy.name",
-            "status",
+            "doc",
+            "branch._id",
+            "branch.name",
             "createdAt",
             "updatedAt",
           ];
@@ -87,7 +84,7 @@ class NamingSeriesController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let search: ISearch = {
-        filter: ["name", "workflowState"],
+        filter: ["name"],
         value: req.query.search || "",
       };
 
@@ -99,12 +96,23 @@ class NamingSeriesController implements IController {
       );
       // End
 
+      // Mengecek permission user
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+      // End
+
       // Mengambil hasil fields
       let setField = FilterQuery.getField(fields);
       // End
 
       // Mengambil hasil filter
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search);
+      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+        "_id",
+        "branch",
+      ]);
       // End
 
       // Validasi apakah filter valid
@@ -119,61 +127,34 @@ class NamingSeriesController implements IController {
 
       let pipelineTotal: any = [
         {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-          },
-        },
-        {
-          $unwind: "$createdBy",
+          $match: isFilter.data,
         },
         {
           $project: setField,
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $count: "total_orders",
         },
       ];
 
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineTotal.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
-
-      const totalData = await Db.aggregate(pipelineTotal);
-
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
-
       let pipelineResult: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $sort: order_by,
         },
         {
           $lookup: {
-            from: "users",
-            localField: "createdBy",
+            from: "branches",
+            localField: "branch",
             foreignField: "_id",
-            as: "createdBy",
+            as: "branch",
           },
         },
         {
-          $unwind: "$createdBy",
-        },
-        {
-          $match: isFilter.data,
-        },
-        {
-          $skip: limit > 0 ? page * limit - limit : 0,
+          $unwind: "$branch",
         },
 
         {
@@ -181,16 +162,45 @@ class NamingSeriesController implements IController {
         },
       ];
 
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineResult.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
+      if (userPermission.length > 0 || branchPermission.length > 0) {
+        let branchPipeline: any = [];
 
+        console.log(branchPermission);
+
+        if (userPermission.length > 0) {
+          branchPipeline.push({ createdBy: { $in: userPermission } });
+        }
+
+        if (branchPermission.length > 0) {
+          branchPipeline.push({ _id: { $in: branchPermission } });
+        }
+
+        const branchValid = await BranchModel.find(
+          { $and: branchPipeline },
+          { _id: 1 }
+        );
+
+        if (branchValid.length === 0) {
+          return res.status(400).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
+        const finalPermission = branchValid.map((item) => {
+          return item._id;
+        });
+
+        console.log(finalPermission);
+
+        pipelineResult.unshift({
+          $match: { branch: { $in: finalPermission } },
+        });
+        pipelineTotal.unshift({ $match: { branch: { $in: finalPermission } } });
+      }
+
+      const totalData = await Db.aggregate(pipelineTotal);
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
         pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
@@ -331,43 +341,88 @@ class NamingSeriesController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      }).populate("createdBy", "name");
+      }).populate("branch", "name createdBy");
 
       if (!result) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
+
+        // Mengambil rincian permission user
+        const branchPermission = await PermissionMiddleware.getPermission(
+          req.userId,
+          selPermissionAllow.BRANCH,
+          selPermissionType.BRANCH
+        );
+        // End
+
+        if (branchPermission.length > 0) {
+          const data = result.branch;
+
+          const parseString: any[] = branchPermission.map((i) => {
+            return `${i}`;
+          });
+
+          const found = data.some((item: any) => {
+            console.log(item._id);
+            return parseString.includes(item._id);
+          });
+
+          if (!found) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
+
+      // const cekPermission = await cekValidPermission(
+      //   req.userId,
+      //   {
+      //     user: result.branch.createdBy,
+      //     branch: result.branch._id,
+      //   },
+      //   selPermissionType.BRANCH
+      // );
+
+      // if (!cekPermission) {
+      //   return res.status(403).json({
+      //     status: 403,
+      //     msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //   });
+      // }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

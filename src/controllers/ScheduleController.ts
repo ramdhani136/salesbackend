@@ -14,6 +14,7 @@ import {
   ScheduleModel as Db,
   History,
   ScheduleListModel,
+  UserGroupListModel,
   UserGroupModel,
   namingSeriesModel,
   visitModel,
@@ -166,9 +167,34 @@ class ScheduleController implements IController {
         });
       }
 
-      const getAll = await Db.find(FinalFIlter, setField).count();
+      // Cek permission usergroup
 
-      const result = await Db.find(FinalFIlter, setField)
+      const userGroup = await UserGroupListModel.find(
+        {
+          user: new ObjectId(req.userId),
+        },
+        { userGroup: 1 }
+      );
+
+      const validPermission = userGroup.map((item) => {
+        return item.userGroup;
+      });
+
+      let pipeline: any[] = [
+        {
+          $or: [
+            { createdBy: new ObjectId(req.userId) },
+            { userGroup: { $in: validPermission } },
+          ],
+        },
+        FinalFIlter,
+      ];
+
+      // End
+
+      const getAll = await Db.find({ $and: pipeline }, setField).count();
+
+      const result = await Db.find({ $and: pipeline }, setField)
         .sort(order_by)
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0)
@@ -188,7 +214,7 @@ class ScheduleController implements IController {
       }
       return res.status(400).json({
         status: 404,
-        msg: "Data Not found!",
+        msg: "Data tidak ditemukan!",
       });
     } catch (error: any) {
       return res.status(400).json({

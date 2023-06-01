@@ -17,18 +17,12 @@ export enum selPermissionType {
   BRANCH = "branch",
   CUSTOMERGROUP = "customergroup",
   ROLEPROFILE = "roleprofile",
-  ROLELIST = "rolelist",
-  ROLEUSER = "roleuser",
-  PERMISSION = "permission",
   CUSTOMER = "customer",
   CONTACT = "contact",
   MEMO = "memo",
-  USERGROUP = "usergroup",
   SCHEDULE = "schedule",
   CALLSHEET = "callsheet",
   VISIT = "visit",
-  CALLSHEETNOTE = "callsheetnote",
-  VISITNOTE = "visitnote",
   USER = "user",
 }
 

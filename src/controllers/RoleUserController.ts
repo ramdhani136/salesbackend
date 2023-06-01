@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { History, RoleProfileModel, RoleUserModel, User } from "../models";
@@ -110,7 +110,7 @@ class RoleUserController implements IController {
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
-        selPermissionType.ROLEUSER
+        selPermissionType.USER
       );
       // End
 
@@ -168,7 +168,7 @@ class RoleUserController implements IController {
       if (userPermission.length > 0) {
         pipelineTotal.unshift({
           $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+            user: { $in: userPermission.map((id) => new ObjectId(id)) },
           },
         });
       }
@@ -237,7 +237,7 @@ class RoleUserController implements IController {
       if (userPermission.length > 0) {
         pipelineResult.unshift({
           $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+            user: { $in: userPermission.map((id) => new ObjectId(id)) },
           },
         });
       }
@@ -355,6 +355,21 @@ class RoleUserController implements IController {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.user._id,
+          },
+          selPermissionType.USER
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
         const getHistory = await History.find(
           {
             $and: [
@@ -389,6 +404,21 @@ class RoleUserController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.user._id,
+        },
+        selPermissionType.USER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -434,53 +464,71 @@ class RoleUserController implements IController {
         .populate("user", "name")
         .populate("createdBy", "name");
 
-      //Cek roleprofile aktif
-      if (req.body.roleprofile) {
-        const cekRoleValid: any = await RoleProfileModel.findOne({
-          $and: [{ _id: req.body.roleprofile }],
-        });
-
-        if (!cekRoleValid) {
-          return res.status(404).json({
-            status: 404,
-            msg: "Error, roleprofile tidak ditemukan!",
-          });
-        }
-
-        if (cekRoleValid.status != 1) {
-          return res.status(404).json({
-            status: 404,
-            msg: "Error, roleprofile tidak aktif!",
-          });
-        }
-      }
-      // End
-
-      // Cek duplikasi data
-      if (req.body.roleprofile || req.body.user) {
-        const dupl = await Db.findOne({
-          $and: [
-            { user: req.body.user ? req.body.user : result.user._id },
-            {
-              roleprofile: req.body.roleprofile
-                ? req.body.roleprofile
-                : result.roleprofile._id,
-            },
-            {
-              _id: { $ne: req.params.id },
-            },
-          ],
-        });
-
-        if (dupl) {
-          return res
-            .status(404)
-            .json({ status: 404, msg: "Error, duplicate data" });
-        }
-      }
-      // End
-
       if (result) {
+        // Cek permission user
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: result.user._id,
+          },
+          selPermissionType.USER
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
+        // Emd
+
+        //Cek roleprofile aktif
+        if (req.body.roleprofile) {
+          const cekRoleValid: any = await RoleProfileModel.findOne({
+            $and: [{ _id: req.body.roleprofile }],
+          });
+
+          if (!cekRoleValid) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, roleprofile tidak ditemukan!",
+            });
+          }
+
+          if (cekRoleValid.status != 1) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, roleprofile tidak aktif!",
+            });
+          }
+        }
+        // End
+
+        // Cek duplikasi data
+        if (req.body.roleprofile || req.body.user) {
+          const dupl = await Db.findOne({
+            $and: [
+              { user: req.body.user ? req.body.user : result.user._id },
+              {
+                roleprofile: req.body.roleprofile
+                  ? req.body.roleprofile
+                  : result.roleprofile._id,
+              },
+              {
+                _id: { $ne: req.params.id },
+              },
+            ],
+          });
+
+          if (dupl) {
+            return res
+              .status(404)
+              .json({ status: 404, msg: "Error, duplicate data" });
+          }
+        }
+        // End
+
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -543,7 +591,7 @@ class RoleUserController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
@@ -551,6 +599,21 @@ class RoleUserController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.user,
+        },
+        selPermissionType.USER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

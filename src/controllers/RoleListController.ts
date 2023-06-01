@@ -7,12 +7,17 @@ import { TypeOfState } from "../Interfaces/FilterInterface";
 import { History, RoleListModel, RoleProfileModel } from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
+import { PermissionMiddleware } from "../middleware";
+import {
+  selPermissionAllow,
+  selPermissionType,
+} from "../middleware/PermissionMiddleware";
 
 const Db = RoleListModel;
 const redisName = "rolelist";
 
 class RoleListController implements IController {
-  index = async (req: Request, res: Response): Promise<Response> => {
+  index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
         alias: "Id",
@@ -161,6 +166,34 @@ class RoleListController implements IController {
           .status(400)
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
+      // End
+
+      // Cek akses roleprofile
+
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.ROLEPROFILE
+      );
+
+      if (userPermission.length > 0) {
+        const roleProfile = await RoleProfileModel.find(
+          {
+            createdBy: { $in: userPermission },
+          },
+          { _id: 1 }
+        );
+
+        console.log(roleProfile);
+
+        if (roleProfile.length === 0) {
+          return res.status(400).json({
+            status: 404,
+            msg: "Anda tidak punya akses untuk dokumen ini!",
+          });
+        }
+      }
+
       // End
 
       let pipelineTotal: any = [

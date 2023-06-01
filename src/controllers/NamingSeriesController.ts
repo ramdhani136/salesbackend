@@ -182,8 +182,8 @@ class NamingSeriesController implements IController {
 
         if (branchValid.length === 0) {
           return res.status(400).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
+            status: 404,
+            msg: "Data tidak ditemukan!",
           });
         }
 

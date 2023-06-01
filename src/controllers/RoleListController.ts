@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { History, RoleListModel, RoleProfileModel } from "../models";
@@ -277,8 +277,6 @@ class RoleListController implements IController {
 
       // End
 
-      console.log(JSON.stringify(pipelineResult));
-
       const totalData = await Db.aggregate(pipelineTotal);
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
@@ -385,11 +383,25 @@ class RoleListController implements IController {
     }
   };
 
-  show = async (req: Request, res: Response): Promise<Response> => {
+  show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.roleprofile.createdBy,
+          },
+          selPermissionType.ROLEPROFILE
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
         const getHistory = await History.find(
           {
             $and: [
@@ -410,13 +422,28 @@ class RoleListController implements IController {
         });
       }
       const result: any = await Db.findOne({ _id: req.params.id })
-        .populate("roleprofile", "name")
+        .populate("roleprofile", "name createdBy")
         .populate("createdBy", "name");
 
       if (!result) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.roleprofile.createdBy,
+        },
+        selPermissionType.ROLEPROFILE
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const getHistory = await History.find(
@@ -448,10 +475,28 @@ class RoleListController implements IController {
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.findById(req.params.id)
-        .populate("roleprofile", "name")
+      const result: any = await Db.findById(req.params.id)
+        .populate("roleprofile", "name createdBy")
         .populate("createdBy", "name");
       if (result) {
+        // Menengecek permission
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: result.roleprofile.createdBy,
+          },
+          selPermissionType.ROLEPROFILE
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+        // End
+
         //Mengecek roleprofile terdaftar dan aktif
         if (req.body.roleprofile) {
           const cekRoleValid: any = await RoleProfileModel.findOne({
@@ -500,7 +545,7 @@ class RoleListController implements IController {
 
         await Db.updateOne({ _id: req.params.id }, req.body);
         const data: any = await Db.findOne({ _id: req.params.id })
-          .populate("roleprofile", "name")
+          .populate("roleprofile", "name createdBy")
           .populate("createdBy", "name");
 
         // Push history semua field yang di update
@@ -528,14 +573,32 @@ class RoleListController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne(
+        { _id: req.params.id },
+        { _id: 1, roleprofile: 1 }
+      ).populate("roleprofile", "_id createdBy");
 
       if (!getData) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.roleprofile.createdBy,
+        },
+        selPermissionType.ROLEPROFILE
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

@@ -53,6 +53,61 @@ const MemoModel = new mongoose.Schema(
       require: true,
       index: 1,
     },
+
+    branch: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "branch",
+          required: true,
+          index: 1,
+        },
+      ],
+      required: true,
+      validate: {
+        validator: function (arr: any) {
+          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
+        },
+        message: "Array harus diisi setidaknya dengan satu branch.",
+      },
+    },
+
+    customerGroup: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "branch",
+          required: true,
+          index: 1,
+        },
+      ],
+      required: true,
+      validate: {
+        validator: function (arr: any) {
+          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
+        },
+        message: "Array harus diisi setidaknya dengan satu customerGroup.",
+      },
+    },
+
+    userGroup: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "usergroup",
+          required: true,
+          index: 1,
+        },
+      ],
+      required: true,
+      validate: {
+        validator: function (arr: any) {
+          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
+        },
+        message: "Array harus diisi setidaknya dengan satu userGroup.",
+      },
+    },
+
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "Users",

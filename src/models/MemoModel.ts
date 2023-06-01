@@ -24,6 +24,10 @@ const MemoModel = new mongoose.Schema(
       },
       index: 1,
     },
+    title: {
+      type: String,
+      required: true,
+    },
     notes: {
       type: String,
       required: true,
@@ -63,31 +67,17 @@ const MemoModel = new mongoose.Schema(
           index: 1,
         },
       ],
-      required: true,
-      validate: {
-        validator: function (arr: any) {
-          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
-        },
-        message: "Array harus diisi setidaknya dengan satu branch.",
-      },
     },
 
     customerGroup: {
       type: [
         {
           type: Schema.Types.ObjectId,
-          ref: "branch",
+          ref: "customergroup",
           required: true,
           index: 1,
         },
       ],
-      required: true,
-      validate: {
-        validator: function (arr: any) {
-          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
-        },
-        message: "Array harus diisi setidaknya dengan satu customerGroup.",
-      },
     },
 
     userGroup: {
@@ -99,13 +89,6 @@ const MemoModel = new mongoose.Schema(
           index: 1,
         },
       ],
-      required: true,
-      validate: {
-        validator: function (arr: any) {
-          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
-        },
-        message: "Array harus diisi setidaknya dengan satu userGroup.",
-      },
     },
 
     createdBy: {

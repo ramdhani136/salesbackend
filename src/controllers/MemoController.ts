@@ -35,6 +35,24 @@ class MemoController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Branch",
+        name: "branch",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        alias: "CustomerGroup",
+        name: "customerGroup",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        alias: "UserGroup",
+        name: "userGroup",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
@@ -115,6 +133,10 @@ class MemoController implements IController {
             "closingDate",
             "status",
             "workflowState",
+            "customerGroup",
+            "branch",
+            "userGroup",
+            "title",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -128,6 +150,9 @@ class MemoController implements IController {
       };
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "createdBy",
+        "branch",
+        "userGroup",
+        "customerGroup",
         "_id",
       ]);
 
@@ -161,7 +186,10 @@ class MemoController implements IController {
         .sort(order_by)
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0)
-        .populate("createdBy", "name");
+        .populate("createdBy", "name")
+        .populate("branch", "name")
+        .populate("customerGroup", "name")
+        .populate("userGroup", "name");
 
       if (result.length > 0) {
         return res.status(200).json({
@@ -199,6 +227,11 @@ class MemoController implements IController {
         .json({ error: "Display harus array dengan data yang ditentukan!." });
     }
 
+    if (!req.body.title) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, title wajib diisi!" });
+    }
     if (!req.body.notes) {
       return res
         .status(400)

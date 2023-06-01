@@ -389,34 +389,51 @@ class ScheduleController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //   const userGroupId = isCache.userGroup._id;
+      //   const userId = isCache.createdBy._id;
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const validUser = await UserGroupListModel.findOne(
+      //     {
+      //       $and: [{ userGroup: userGroupId }, { user: req.userId }],
+      //     },
+      //     { _id: 1 }
+      //   );
+
+      //   if (!validUser && `${userId}` !== `${req.userId}`) {
+      //     return res.status(404).json({
+      //       status: 403,
+      //       msg: "Anda tidak memiliki akses untuk dokumen ini!",
+      //     });
+      //   }
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
+
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
@@ -427,6 +444,23 @@ class ScheduleController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const userGroupId = result.userGroup._id;
+      const userId = result.createdBy._id;
+
+      const validUser = await UserGroupListModel.findOne(
+        {
+          $and: [{ userGroup: userGroupId }, { user: req.userId }],
+        },
+        { _id: 1 }
+      );
+
+      if (!validUser && `${userId}` !== `${req.userId}`) {
+        return res.status(404).json({
+          status: 403,
+          msg: "Anda tidak memiliki akses untuk dokumen ini!",
+        });
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -487,6 +521,25 @@ class ScheduleController implements IController {
         .populate("createdBy", "name");
 
       if (result) {
+        // Cek Permission user
+        const userGroupId = result.userGroup._id;
+        const userId = result.createdBy._id;
+
+        const validUser = await UserGroupListModel.findOne(
+          {
+            $and: [{ userGroup: userGroupId }, { user: req.userId }],
+          },
+          { _id: 1 }
+        );
+
+        if (!validUser && `${userId}` !== `${req.userId}`) {
+          return res.status(404).json({
+            status: 403,
+            msg: "Anda tidak memiliki akses untuk dokumen ini!",
+          });
+        }
+        // End
+
         // Jika type diedit dan hanya bisa edit ketika belum ada schedulelist yang di close
 
         const scheduleList = await ScheduleListModel.findOne({
@@ -613,9 +666,12 @@ class ScheduleController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<any> => {
+  delete = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne(
+        { _id: req.params.id },
+        { userGroup: 1, createdBy: 1 }
+      );
 
       if (!getData) {
         return res
@@ -629,6 +685,22 @@ class ScheduleController implements IController {
           .json({ status: 404, msg: "Error, status dokumen aktif!" });
       }
 
+      const userGroupId = getData.userGroup;
+      const userId = getData.createdBy;
+
+      const validUser = await UserGroupListModel.findOne(
+        {
+          $and: [{ userGroup: userGroupId }, { user: req.userId }],
+        },
+        { _id: 1 }
+      );
+
+      if (!validUser && `${userId}` !== `${req.userId}`) {
+        return res.status(404).json({
+          status: 403,
+          msg: "Anda tidak memiliki akses untuk dokumen ini!",
+        });
+      }
       const result = await Db.deleteOne({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);
       // Delete Child

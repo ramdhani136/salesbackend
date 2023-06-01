@@ -5,7 +5,6 @@ const RoleProfile = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-
       unique: true,
       index: 1,
     },

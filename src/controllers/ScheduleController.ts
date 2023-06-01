@@ -168,7 +168,6 @@ class ScheduleController implements IController {
       }
 
       // Cek permission usergroup
-
       const userGroup = await UserGroupListModel.find(
         {
           user: new ObjectId(req.userId),
@@ -189,7 +188,6 @@ class ScheduleController implements IController {
         },
         FinalFIlter,
       ];
-
       // End
 
       const getAll = await Db.find({ $and: pipeline }, setField).count();

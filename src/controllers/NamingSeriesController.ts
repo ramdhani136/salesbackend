@@ -379,50 +379,57 @@ class NamingSeriesController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
+      // Mengambil rincian permission user
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+      // End
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
 
-        // Mengambil rincian permission user
-        const branchPermission = await PermissionMiddleware.getPermission(
-          req.userId,
-          selPermissionAllow.BRANCH,
-          selPermissionType.BRANCH
-        );
-        // End
+      if (branchPermission.length > 0) {
+        const data = result.branch;
 
-        if (branchPermission.length > 0) {
-          const data = result.branch;
+        const parseString: any[] = branchPermission.map((i) => {
+          return `${i}`;
+        });
 
-          const parseString: any[] = branchPermission.map((i) => {
-            return `${i}`;
+        const found = data.some((item: any) => {
+          return parseString.includes(`${item._id}`);
+        });
+
+        if (!found) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
           });
-
-          const found = data.some((item: any) => {
-            console.log(item._id);
-            return parseString.includes(item._id);
-          });
-
-          if (!found) {
-            return res.status(403).json({
-              status: 403,
-              msg: "Anda tidak mempunyai akses untuk dok ini!",
-            });
-          }
         }
+      }
+      if (userPermission.length > 0) {
+        const data = result.branch;
 
-      // const cekPermission = await cekValidPermission(
-      //   req.userId,
-      //   {
-      //     user: result.branch.createdBy,
-      //     branch: result.branch._id,
-      //   },
-      //   selPermissionType.BRANCH
-      // );
+        const parseString: any[] = userPermission.map((i) => {
+          return `${i}`;
+        });
 
-      // if (!cekPermission) {
-      //   return res.status(403).json({
-      //     status: 403,
-      //     msg: "Anda tidak mempunyai akses untuk dok ini!",
-      //   });
-      // }
+        const found = data.some((item: any) => {
+          return parseString.includes(`${item.createdBy}`);
+        });
+
+        if (!found) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+      }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

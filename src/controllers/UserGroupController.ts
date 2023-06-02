@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { UserGroupModel as Db, History, UserGroupListModel } from "../models";
@@ -201,6 +201,22 @@ class UserGroupController implements IController {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.createdBy._id,
+          },
+          selPermissionType.USERGROUP
+        );
+
+        if (!cekPermission) {
+          if (`${req.userId}` !== `${isCache.createdBy._id}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
         const getHistory = await History.find(
           {
             $and: [
@@ -234,6 +250,23 @@ class UserGroupController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.createdBy._id,
+        },
+        selPermissionType.USERGROUP
+      );
+
+      if (!cekPermission) {
+        if (`${req.userId}` !== `${result.createdBy._id}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -306,6 +339,25 @@ class UserGroupController implements IController {
       });
 
       if (result) {
+        console.log(result);
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: result.createdBy,
+          },
+          selPermissionType.USERGROUP
+        );
+
+        if (!cekPermission) {
+          if (`${req.userId}` !== `${result.createdBy}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
+
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -365,7 +417,7 @@ class UserGroupController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id });
 
@@ -373,6 +425,23 @@ class UserGroupController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tida ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.createdBy,
+        },
+        selPermissionType.USERGROUP
+      );
+
+      if (!cekPermission) {
+        if (`${req.userId}` !== `${getData.createdBy}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

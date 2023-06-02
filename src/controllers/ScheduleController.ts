@@ -691,7 +691,7 @@ class ScheduleController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         })
-          .populate("userGroup", "name")
+          // .populate("userGroup", "name")
           .populate("createdBy", "name");
 
         // Update scheduleList

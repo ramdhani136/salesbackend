@@ -204,7 +204,7 @@ class MemoController implements IController {
         );
         if (branch.length > 0) {
           const validBranch = branch.map((item) => item._id);
-          console.log(validBranch);
+         
           FinalFIlter.unshift({
             $or: [{ branch: [] }, { branch: { $in: validBranch } }],
           });
@@ -705,7 +705,11 @@ class MemoController implements IController {
 
       const result: any = await Db.findOne({
         _id: req.params.id,
-      }).populate("createdBy", "name");
+      })
+        .populate("createdBy", "name")
+        .populate("branch", "name")
+        .populate("customerGroup", "name")
+        .populate("userGroup", "name");
 
       if (!result) {
         return res
@@ -713,11 +717,12 @@ class MemoController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      // Cek Branch
+      // // Cek Branch
       const branch = result.branch;
 
       if (branch.length > 0) {
-        const cekBranch: any = await this.checkBranch(req.userId, branch);
+        const validBranch = branch.map((item: any) => item._id);
+        const cekBranch: any = await this.checkBranch(req.userId, validBranch);
 
         if (!cekBranch) {
           return res.status(404).json({
@@ -732,7 +737,8 @@ class MemoController implements IController {
       const group = result.customerGroup;
 
       if (group.length > 0) {
-        const cekGroup: any = await this.checkGroup(req.userId, group);
+        const validGroup = group.map((item: any) => item._id);
+        const cekGroup: any = await this.checkGroup(req.userId, validGroup);
 
         if (!cekGroup) {
           return res.status(404).json({
@@ -747,7 +753,8 @@ class MemoController implements IController {
       const userGroup = result.userGroup;
 
       if (userGroup.length > 0) {
-        const cegUG: any = await this.CheckUserGroup(req.userId, userGroup);
+        const validUg = userGroup.map((item: any) => item._id);
+        const cegUG: any = await this.CheckUserGroup(req.userId, validUg);
 
         if (!cegUG) {
           return res.status(404).json({

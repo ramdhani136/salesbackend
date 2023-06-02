@@ -204,7 +204,7 @@ class MemoController implements IController {
       }
       return res.status(400).json({
         status: 404,
-        msg: "Data Not found!",
+        msg: "Data tidak ditemukan!",
       });
     } catch (error: any) {
       return res.status(400).json({
@@ -617,7 +617,7 @@ class MemoController implements IController {
       } else {
         return res
           .status(400)
-          .json({ status: 404, msg: "Error update, data not found" });
+          .json({ status: 404, msg: "Error update, Data tidak di temukan!" });
       }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });

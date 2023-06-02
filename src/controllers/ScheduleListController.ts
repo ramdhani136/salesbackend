@@ -76,12 +76,12 @@ class ScheduleListController implements IController {
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
-      {
-        alias: "UserGroup",
-        name: "schedule.userGroup",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+      // {
+      //   alias: "UserGroup",
+      //   name: "schedule.userGroup",
+      //   operator: ["=", "!="],
+      //   typeOf: TypeOfState.String,
+      // },
       {
         alias: "Customer",
         name: "customer",
@@ -147,8 +147,8 @@ class ScheduleListController implements IController {
             "customerGroup.name",
             "branch._id",
             "branch.name",
-            "userGroup._id",
-            "userGroup.name",
+            // "userGroup._id",
+            // "userGroup.name",
             "createdAt",
             "updatedAt",
           ];
@@ -277,17 +277,17 @@ class ScheduleListController implements IController {
         {
           $unwind: "$schedule",
         },
-        {
-          $lookup: {
-            from: "usergroups",
-            localField: "schedule.userGroup",
-            foreignField: "_id",
-            as: "userGroup",
-          },
-        },
-        {
-          $unwind: "$userGroup",
-        },
+        // {
+        //   $lookup: {
+        //     from: "usergroups",
+        //     localField: "schedule.userGroup",
+        //     foreignField: "_id",
+        //     as: "userGroup",
+        //   },
+        // },
+        // {
+        //   $unwind: "$userGroup",
+        // },
       ];
 
       //Menambahkan limit ketika terdapat limit
@@ -329,7 +329,8 @@ class ScheduleListController implements IController {
           scheduleFIlter,
           stateSchedule,
           undefined,
-          ["_id", "userGroup"]
+          // ["_id", "userGroup"]
+          ["_id"]
         );
 
         const schedulesData = await ScheduleModel.find(
@@ -448,7 +449,19 @@ class ScheduleListController implements IController {
           { _id: 1 }
         );
 
-        console.log(customer);
+        if (customer.length === 0) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
+        const validPermission = customer.map((item) => {
+          return item._id;
+        });
+
+        pipelineTotal.unshift({ customer: { $in: validPermission } });
+        pipeline.unshift({ $match: { customer: { $in: validPermission } } });
       }
 
       // End
@@ -518,7 +531,7 @@ class ScheduleListController implements IController {
       const cekSchedule: any = await ScheduleModel.findOne({
         $and: [{ _id: req.body.schedule }],
       })
-        .populate("userGroup", "name")
+        // .populate("userGroup", "name")
         .populate("createdBy", "name");
 
       if (!cekSchedule) {
@@ -614,34 +627,34 @@ class ScheduleListController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
       const getData: any = await Db.aggregate([
         {
           $match: {
@@ -703,17 +716,17 @@ class ScheduleListController implements IController {
         {
           $unwind: "$schedule",
         },
-        {
-          $lookup: {
-            from: "usergroups",
-            localField: "schedule.userGroup",
-            foreignField: "_id",
-            as: "userGroup",
-          },
-        },
-        {
-          $unwind: "$userGroup",
-        },
+        // {
+        //   $lookup: {
+        //     from: "usergroups",
+        //     localField: "schedule.userGroup",
+        //     foreignField: "_id",
+        //     as: "userGroup",
+        //   },
+        // },
+        // {
+        //   $unwind: "$userGroup",
+        // },
         {
           $project: {
             _id: 1,
@@ -728,8 +741,8 @@ class ScheduleListController implements IController {
             "customerGroup.name": 1,
             "branch._id": 1,
             "branch.name": 1,
-            "userGroup._id": 1,
-            "userGroup.name": 1,
+            // "userGroup._id": 1,
+            // "userGroup.name": 1,
             createdAt: 1,
             updatedAt: 1,
             "schedule.type": 1,
@@ -855,17 +868,17 @@ class ScheduleListController implements IController {
       {
         $unwind: "$schedule",
       },
-      {
-        $lookup: {
-          from: "usergroups",
-          localField: "schedule.userGroup",
-          foreignField: "_id",
-          as: "userGroup",
-        },
-      },
-      {
-        $unwind: "$userGroup",
-      },
+      // {
+      //   $lookup: {
+      //     from: "usergroups",
+      //     localField: "schedule.userGroup",
+      //     foreignField: "_id",
+      //     as: "userGroup",
+      //   },
+      // },
+      // {
+      //   $unwind: "$userGroup",
+      // },
       {
         $project: {
           _id: 1,
@@ -880,8 +893,8 @@ class ScheduleListController implements IController {
           "customerGroup.name": 1,
           "branch._id": 1,
           "branch.name": 1,
-          "userGroup._id": 1,
-          "userGroup.name": 1,
+          // "userGroup._id": 1,
+          // "userGroup.name": 1,
           createdAt: 1,
           updatedAt: 1,
           "schedule.type": 1,
@@ -988,7 +1001,7 @@ class ScheduleListController implements IController {
           const cekSchedule: any = await ScheduleModel.findOne({
             $and: [{ _id: req.body.schedule }],
           })
-            .populate("userGroup", "name")
+            // .populate("userGroup", "name")
             .populate("createdBy", "name");
 
           if (!cekSchedule) {

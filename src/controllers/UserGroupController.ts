@@ -336,21 +336,19 @@ class UserGroupController implements IController {
     try {
       const result: any = await Db.findOne({
         _id: req.params.id,
-      });
+      }).populate("createdBy", "name");
 
       if (result) {
-        console.log(result);
-
         const cekPermission = await cekValidPermission(
           req.userId,
           {
-            user: result.createdBy,
+            user: result.createdBy._id,
           },
           selPermissionType.USERGROUP
         );
 
         if (!cekPermission) {
-          if (`${req.userId}` !== `${result.createdBy}`) {
+          if (`${req.userId}` !== `${result.createdBy._id}`) {
             return res.status(403).json({
               status: 403,
               msg: "Anda tidak mempunyai akses untuk dok ini!",
@@ -386,7 +384,7 @@ class UserGroupController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        });
+        }).populate("createdBy", "name");
 
         await Redis.client.set(
           `${redisName}-${req.params.id}`,

@@ -182,14 +182,6 @@ class VisitNoteController implements IController {
         "visit",
       ]);
 
-      // Mengambil rincian permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.CUSTOMER
-      // );
-      // End
-
       if (!isFilter.status) {
         return res
           .status(400)
@@ -401,10 +393,46 @@ class VisitNoteController implements IController {
           return newItem;
         });
 
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CALLSHEET
+      );
+      // End
+
       if (
         visitFilter.length > 0 ||
         req.query.search ||
-        customerFIlter.length > 0
+        customerFIlter.length > 0 ||
+        userPermission.length > 0 ||
+        branchPermission.length > 0 ||
+        customerPermission.length > 0 ||
+        groupPermission.length > 0
       ) {
         // Cek Customer
 
@@ -419,7 +447,17 @@ class VisitNoteController implements IController {
           ["_id", "customerGroup", "branch"]
         );
 
-        const customerData = await CustomerModel.find(validCustomer.data, [
+        let custPipeline: any[] = [validCustomer.data];
+
+        if (branchPermission.length > 0) {
+          custPipeline.unshift({ branch: { $in: branchPermission } });
+        }
+
+        if (groupPermission.length > 0) {
+          custPipeline.unshift({ customerGroup: { $in: groupPermission } });
+        }
+
+        const customerData = await CustomerModel.find({ $and: custPipeline }, [
           "_id",
         ]);
 
@@ -448,6 +486,18 @@ class VisitNoteController implements IController {
 
         if (finalFilterCustomer.length > 0) {
           pipelineVisit.push({ customer: { $in: finalFilterCustomer } });
+        }
+
+        if (userPermission.length > 0) {
+          pipelineVisit.unshift({
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          });
+        }
+
+        if (customerPermission.length > 0) {
+          pipelineVisit.unshift({
+            customer: { $in: customerPermission },
+          });
         }
 
         const visitData = await visitModel.find({ $and: pipelineVisit }, [

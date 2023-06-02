@@ -13,7 +13,7 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
-import { ISearch } from "../utils/FilterQuery";
+// import { ISearch } from "../utils/FilterQuery";
 import UserModel from "../models/UserModel";
 
 const redisName = "usergrouplist";
@@ -97,18 +97,38 @@ class UserGroupListController implements IController {
       }
       // End
 
-      let FinalFIlter: any = {};
-      FinalFIlter[`$and`] = [isFilter.data];
+      let FinalFIlter: any[] = [isFilter.data];
 
+      // Cek Permission usergroup
       if (userPermission.length > 0) {
-        FinalFIlter[`$and`].push({
-          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+        const userGroup = await UserGroupModel.find(
+          {
+            $or: [
+              { createdBy: { $in: userPermission } },
+              { createdBy: new ObjectId(req.userId) },
+            ],
+          },
+          { _id: 1 }
+        );
+
+        if (userGroup.length === 0) {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data tidak ditemukan!",
+          });
+        }
+
+        const validPermission = userGroup.map((item) => item._id);
+
+        FinalFIlter.unshift({
+          userGroup: { $in: validPermission },
         });
       }
+      // End
 
-      const getAll = await Db.find(FinalFIlter, setField).count();
+      const getAll = await Db.find({ $and: FinalFIlter }, setField).count();
 
-      const result = await Db.find(FinalFIlter, setField)
+      const result = await Db.find({ $and: FinalFIlter }, setField)
 
         .sort(order_by)
         .limit(limit)
@@ -130,7 +150,7 @@ class UserGroupListController implements IController {
       }
       return res.status(400).json({
         status: 404,
-        msg: "Data Not found!",
+        msg: "Data tidak ditemukan!",
       });
     } catch (error: any) {
       return res.status(400).json({

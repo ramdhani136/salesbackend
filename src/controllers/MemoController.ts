@@ -11,6 +11,7 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   BranchModel,
+  CustomerGroupModel,
   MemoModel as Db,
   History,
   namingSeriesModel,
@@ -172,7 +173,7 @@ class MemoController implements IController {
 
       // Cek Branch
       // Mengecek permission user
-      const userPermission = await PermissionMiddleware.getPermission(
+      const userBranchPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
         selPermissionType.BRANCH
@@ -185,13 +186,98 @@ class MemoController implements IController {
         selPermissionAllow.BRANCH,
         selPermissionType.BRANCH
       );
-      // End
-      if (userPermission.length > 0 || branchPermission.length > 0) {
-        const branch = await BranchModel.find({}, { _id: 1 });
-        if(branch.length>0){
-          
+
+      if (branchPermission.length > 0 || userBranchPermission.length > 0) {
+        let pipelineBranch: any = [];
+
+        if (userBranchPermission.length > 0) {
+          pipelineBranch.push({ createdBy: { $in: userBranchPermission } });
+        }
+
+        if (branchPermission.length > 0) {
+          pipelineBranch.push({ _id: { $in: branchPermission } });
+        }
+        const branch = await BranchModel.find(
+          { $and: pipelineBranch },
+          { _id: 1 }
+        );
+        if (branch.length > 0) {
+          const validBranch = branch.map((item) => item._id);
+          console.log(validBranch);
+          FinalFIlter.unshift({
+            $or: [{ branch: [] }, { branch: { $in: validBranch } }],
+          });
+        } else {
+          FinalFIlter.unshift({
+            $or: [{ branch: [] }],
+          });
         }
       }
+
+      // End
+
+      // End
+
+      // Mengecek customer Group
+      // Mengambil rincian permission user
+      const groupUserPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+      // Mengambil rincian permission branch
+      const groupBanchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+      // Mengambil rincian permission customerGroup
+      const groupGroupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+
+      if (
+        groupUserPermission.length > 0 ||
+        groupBanchPermission.length > 0 ||
+        groupGroupPermission.length > 0
+      ) {
+        let pipelineGroup: any = [];
+
+        if (groupUserPermission.length > 0) {
+          pipelineGroup.push({ createdBy: { $in: groupUserPermission } });
+        }
+
+        if (groupBanchPermission.length > 0) {
+          pipelineGroup.push({ branch: { $in: groupBanchPermission } });
+        }
+
+        if (groupGroupPermission.length > 0) {
+          pipelineGroup.push({ _id: { $in: groupGroupPermission } });
+        }
+        const group = await CustomerGroupModel.find(
+          { $and: pipelineGroup },
+          { _id: 1 }
+        );
+        if (group.length > 0) {
+          const validGroup = group.map((item) => item._id);
+          FinalFIlter.unshift({
+            $or: [
+              { customerGroup: [] },
+              { customerGroup: { $in: validGroup } },
+            ],
+          });
+        } else {
+          FinalFIlter.unshift({
+            $or: [{ customerGroup: [] }],
+          });
+        }
+      }
+
       // End
 
       const getAll = await Db.find({ $and: FinalFIlter }, setField).count();

@@ -9,7 +9,12 @@ import {
 } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { MemoModel as Db, History, namingSeriesModel } from "../models";
+import {
+  BranchModel,
+  MemoModel as Db,
+  History,
+  namingSeriesModel,
+} from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -156,14 +161,6 @@ class MemoController implements IController {
         "_id",
       ]);
 
-      // Mengambil rincian permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.MEMO
-      );
-      // End
-
       if (!isFilter.status) {
         return res
           .status(400)
@@ -173,11 +170,29 @@ class MemoController implements IController {
 
       let FinalFIlter: any = [isFilter.data];
 
-      // if (userPermission.length > 0) {
-      //   FinalFIlter.push({
-      //     createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //   });
-      // }
+      // Cek Branch
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+
+      // Mengecek permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+      // End
+      if (userPermission.length > 0 || branchPermission.length > 0) {
+        const branch = await BranchModel.find({}, { _id: 1 });
+        if(branch.length>0){
+          
+        }
+      }
+      // End
 
       const getAll = await Db.find({ $and: FinalFIlter }, setField).count();
 

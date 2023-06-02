@@ -22,8 +22,6 @@ import { ISearch } from "../utils/FilterQuery";
 
 const redisName = "callsheetnote";
 
-
-
 class CallsheetNoteController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
@@ -1227,7 +1225,10 @@ class CallsheetNoteController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne(
+        { _id: req.params.id },
+        { callsheet: 1 }
+      );
 
       if (!getData) {
         return res
@@ -1240,8 +1241,6 @@ class CallsheetNoteController implements IController {
       ).populate("customer", "customerGroup branch");
 
       if (callsheet) {
-        console.log(callsheet);
-
         const cekPermission = await cekValidPermission(
           req.userId,
           {

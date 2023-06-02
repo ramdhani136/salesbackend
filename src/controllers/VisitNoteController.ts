@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
@@ -676,6 +676,25 @@ class VisitNoteController implements IController {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.callsheet.createdBy._id,
+            branch: isCache.callsheet.branch._id,
+            group: isCache.callsheet.customerGroup._id,
+            customer: isCache.callsheet.customer._id,
+          },
+          selPermissionType.CALLSHEET
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
         const getHistory = await History.find(
           {
             $and: [
@@ -863,6 +882,24 @@ class VisitNoteController implements IController {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.visit.createdBy._id,
+          branch: result.visit.branch._id,
+          group: result.visit.customerGroup._id,
+          customer: result.visit.customer._id,
+        },
+        selPermissionType.VISIT
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const getHistory = await History.find(
@@ -1178,14 +1215,41 @@ class VisitNoteController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne(
+        { _id: req.params.id },
+        { visit: 1 }
+      );
 
       if (!getData) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const visit: any = await visitModel
+        .findById(getData.callsheet)
+        .populate("customer", "customerGroup branch");
+
+      if (visit) {
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: visit.createdBy,
+            branch: visit.customer.branch,
+            group: visit.customer.customerGroup,
+            customer: visit.customer._id,
+          },
+          selPermissionType.VISIT
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

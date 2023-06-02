@@ -107,18 +107,24 @@ class UserGroupController implements IController {
       }
       // End
 
-      let FinalFIlter: any = {};
-      FinalFIlter[`$and`] = [isFilter.data];
+      let FinalFIlter: any[] = [isFilter.data];
 
       if (userPermission.length > 0) {
-        FinalFIlter[`$and`].push({
-          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+        FinalFIlter.push({
+          $or: [
+            {
+              createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+            },
+            {
+              createdBy: new ObjectId(req.userId),
+            },
+          ],
         });
       }
 
-      const getAll = await Db.find(FinalFIlter, setField).count();
+      const getAll = await Db.find({ $and: FinalFIlter }, setField).count();
 
-      const result = await Db.find(FinalFIlter, setField)
+      const result = await Db.find({ $and: FinalFIlter }, setField)
         .sort(order_by)
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0)
@@ -137,7 +143,7 @@ class UserGroupController implements IController {
       }
       return res.status(400).json({
         status: 404,
-        msg: "Data Not found!",
+        msg: "Data tidak ditemukan!",
       });
     } catch (error: any) {
       return res.status(400).json({

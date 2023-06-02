@@ -23,6 +23,7 @@ export enum selPermissionType {
   SCHEDULE = "schedule",
   CALLSHEET = "callsheet",
   VISIT = "visit",
+  USERGROUP = "usergroup",
   USER = "user",
 }
 

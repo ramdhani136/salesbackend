@@ -397,7 +397,7 @@ class VisitNoteController implements IController {
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
-        selPermissionType.CALLSHEET
+        selPermissionType.VISIT
       );
       // End
 
@@ -405,7 +405,7 @@ class VisitNoteController implements IController {
       const customerPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.CUSTOMER,
-        selPermissionType.CALLSHEET
+        selPermissionType.VISIT
       );
       // End
 
@@ -413,7 +413,7 @@ class VisitNoteController implements IController {
       const groupPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.CUSTOMERGROUP,
-        selPermissionType.CALLSHEET
+        selPermissionType.VISIT
       );
       // End
 
@@ -421,7 +421,7 @@ class VisitNoteController implements IController {
       const branchPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.BRANCH,
-        selPermissionType.CALLSHEET
+        selPermissionType.VISIT
       );
       // End
 

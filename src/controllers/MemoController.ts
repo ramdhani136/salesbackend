@@ -282,7 +282,6 @@ class MemoController implements IController {
       // End
 
       // Cek userGroup
-
       const userGroupList = await UserGroupListModel.find(
         {
           user: new ObjectId(req.userId),
@@ -301,7 +300,6 @@ class MemoController implements IController {
           $or: [{ userGroup: [] }],
         });
       }
-
       // End
 
       const getAll = await Db.find({ $and: FinalFIlter }, setField).count();
@@ -626,7 +624,6 @@ class MemoController implements IController {
       );
       if (group.length > 0) {
         const validGroup = group.map((item) => item._id);
-        console.log(validGroup);
         const parseString: any[] = validGroup.map((i) => {
           return `${i}`;
         });
@@ -641,6 +638,36 @@ class MemoController implements IController {
       }
     }
     return true;
+  };
+
+  protected CheckUserGroup = async (
+    userId: string,
+    data: any[]
+  ): Promise<any> => {
+    // Cek userGroup
+    const userGroupList = await UserGroupListModel.find(
+      {
+        user: new ObjectId(userId),
+      },
+      { userGroup: 1 }
+    );
+
+    if (userGroupList.length > 0) {
+      const validUserGroup = userGroupList.map((item) => item.userGroup);
+
+      const parseString: any[] = validUserGroup.map((i) => {
+        return `${i}`;
+      });
+
+      const found = data.some((item: any) => {
+        return parseString.includes(`${item._id}`);
+      });
+
+      return found;
+    } else {
+      return false;
+    }
+    // End
   };
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
@@ -686,8 +713,6 @@ class MemoController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      const userGroup = result.userGroup;
-
       // Cek Branch
       const branch = result.branch;
       if (branch.length > 0) {
@@ -709,6 +734,21 @@ class MemoController implements IController {
         const cekGroup: any = await this.checkGroup(req.userId, group);
 
         if (!cekGroup) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error,Anda tidak memiliki akses dokumen ini!",
+          });
+        }
+      }
+      // End
+
+      // Cek customerGroup
+      const userGroup = result.userGroup;
+
+      if (userGroup.length > 0) {
+        const cegUG: any = await this.CheckUserGroup(req.userId, userGroup);
+
+        if (!cegUG) {
           return res.status(404).json({
             status: 404,
             msg: "Error,Anda tidak memiliki akses dokumen ini!",

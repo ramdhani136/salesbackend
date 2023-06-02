@@ -17,12 +17,12 @@ const SchemaScheduleModel = {
     type: String,
     required: true,
   },
-  userGroup: {
-    type: Schema.Types.ObjectId,
-    ref: "usergroup",
-    required: true,
-    index:true
-  },
+  // userGroup: {
+  //   type: Schema.Types.ObjectId,
+  //   ref: "usergroup",
+  //   required: true,
+  //   index:true
+  // },
   activeDate: {
     type: Date,
     required: true,

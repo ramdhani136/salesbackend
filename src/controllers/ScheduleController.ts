@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import {
@@ -6,6 +6,7 @@ import {
   FilterQuery,
   HapusKarakter,
   PaddyData,
+  cekValidPermission,
 } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
@@ -14,8 +15,8 @@ import {
   ScheduleModel as Db,
   History,
   ScheduleListModel,
-  UserGroupListModel,
-  UserGroupModel,
+  // UserGroupListModel,
+  // UserGroupModel,
   namingSeriesModel,
   visitModel,
 } from "../models";
@@ -54,12 +55,12 @@ class ScheduleController implements IController {
         typeOf: TypeOfState.String,
         isSort: true,
       },
-      {
-        alias: "UserGroup",
-        name: "userGroup",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+      // {
+      //   alias: "UserGroup",
+      //   name: "userGroup",
+      //   operator: ["=", "!="],
+      //   typeOf: TypeOfState.String,
+      // },
       {
         alias: "CreatedBy",
         name: "createdBy",
@@ -140,7 +141,7 @@ class ScheduleController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "createdBy",
         "_id",
-        "userGroup",
+        // "userGroup",
       ]);
 
       // Mengambil rincian permission user
@@ -161,33 +162,46 @@ class ScheduleController implements IController {
       let FinalFIlter: any = {};
       FinalFIlter[`$and`] = [isFilter.data];
 
-      if (userPermission.length > 0) {
-        FinalFIlter[`$and`].push({
-          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-        });
-      }
+      // if (userPermission.length > 0) {
+      //   FinalFIlter[`$and`].push({
+      //     createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+      //   });
+      // }
 
-      // Cek permission usergroup
-      const userGroup = await UserGroupListModel.find(
-        {
-          user: new ObjectId(req.userId),
-        },
-        { userGroup: 1 }
-      );
+      // // Cek permission usergroup
+      // const userGroup = await UserGroupListModel.find(
+      //   {
+      //     user: new ObjectId(req.userId),
+      //   },
+      //   { userGroup: 1 }
+      // );
 
-      const validPermission = userGroup.map((item) => {
-        return item.userGroup;
-      });
+      // const validPermission = userGroup.map((item) => {
+      //   return item.userGroup;
+      // });
 
       let pipeline: any[] = [
-        {
-          $or: [
-            { createdBy: new ObjectId(req.userId) },
-            { userGroup: { $in: validPermission } },
-          ],
-        },
+        // {
+        //   $or: [
+        //     { createdBy: new ObjectId(req.userId) },
+        //     { userGroup: { $in: validPermission } },
+        //   ],
+        // },
         FinalFIlter,
       ];
+      // End
+
+      // Cek permission user
+      if (userPermission.length > 0) {
+        pipeline.unshift({
+          $or: [
+            {
+              createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+            },
+            { createdBy: new ObjectId(req.userId) },
+          ],
+        });
+      }
       // End
 
       const getAll = await Db.find({ $and: pipeline }, setField).count();
@@ -196,7 +210,7 @@ class ScheduleController implements IController {
         .sort(order_by)
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0)
-        .populate("userGroup", "name")
+        // .populate("userGroup", "name")
         .populate("createdBy", "name");
 
       if (result.length > 0) {
@@ -329,37 +343,37 @@ class ScheduleController implements IController {
         : olahKata.join("") + PaddyData(latest + 1, 4).toString();
       // End set name
 
-      //Mengecek userGroup
-      if (!req.body.userGroup) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, userGroup wajib diisi!" });
-      }
-      if (typeof req.body.userGroup !== "string") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
-        });
-      }
+      // //Mengecek userGroup
+      // if (!req.body.userGroup) {
+      //   return res
+      //     .status(400)
+      //     .json({ status: 400, msg: "Error, userGroup wajib diisi!" });
+      // }
+      // if (typeof req.body.userGroup !== "string") {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
+      //   });
+      // }
 
-      const cekUserGroup: any = await UserGroupModel.findOne({
-        $and: [{ _id: req.body.userGroup }],
-      });
+      // const cekUserGroup: any = await UserGroupModel.findOne({
+      //   $and: [{ _id: req.body.userGroup }],
+      // });
 
-      if (!cekUserGroup) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, userGroup tidak ditemukan!",
-        });
-      }
+      // if (!cekUserGroup) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, userGroup tidak ditemukan!",
+      //   });
+      // }
 
-      if (cekUserGroup.status != 1) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, userGroup tidak aktif!",
-        });
-      }
-      // End
+      // if (cekUserGroup.status != 1) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, userGroup tidak aktif!",
+      //   });
+      // }
+      // // End
 
       // End
 
@@ -389,55 +403,70 @@ class ScheduleController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
 
-      //   const userGroupId = isCache.userGroup._id;
-      //   const userId = isCache.createdBy._id;
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.createdBy._id,
+          },
+          selPermissionType.SCHEDULE
+        );
 
-      //   const validUser = await UserGroupListModel.findOne(
-      //     {
-      //       $and: [{ userGroup: userGroupId }, { user: req.userId }],
-      //     },
-      //     { _id: 1 }
-      //   );
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
 
-      //   if (!validUser && `${userId}` !== `${req.userId}`) {
-      //     return res.status(404).json({
-      //       status: 403,
-      //       msg: "Anda tidak memiliki akses untuk dokumen ini!",
-      //     });
-      //   }
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+        // const userGroupId = isCache.userGroup._id;
+        // const userId = isCache.createdBy._id;
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+        // const validUser = await UserGroupListModel.findOne(
+        //   {
+        //     $and: [{ userGroup: userGroupId }, { user: req.userId }],
+        //   },
+        //   { _id: 1 }
+        // );
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        // if (!validUser && `${userId}` !== `${req.userId}`) {
+        //   return res.status(404).json({
+        //     status: 403,
+        //     msg: "Anda tidak memiliki akses untuk dokumen ini!",
+        //   });
+        // }
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
-        .populate("userGroup", "name")
+        // .populate("userGroup", "name")
         .populate("createdBy", "name");
 
       if (!result) {
@@ -446,22 +475,41 @@ class ScheduleController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      const userGroupId = result.userGroup._id;
-      const userId = result.createdBy._id;
+      // Cek Permission user
 
-      const validUser = await UserGroupListModel.findOne(
+      const cekPermission = await cekValidPermission(
+        req.userId,
         {
-          $and: [{ userGroup: userGroupId }, { user: req.userId }],
+          user: result.createdBy._id,
         },
-        { _id: 1 }
+        selPermissionType.SCHEDULE
       );
 
-      if (!validUser && `${userId}` !== `${req.userId}`) {
-        return res.status(404).json({
+      if (!cekPermission) {
+        return res.status(403).json({
           status: 403,
-          msg: "Anda tidak memiliki akses untuk dokumen ini!",
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
         });
       }
+
+      // End
+
+      // const userGroupId = result.userGroup._id;
+      // const userId = result.createdBy._id;
+
+      // const validUser = await UserGroupListModel.findOne(
+      //   {
+      //     $and: [{ userGroup: userGroupId }, { user: req.userId }],
+      //   },
+      //   { _id: 1 }
+      // );
+
+      // if (!validUser && `${userId}` !== `${req.userId}`) {
+      //   return res.status(404).json({
+      //     status: 403,
+      //     msg: "Anda tidak memiliki akses untuk dokumen ini!",
+      //   });
+      // }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -517,27 +565,43 @@ class ScheduleController implements IController {
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
-        .populate("userGroup", "name")
+        // .populate("userGroup", "name")
         .populate("createdBy", "name");
 
       if (result) {
         // Cek Permission user
-        const userGroupId = result.userGroup._id;
-        const userId = result.createdBy._id;
 
-        const validUser = await UserGroupListModel.findOne(
+        const cekPermission = await cekValidPermission(
+          req.userId,
           {
-            $and: [{ userGroup: userGroupId }, { user: req.userId }],
+            user: result.createdBy._id
           },
-          { _id: 1 }
+          selPermissionType.SCHEDULE
         );
-
-        if (!validUser && `${userId}` !== `${req.userId}`) {
-          return res.status(404).json({
+  
+        if (!cekPermission) {
+          return res.status(403).json({
             status: 403,
-            msg: "Anda tidak memiliki akses untuk dokumen ini!",
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
           });
         }
+
+        // const userGroupId = result.userGroup._id;
+        // const userId = result.createdBy._id;
+
+        // const validUser = await UserGroupListModel.findOne(
+        //   {
+        //     $and: [{ userGroup: userGroupId }, { user: req.userId }],
+        //   },
+        //   { _id: 1 }
+        // );
+
+        // if (!validUser && `${userId}` !== `${req.userId}`) {
+        //   return res.status(404).json({
+        //     status: 403,
+        //     msg: "Anda tidak memiliki akses untuk dokumen ini!",
+        //   });
+        // }
         // End
 
         // Jika type diedit dan hanya bisa edit ketika belum ada schedulelist yang di close
@@ -560,41 +624,41 @@ class ScheduleController implements IController {
 
         // End
 
-        //Mengecek userGroup
-        if (req.body.usergroup) {
-          if (typeof req.body.userGroup !== "string") {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
-            });
-          }
+        // //Mengecek userGroup
+        // if (req.body.usergroup) {
+        //   if (typeof req.body.userGroup !== "string") {
+        //     return res.status(404).json({
+        //       status: 404,
+        //       msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
+        //     });
+        //   }
 
-          const cekUserGroup: any = await UserGroupModel.findOne({
-            $and: [{ _id: req.body.userGroup }],
-          });
+        //   const cekUserGroup: any = await UserGroupModel.findOne({
+        //     $and: [{ _id: req.body.userGroup }],
+        //   });
 
-          if (!cekUserGroup) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, userGroup tidak ditemukan!",
-            });
-          }
+        //   if (!cekUserGroup) {
+        //     return res.status(404).json({
+        //       status: 404,
+        //       msg: "Error, userGroup tidak ditemukan!",
+        //     });
+        //   }
 
-          if (cekUserGroup.status != 1) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, userGroup tidak aktif!",
-            });
-          }
-          // End
+        //   if (cekUserGroup.status != 1) {
+        //     return res.status(404).json({
+        //       status: 404,
+        //       msg: "Error, userGroup tidak aktif!",
+        //     });
+        //   }
+        //   // End
 
-          // set setUserGroup
-          req.body.userGroup = {
-            _id: cekUserGroup._id,
-            name: cekUserGroup.name,
-          };
-          // End
-        }
+        //   // set setUserGroup
+        //   req.body.userGroup = {
+        //     _id: cekUserGroup._id,
+        //     name: cekUserGroup.name,
+        //   };
+        //   // End
+        // }
 
         // End
 
@@ -685,27 +749,41 @@ class ScheduleController implements IController {
           .json({ status: 404, msg: "Error, status dokumen aktif!" });
       }
 
-      const userGroupId = getData.userGroup;
-      const userId = getData.createdBy;
-
-      const validUser = await UserGroupListModel.findOne(
+      const cekPermission = await cekValidPermission(
+        req.userId,
         {
-          $and: [{ userGroup: userGroupId }, { user: req.userId }],
+          user: getData.createdBy,
         },
-        { _id: 1 }
+        selPermissionType.SCHEDULE
       );
 
-      if (!validUser && `${userId}` !== `${req.userId}`) {
-        return res.status(404).json({
+      if (!cekPermission) {
+        return res.status(403).json({
           status: 403,
-          msg: "Anda tidak memiliki akses untuk dokumen ini!",
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
         });
       }
+      // const userGroupId = getData.userGroup;
+      // const userId = getData.createdBy;
+
+      // const validUser = await UserGroupListModel.findOne(
+      //   {
+      //     $and: [{ userGroup: userGroupId }, { user: req.userId }],
+      //   },
+      //   { _id: 1 }
+      // );
+
+      // if (!validUser && `${userId}` !== `${req.userId}`) {
+      //   return res.status(404).json({
+      //     status: 403,
+      //     msg: "Anda tidak memiliki akses untuk dokumen ini!",
+      //   });
+      // // }
       const result = await Db.deleteOne({ _id: req.params.id });
       await Redis.client.del(`${redisName}-${req.params.id}`);
       // Delete Child
       await this.DeletedRelateChild(new ObjectId(req.params.id));
-      // End
+      //End;
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

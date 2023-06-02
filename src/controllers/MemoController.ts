@@ -715,6 +715,7 @@ class MemoController implements IController {
 
       // Cek Branch
       const branch = result.branch;
+
       if (branch.length > 0) {
         const cekBranch: any = await this.checkBranch(req.userId, branch);
 

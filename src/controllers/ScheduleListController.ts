@@ -1,7 +1,7 @@
 import { Request, Response, response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
@@ -355,7 +355,7 @@ class ScheduleListController implements IController {
         } else {
           return res.status(400).json({
             status: 404,
-            msg: "Data Not found!",
+            msg: "Data tidak ditemukan!",
           });
         }
       }
@@ -451,8 +451,8 @@ class ScheduleListController implements IController {
 
         if (customer.length === 0) {
           return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
+            status: 404,
+            msg: "Data tidak ditemukan!",
           });
         }
 
@@ -627,34 +627,51 @@ class ScheduleListController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.customer.createdBy,
+            group: isCache.customerGroup._id,
+            customer: isCache.customer._id,
+            branch: isCache.branch._id,
+          },
+          selPermissionType.CUSTOMER
+        );
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
 
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const getData: any = await Db.aggregate([
         {
           $match: {
@@ -732,8 +749,10 @@ class ScheduleListController implements IController {
             _id: 1,
             "schedule._id": 1,
             "schedule.name": 1,
+            "schedule.createdBy": 1,
             "customer._id": 1,
             "customer.name": 1,
+            "customer.createdBy": 1,
             status: 1,
             "createdBy._id": 1,
             "createdBy.name": 1,
@@ -762,6 +781,23 @@ class ScheduleListController implements IController {
 
       const result = getData[0];
 
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.customer.createdBy,
+          group: result.customerGroup._id,
+          customer: result.customer._id,
+          branch: result.branch._id,
+        },
+        selPermissionType.CUSTOMER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,
@@ -886,6 +922,7 @@ class ScheduleListController implements IController {
           "schedule.name": 1,
           "customer._id": 1,
           "customer.name": 1,
+          "customer.createdBy": 1,
           status: 1,
           "createdBy._id": 1,
           "createdBy.name": 1,
@@ -907,16 +944,34 @@ class ScheduleListController implements IController {
     ];
 
     try {
-      const cekData = await Db.aggregate(pipeline);
-      const prevDataBanding = await Db.findOne({
-        _id: new ObjectId(req.params.id),
-      })
-        .populate("schedule", "name")
-        .populate("customer", "name")
-        .populate("createdBy", "name");
-
+      const cekData: any = await Db.aggregate(pipeline);
       if (cekData.length > 0) {
         const result = cekData[0];
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: result.customer.createdBy,
+            group: result.customerGroup._id,
+            customer: result.customer._id,
+            branch: result.branch._id,
+          },
+          selPermissionType.CUSTOMER
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
+        const prevDataBanding = await Db.findOne({
+          _id: new ObjectId(req.params.id),
+        })
+          .populate("schedule", "name")
+          .populate("customer", "name")
+          .populate("createdBy", "name");
 
         // Apabila schedulelist di close
         if (result.status !== "0") {
@@ -1126,17 +1181,35 @@ class ScheduleListController implements IController {
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const getData: any = await Db.findOne({ _id: req.params.id }).populate(
-        "schedule",
-        "name type"
+        "customer",
+        "branch customerGroup createdBy"
       );
 
       if (!getData) {
         return res
           .status(404)
           .json({ status: 404, msg: "Data tidak ditemukan!!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.customer.createdBy,
+          group: getData.customer.customerGroup,
+          customer: getData.customer._id,
+          branch: getData.customer.branch,
+        },
+        selPermissionType.CUSTOMER
+      );
+
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

@@ -17,6 +17,11 @@ import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
+import { PermissionMiddleware } from "../middleware";
+import {
+  selPermissionAllow,
+  selPermissionType,
+} from "../middleware/PermissionMiddleware";
 
 const redisName = "schedulelist";
 
@@ -154,6 +159,36 @@ class ScheduleListController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
+
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.CUSTOMER
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CUSTOMER
+      );
+      // End
+      // Mengambil rincian permission customerGroup
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CUSTOMER
+      );
+      // End
+
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.CUSTOMER
+      );
+      // End
 
       const notScheduleFIlter: any = filters.filter((item: any) => {
         const key = item[0]; // Ambil kunci pada indeks 0
@@ -383,6 +418,39 @@ class ScheduleListController implements IController {
           });
         }
       }
+      // End
+
+      // Cek Permission User
+
+      if (
+        userPermission.length > 0 ||
+        branchPermission.length > 0 ||
+        groupPermission.length > 0 ||
+        customerPermission.length > 0
+      ) {
+        let pipelineCustomer: any = [];
+
+        if (userPermission.length > 0) {
+          pipelineCustomer.push({ createdBy: { $in: userPermission } });
+        }
+        if (branchPermission.length > 0) {
+          pipelineCustomer.push({ branch: { $in: branchPermission } });
+        }
+        if (groupPermission.length > 0) {
+          pipelineCustomer.push({ customerGroup: { $in: groupPermission } });
+        }
+        if (customerPermission.length > 0) {
+          pipelineCustomer.push({ _id: { $in: customerPermission } });
+        }
+
+        const customer = await CustomerModel.find(
+          { $and: pipelineCustomer },
+          { _id: 1 }
+        );
+
+        console.log(customer);
+      }
+
       // End
 
       const getAll = await Db.find({

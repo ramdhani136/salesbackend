@@ -404,6 +404,7 @@ class ScheduleController implements IController {
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+
       if (cache) {
         const isCache = JSON.parse(cache);
 
@@ -416,10 +417,12 @@ class ScheduleController implements IController {
         );
 
         if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
+          if (`${req.userId}` !== `${isCache.createdBy._id}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
         }
 
         // const userGroupId = isCache.userGroup._id;
@@ -438,6 +441,7 @@ class ScheduleController implements IController {
         //     msg: "Anda tidak memiliki akses untuk dokumen ini!",
         //   });
         // }
+
         const getHistory = await History.find(
           {
             $and: [
@@ -463,6 +467,7 @@ class ScheduleController implements IController {
           workflow: buttonActions,
         });
       }
+
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
@@ -486,10 +491,12 @@ class ScheduleController implements IController {
       );
 
       if (!cekPermission) {
-        return res.status(403).json({
-          status: 403,
-          msg: "Anda tidak mempunyai akses untuk dok ini!",
-        });
+        if (`${req.userId}` !== `${result.createdBy._id}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       // End
@@ -574,16 +581,18 @@ class ScheduleController implements IController {
         const cekPermission = await cekValidPermission(
           req.userId,
           {
-            user: result.createdBy._id
+            user: result.createdBy._id,
           },
           selPermissionType.SCHEDULE
         );
-  
+
         if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
+          if (`${req.userId}` !== `${result.createdBy._id}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
         }
 
         // const userGroupId = result.userGroup._id;
@@ -758,10 +767,12 @@ class ScheduleController implements IController {
       );
 
       if (!cekPermission) {
-        return res.status(403).json({
-          status: 403,
-          msg: "Anda tidak mempunyai akses untuk dok ini!",
-        });
+        if (`${req.userId}` !== `${getData.createdBy}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
       // const userGroupId = getData.userGroup;
       // const userId = getData.createdBy;

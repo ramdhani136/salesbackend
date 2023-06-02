@@ -14,6 +14,7 @@ import {
   CustomerGroupModel,
   MemoModel as Db,
   History,
+  UserGroupListModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -276,6 +277,29 @@ class MemoController implements IController {
             $or: [{ customerGroup: [] }],
           });
         }
+      }
+
+      // End
+
+      // Cek userGroup
+
+      const userGroupList = await UserGroupListModel.find(
+        {
+          user: new ObjectId(req.userId),
+        },
+        { userGroup: 1 }
+      );
+
+      if (userGroupList.length > 0) {
+        const validUserGroup = userGroupList.map((item) => item.userGroup);
+
+        FinalFIlter.unshift({
+          $or: [{ userGroup: [] }, { userGroup: { $in: validUserGroup } }],
+        });
+      } else {
+        FinalFIlter.unshift({
+          $or: [{ userGroup: [] }],
+        });
       }
 
       // End

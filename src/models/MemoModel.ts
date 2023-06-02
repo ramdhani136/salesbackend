@@ -63,7 +63,6 @@ const MemoModel = new mongoose.Schema(
         {
           type: Schema.Types.ObjectId,
           ref: "branch",
-          required: true,
           index: 1,
         },
       ],
@@ -74,7 +73,6 @@ const MemoModel = new mongoose.Schema(
         {
           type: Schema.Types.ObjectId,
           ref: "customergroup",
-          required: true,
           index: 1,
         },
       ],
@@ -85,7 +83,6 @@ const MemoModel = new mongoose.Schema(
         {
           type: Schema.Types.ObjectId,
           ref: "usergroup",
-          required: true,
           index: 1,
         },
       ],

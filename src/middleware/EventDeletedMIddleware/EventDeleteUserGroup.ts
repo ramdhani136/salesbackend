@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { ScheduleModel } from "../../models";
+// import { ScheduleModel } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
 
@@ -15,11 +15,11 @@ export const EventDeleteUserGroup = async (
   next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
-    {
-      doc: "Schedule",
-      filters: ["userGroup"],
-      model: ScheduleModel,
-    },
+    // {
+    //   doc: "Schedule",
+    //   filters: ["userGroup"],
+    //   model: ScheduleModel,
+    // },
   ];
 
   for (const i of data) {

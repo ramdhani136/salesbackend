@@ -394,8 +394,7 @@ class CustomerGroupController implements IController {
           });
 
           const found = data.some((item: any) => {
-            console.log(item._id);
-            return parseString.includes(item._id);
+            return parseString.includes(`${item._id}`);
           });
 
           if (!found) {

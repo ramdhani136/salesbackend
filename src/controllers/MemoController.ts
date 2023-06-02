@@ -521,36 +521,160 @@ class MemoController implements IController {
     }
   };
 
+  protected checkBranch = async (
+    userId: string,
+    data: any[]
+  ): Promise<boolean> => {
+    // Cek Branch
+    // Mengecek permission user
+
+    const userBranchPermission = await PermissionMiddleware.getPermission(
+      userId,
+      selPermissionAllow.USER,
+      selPermissionType.BRANCH
+    );
+    // End
+
+    // Mengecek permission branch
+    const branchPermission = await PermissionMiddleware.getPermission(
+      userId,
+      selPermissionAllow.BRANCH,
+      selPermissionType.BRANCH
+    );
+
+    if (branchPermission.length > 0 || userBranchPermission.length > 0) {
+      let pipelineBranch: any = [];
+
+      if (userBranchPermission.length > 0) {
+        pipelineBranch.push({ createdBy: { $in: userBranchPermission } });
+      }
+
+      if (branchPermission.length > 0) {
+        pipelineBranch.push({ _id: { $in: branchPermission } });
+      }
+      const branch = await BranchModel.find(
+        { $and: pipelineBranch },
+        { _id: 1 }
+      );
+      if (branch.length > 0) {
+        const validBranch = branch.map((item) => item._id);
+        const parseString: any[] = validBranch.map((i) => {
+          return `${i}`;
+        });
+
+        const found = data.some((item: any) => {
+          return parseString.includes(`${item._id}`);
+        });
+
+        return found;
+      } else {
+        return false;
+      }
+    }
+
+    return true;
+    // End
+  };
+
+  protected checkGroup = async (
+    userId: string,
+    data: any[]
+  ): Promise<boolean> => {
+    // Mengambil rincian permission user
+    const groupUserPermission = await PermissionMiddleware.getPermission(
+      userId,
+      selPermissionAllow.USER,
+      selPermissionType.CUSTOMERGROUP
+    );
+    // End
+    // Mengambil rincian permission branch
+    const groupBanchPermission = await PermissionMiddleware.getPermission(
+      userId,
+      selPermissionAllow.BRANCH,
+      selPermissionType.CUSTOMERGROUP
+    );
+    // End
+    // Mengambil rincian permission customerGroup
+    const groupGroupPermission = await PermissionMiddleware.getPermission(
+      userId,
+      selPermissionAllow.CUSTOMERGROUP,
+      selPermissionType.CUSTOMERGROUP
+    );
+    // End
+
+    if (
+      groupUserPermission.length > 0 ||
+      groupBanchPermission.length > 0 ||
+      groupGroupPermission.length > 0
+    ) {
+      let pipelineGroup: any = [];
+
+      if (groupUserPermission.length > 0) {
+        pipelineGroup.push({ createdBy: { $in: groupUserPermission } });
+      }
+
+      if (groupBanchPermission.length > 0) {
+        pipelineGroup.push({ branch: { $in: groupBanchPermission } });
+      }
+
+      if (groupGroupPermission.length > 0) {
+        pipelineGroup.push({ _id: { $in: groupGroupPermission } });
+      }
+      const group = await CustomerGroupModel.find(
+        { $and: pipelineGroup },
+        { _id: 1 }
+      );
+      if (group.length > 0) {
+        const validGroup = group.map((item) => item._id);
+        console.log(validGroup);
+        const parseString: any[] = validGroup.map((i) => {
+          return `${i}`;
+        });
+
+        const found = data.some((item: any) => {
+          return parseString.includes(`${item._id}`);
+        });
+
+        return found;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  };
+
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      // End
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
 
       const result: any = await Db.findOne({
         _id: req.params.id,
@@ -561,6 +685,37 @@ class MemoController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
+      const userGroup = result.userGroup;
+
+      // Cek Branch
+      const branch = result.branch;
+      if (branch.length > 0) {
+        const cekBranch: any = await this.checkBranch(req.userId, branch);
+
+        if (!cekBranch) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error,Anda tidak memiliki akses dokumen ini!",
+          });
+        }
+      }
+      // End
+
+      // Cek customerGroup
+      const group = result.customerGroup;
+
+      if (group.length > 0) {
+        const cekGroup: any = await this.checkGroup(req.userId, group);
+
+        if (!cekGroup) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error,Anda tidak memiliki akses dokumen ini!",
+          });
+        }
+      }
+      // End
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,

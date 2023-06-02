@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { UserGroupListModel as Db, History, UserGroupModel } from "../models";
@@ -272,6 +272,23 @@ class UserGroupListController implements IController {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       if (cache) {
         const isCache = JSON.parse(cache);
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.userGroup.createdBy,
+          },
+          selPermissionType.USERGROUP
+        );
+
+        if (!cekPermission) {
+          if (`${req.userId}` !== `${isCache.userGroup.createdBy}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
         const getHistory = await History.find(
           {
             $and: [
@@ -301,13 +318,30 @@ class UserGroupListController implements IController {
         _id: req.params.id,
       })
         .populate("createdBy", "name")
-        .populate("userGroup", "name")
+        .populate("userGroup", "name createdBy")
         .populate("user", "name");
 
       if (!result) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.userGroup.createdBy,
+        },
+        selPermissionType.USERGROUP
+      );
+
+      if (!cekPermission) {
+        if (`${req.userId}` !== `${result.userGroup.createdBy}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -345,88 +379,119 @@ class UserGroupListController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
-    // Cek data yang tidak boleh dirubah
-    if (req.body.createdBy) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, createdby tidak dapat dirubah",
-      });
-    }
-    // End
-
-    // Cek User Group
-    if (req.body.userGroup) {
-      if (typeof req.body.userGroup !== "string") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
-        });
-      }
-
-      const cekUG = await UserGroupModel.findOne({
-        $and: [{ _id: new ObjectId(req.body.userGroup) }],
-      });
-
-      if (!cekUG) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, userGroup tidak ditemukan!",
-        });
-      }
-
-      if (cekUG.status !== "1") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, userGroup tidak aktif!",
-        });
-      }
-
-      req.body.userGroup = {
-        _id: cekUG._id,
-        name: cekUG.name,
-      };
-    }
-
-    // End
-
-    // Cek User
-    if (req.body.user) {
-      if (typeof req.body.user !== "string") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Cek kembali data user, Data harus berupa string id user!",
-        });
-      }
-
-      const cekUser = await UserModel.findOne({
-        $and: [{ _id: new ObjectId(req.body.user) }],
-      });
-
-      if (!cekUser) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, user tidak ditemukan!",
-        });
-      }
-
-      if (cekUser.status !== "1") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, user tidak aktif!",
-        });
-      }
-
-      req.body.user = {
-        _id: cekUser._id,
-        name: cekUser.name,
-      };
-    }
-    // End
-
     try {
-      const result: any = await Db.findOne({
+      const cekData: any = await Db.findOne(
+        { _id: req.params.id },
+        { _id: 1, userGroup: 1 }
+      ).populate("userGroup", "name createdBy");
+
+      if (!cekData) {
+        return res
+          .status(400)
+          .json({ status: 404, msg: "Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: cekData.userGroup.createdBy,
+        },
+        selPermissionType.USERGROUP
+      );
+
+      if (!cekPermission) {
+        if (`${req.userId}` !== `${cekData.userGroup.createdBy}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+      }
+
+      // Cek data yang tidak boleh dirubah
+      if (req.body.createdBy) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, createdby tidak dapat dirubah",
+        });
+      }
+      // End
+
+      // Cek User Group
+      if (req.body.userGroup) {
+        if (typeof req.body.userGroup !== "string") {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
+          });
+        }
+
+        const cekUG = await UserGroupModel.findOne({
+          $and: [{ _id: new ObjectId(req.body.userGroup) }],
+        });
+
+        if (!cekUG) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, userGroup tidak ditemukan!",
+          });
+        }
+
+        if (cekUG.status !== "1") {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, userGroup tidak aktif!",
+          });
+        }
+
+        req.body.userGroup = {
+          _id: cekUG._id,
+          name: cekUG.name,
+        };
+      }
+
+      // End
+
+      // Cek User
+      if (req.body.user) {
+        if (typeof req.body.user !== "string") {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, Cek kembali data user, Data harus berupa string id user!",
+          });
+        }
+
+        const cekUser = await UserModel.findOne({
+          $and: [{ _id: new ObjectId(req.body.user) }],
+        });
+
+        if (!cekUser) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, user tidak ditemukan!",
+          });
+        }
+
+        if (cekUser.status !== "1") {
+          return res.status(404).json({
+            status: 404,
+            msg: "Error, user tidak aktif!",
+          });
+        }
+
+        req.body.user = {
+          _id: cekUser._id,
+          name: cekUser.name,
+        };
+      }
+      // End
+
+      const prevData: any = await Db.findOne({
         _id: req.params.id,
-      });
+      })
+        .populate("createdBy", "name")
+        .populate("userGroup", "name createdBy")
+        .populate("user", "name");
 
       // Cek duplicate
       const dup = await Db.findOne({
@@ -434,12 +499,12 @@ class UserGroupListController implements IController {
           {
             "userGroup._id": req.body.userGroup
               ? new ObjectId(req.body.userGroup._id)
-              : result.userGroup._id,
+              : prevData.userGroup._id,
           },
           {
             "user._id": req.body.user
               ? new ObjectId(req.body.user._id)
-              : result.user._id,
+              : prevData.user._id,
           },
         ],
       });
@@ -452,72 +517,90 @@ class UserGroupListController implements IController {
       }
       // End
 
-      if (result) {
-        if (req.body.id_workflow && req.body.id_state) {
-          const checkedWorkflow =
-            await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
-              req.userId,
-              req.body.id_state,
-              result.createdBy._id
-            );
-
-          if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
-          } else {
-            return res
-              .status(403)
-              .json({ status: 403, msg: checkedWorkflow.msg });
-          }
-        } else {
-          await Db.updateOne({ _id: req.params.id }, req.body).populate(
-            "createdBy",
-            "name"
-          );
-        }
-
-        const getData: any = await Db.findOne({
-          _id: req.params.id,
-        });
-
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
-          {
-            EX: 30,
-          }
-        );
-
-        // push history semua field yang di update
-        await HistoryController.pushUpdateMany(
-          result,
-          getData,
-          req.user,
+      if (req.body.id_workflow && req.body.id_state) {
+        const checkedWorkflow = await WorkflowController.permissionUpdateAction(
+          req.body.id_workflow,
           req.userId,
-          redisName
+          req.body.id_state,
+          prevData.createdBy._id
         );
 
-        return res.status(200).json({ status: 200, data: getData });
-        // End
+        if (checkedWorkflow.status) {
+          await Db.updateOne(
+            { _id: req.params.id },
+            checkedWorkflow.data
+          ).populate("createdBy", "name");
+        } else {
+          return res
+            .status(403)
+            .json({ status: 403, msg: checkedWorkflow.msg });
+        }
       } else {
-        return res
-          .status(400)
-          .json({ status: 404, msg: "Error update, data not found" });
+        await Db.updateOne({ _id: req.params.id }, req.body).populate(
+          "createdBy",
+          "name"
+        );
       }
+
+      const getData: any = await Db.findOne({
+        _id: req.params.id,
+      })
+        .populate("createdBy", "name")
+        .populate("userGroup", "name createdBy")
+        .populate("user", "name");
+
+      await Redis.client.set(
+        `${redisName}-${req.params.id}`,
+        JSON.stringify(getData),
+        {
+          EX: 30,
+        }
+      );
+
+      // push history semua field yang di update
+      await HistoryController.pushUpdateMany(
+        prevData,
+        getData,
+        req.user,
+        req.userId,
+        redisName
+      );
+
+      return res.status(200).json({ status: 200, data: getData });
+      // End
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }
   };
 
-  delete = async (req: Request, res: Response): Promise<Response> => {
+  delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne(
+        { _id: req.params.id },
+        { _id: 1, userGroup: 1 }
+      ).populate("userGroup", "name createdBy");
 
       if (!getData) {
-        return res.status(404).json({ status: 404, msg: "Not found!" });
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Data tidak ditemukan!" });
+      }
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: getData.userGroup.createdBy,
+        },
+        selPermissionType.USERGROUP
+      );
+
+      if (!cekPermission) {
+        if (`${req.userId}` !== `${getData.userGroup.createdBy}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });

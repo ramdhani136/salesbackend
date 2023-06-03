@@ -380,34 +380,50 @@ class PermissionController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
+      if (cache) {
+        const isCache = JSON.parse(cache);
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: isCache.user._id,
+          },
+          selPermissionType.USER
+        );
 
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
+        if (!cekPermission) {
+          if (`${req.userId}` !== `${isCache.user._id}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
+        const getHistory = await History.find(
+          {
+            $and: [
+              { "document._id": `${isCache._id}` },
+              { "document.type": redisName },
+            ],
+          },
+
+          ["_id", "message", "createdAt", "updatedAt"]
+        )
+          .populate("user", "name")
+          .sort({ createdAt: -1 });
+        const buttonActions = await WorkflowController.getButtonAction(
+          redisName,
+          req.userId,
+          isCache.workflowState
+        );
+        return res.status(200).json({
+          status: 200,
+          data: JSON.parse(cache),
+          history: getHistory,
+          workflow: buttonActions,
+        });
+      }
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
@@ -420,24 +436,22 @@ class PermissionController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      console.log(result);
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: result.user._id,
+        },
+        selPermissionType.USER
+      );
 
-      // const cekPermission = await cekValidPermission(
-      //   req.userId,
-      //   {
-      //     user: result.user._id,
-      //   },
-      //   selPermissionType.USER
-      // );
-
-      // if (!cekPermission) {
-      //   if (`${req.userId !== `${result._id}`}`) {
-      //     return res.status(403).json({
-      //       status: 403,
-      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
-      //     });
-      //   }
-      // }
+      if (!cekPermission) {
+        if (`${req.userId}` !== `${result.user._id}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+      }
 
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
@@ -486,6 +500,27 @@ class PermissionController implements IController {
         .populate("user", "name");
 
       if (result) {
+        // Cek permission
+
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: result.user._id,
+          },
+          selPermissionType.USER
+        );
+
+        if (!cekPermission) {
+          if (`${req.userId}` !== `${result.user._id}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
+        }
+
+        // End
+
         // Cek User terdaftar
         if (req.body.user) {
           const isRegUser = await UserController.checkUserRegistered(
@@ -579,23 +614,45 @@ class PermissionController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result: any = await Db.findOneAndDelete({ _id: req.params.id });
-      if (result) {
-        await Redis.client.del(`${redisName}-${req.params.id}`);
-        // push history
-        await HistoryController.pushHistory({
-          document: {
-            _id: result._id,
-            name: result.name,
-            type: redisName,
-          },
-          message: `Menghapus ${redisName} nomor ${result.name}`,
-          user: req.userId,
-        });
-        // End
-        return res.status(200).json({ status: 200, data: result });
+      const cekValid = await Db.findById(req.params.id, { _id: 1, user: 1 });
+
+      if (!cekValid) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
-      return res.status(404).json({ status: 404, msg: "Error Delete!" });
+
+      const cekPermission = await cekValidPermission(
+        req.userId,
+        {
+          user: cekValid.user,
+        },
+        selPermissionType.USER
+      );
+
+      if (!cekPermission) {
+        if (`${req.userId}` !== `${cekValid.user}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+      }
+
+      const result = await Db.findByIdAndDelete(req.params.id);
+      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // push history
+      // await HistoryController.pushHistory({
+      //   document: {
+      //     _id: cekValid._id,
+      //     name: cekValid.name,
+      //     type: redisName,
+      //   },
+      //   message: `Menghapus ${redisName} nomor ${cekValid.name}`,
+      //   user: req.userId,
+      // });
+      // End
+      return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

@@ -270,7 +270,7 @@ class UserController implements IController {
         );
 
         if (!cekPermission) {
-          if (`${req.userId !== `${isCache._id}`}`) {
+          if (`${req.userId}` !== `${isCache._id}`) {
             return res.status(403).json({
               status: 403,
               msg: "Anda tidak mempunyai akses untuk dok ini!",
@@ -312,7 +312,7 @@ class UserController implements IController {
       );
 
       if (!cekPermission) {
-        if (`${req.userId !== `${req.params.id}`}`) {
+        if (`${req.userId}` !== `${req.params.id}`) {
           return res.status(403).json({
             status: 403,
             msg: "Anda tidak mempunyai akses untuk dok ini!",
@@ -356,7 +356,7 @@ class UserController implements IController {
     );
 
     if (!cekPermission) {
-      if (`${req.userId !== `${req.params.id}`}`) {
+      if (`${req.userId}` !== `${req.params.id}`) {
         return res.status(403).json({
           status: 403,
           msg: "Anda tidak mempunyai akses untuk dok ini!",
@@ -454,7 +454,7 @@ class UserController implements IController {
       );
 
       if (!cekPermission) {
-        if (`${req.userId !== `${req.params.id}`}`) {
+        if (`${req.userId}` !== `${req.params.id}`) {
           return res.status(403).json({
             status: 403,
             msg: "Anda tidak mempunyai akses untuk dok ini!",

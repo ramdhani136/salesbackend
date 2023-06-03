@@ -13,6 +13,7 @@ import {
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
 import { ObjectId } from "mongodb";
+import UserModel from "../models/UserModel";
 
 const Db = PermissionModel;
 const redisName = "permission";
@@ -138,13 +139,13 @@ class PermissionController implements IController {
       ]);
       // End
 
-      // // Mengecek permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.PERMISSION
-      // );
-      // // End
+      // Mengecek permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.USER
+      );
+      // End
 
       // Validasi apakah filter valid
 
@@ -191,20 +192,6 @@ class PermissionController implements IController {
         },
       ];
 
-      // // Menambahkan filter berdasarkan permission user
-      // if (userPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
-
-      const totalData = await Db.aggregate(pipelineTotal);
-
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
-
       let pipelineResult: any = [
         {
           $match: isFilter.data,
@@ -249,15 +236,46 @@ class PermissionController implements IController {
       }
       // End
 
-      // // Menambahkan filter berdasarkan permission user
-      // if (userPermission.length > 0) {
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
+      // Cek Permission User
+
+      if (userPermission.length > 0) {
+        const user = await UserModel.find(
+          { _id: { $in: userPermission } },
+          { _id: 1 }
+        );
+
+        if (user.length === 0) {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data tidak ditemukan!",
+          });
+        }
+
+        const validUser = user.map((item) => item._id);
+
+        pipelineTotal.unshift({
+          $match: {
+            $or: [
+              { user: { $in: validUser } },
+              { user: new ObjectId(req.userId) },
+            ],
+          },
+        });
+        pipelineResult.unshift({
+          $match: {
+            $or: [
+              { user: { $in: validUser } },
+              { user: new ObjectId(req.userId) },
+            ],
+          },
+        });
+      }
+
+      // End
+
+      const totalData = await Db.aggregate(pipelineTotal);
+
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       const result = await Db.aggregate(pipelineResult);
       if (result.length > 0) {
@@ -273,7 +291,7 @@ class PermissionController implements IController {
       }
       return res.status(400).json({
         status: 404,
-        msg: "Data Not found!",
+        msg: "Data tidak ditemukan!",
       });
     } catch (error: any) {
       return res.status(400).json({

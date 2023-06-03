@@ -157,7 +157,12 @@ class UserController implements IController {
 
       if (userPermission.length > 0) {
         pipeline.push({
-          _id: { $in: userPermission.map((id) => new ObjectId(id)) },
+          $or: [
+            {
+              _id: { $in: userPermission.map((id) => new ObjectId(id)) },
+            },
+            { _id: new ObjectId(req.userId) },
+          ],
         });
       }
 
@@ -265,10 +270,12 @@ class UserController implements IController {
         );
 
         if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
+          if (`${req.userId !== `${isCache._id}`}`) {
+            return res.status(403).json({
+              status: 403,
+              msg: "Anda tidak mempunyai akses untuk dok ini!",
+            });
+          }
         }
         const getHistory = await History.find(
           {
@@ -305,10 +312,12 @@ class UserController implements IController {
       );
 
       if (!cekPermission) {
-        return res.status(403).json({
-          status: 403,
-          msg: "Anda tidak mempunyai akses untuk dok ini!",
-        });
+        if (`${req.userId !== `${req.params.id}`}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const buttonActions = await WorkflowController.getButtonAction(
@@ -347,10 +356,12 @@ class UserController implements IController {
     );
 
     if (!cekPermission) {
-      return res.status(403).json({
-        status: 403,
-        msg: "Anda tidak mempunyai akses untuk dok ini!",
-      });
+      if (`${req.userId !== `${req.params.id}`}`) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
     }
 
     // tidak dapat diubah
@@ -443,10 +454,12 @@ class UserController implements IController {
       );
 
       if (!cekPermission) {
-        return res.status(403).json({
-          status: 403,
-          msg: "Anda tidak mempunyai akses untuk dok ini!",
-        });
+        if (`${req.userId !== `${req.params.id}`}`) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
       }
 
       const users = await User.findOneAndDelete({ _id: req.params.id });

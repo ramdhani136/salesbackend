@@ -120,7 +120,7 @@ class PermissionController implements IController {
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
-      const limit: number | string = parseInt(`${req.query.limit}`) || 0;
+      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let search: ISearch = {
         filter: ["doc", "workflowState"],
@@ -271,21 +271,134 @@ class PermissionController implements IController {
         });
       }
 
-      // End
-
       const totalData = await Db.aggregate(pipelineTotal);
 
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       const result = await Db.aggregate(pipelineResult);
       if (result.length > 0) {
+        const finalData = result.map(async (item: any): Promise<any[]> => {
+          const allow = item.allow;
+
+          let dbRelate: string = "";
+
+          switch (allow) {
+            case "user":
+              dbRelate = "users";
+              break;
+            case "branch":
+              dbRelate = "branches";
+              break;
+            case "usergroup":
+              dbRelate = "usergroups";
+              break;
+            case "customer":
+              dbRelate = "customers";
+              break;
+            case "customergroup":
+              dbRelate = "customergroups";
+              break;
+
+            default:
+              break;
+          }
+
+          let pipeline: any[] = [];
+
+          if (dbRelate) {
+            pipeline.push(
+              // {
+              //   $project: {
+              //     _id: 1,
+              //     value: 1,
+              //   },
+              // },
+              {
+                $match: { _id: item._id },
+              },
+              {
+                $lookup: {
+                  from: "users",
+                  localField: "createdBy",
+                  foreignField: "_id",
+                  as: "createdBy",
+                  pipeline: [
+                    {
+                      $project: {
+                        _id: 1,
+                        name: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $unwind: "$createdBy",
+              },
+              {
+                $lookup: {
+                  from: "users",
+                  localField: "user",
+                  foreignField: "_id",
+                  as: "user",
+                  pipeline: [
+                    {
+                      $project: {
+                        _id: 1,
+                        name: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $unwind: "$createdBy",
+              },
+
+              {
+                $lookup: {
+                  from: dbRelate,
+                  localField: "value",
+                  foreignField: "_id",
+                  as: "value",
+                  pipeline: [
+                    {
+                      $project: {
+                        _id: 1,
+                        name: 1,
+                      },
+                    },
+                  ],
+                },
+              },
+              {
+                $unwind: "$value",
+              }
+              // {
+              //   $project: {
+              //     value: 1,
+              //   },
+              // }
+            );
+          }
+
+          let getData = await Db.aggregate(pipeline);
+
+          let data = item;
+          if (getData.length > 0) {
+            data = getData[0];
+          }
+
+          return { ...data };
+        });
+
         return res.status(200).json({
           status: 200,
           total: getAll,
           limit,
           nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
           hasMore: getAll > page * limit && limit > 0 ? true : false,
-          data: result,
+          data: await Promise.all(finalData),
           filters: stateFilter,
         });
       }
@@ -380,61 +493,167 @@ class PermissionController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.user._id,
-          },
-          selPermissionType.USER
-        );
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.user._id,
+      //     },
+      //     selPermissionType.USER
+      //   );
 
-        if (!cekPermission) {
-          if (`${req.userId}` !== `${isCache.user._id}`) {
-            return res.status(403).json({
-              status: 403,
-              msg: "Anda tidak mempunyai akses untuk dok ini!",
-            });
-          }
-        }
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   if (!cekPermission) {
+      //     if (`${req.userId}` !== `${isCache.user._id}`) {
+      //       return res.status(403).json({
+      //         status: 403,
+      //         msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //       });
+      //     }
+      //   }
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      })
-        .populate("createdBy", "name")
-        .populate("user", "name");
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
+      // const result: any = await Db.findOne({
+      //   _id: req.params.id,
+      // })
+      //   .populate("createdBy", "name")
+      //   .populate("user", "name");
 
-      if (!result) {
+      const cekValid = await Db.findOne(
+        { _id: new ObjectId(req.params.id) },
+        { allow: 1, value: 1 }
+      );
+
+      if (!cekValid) {
         return res
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
+      let pipeline = [
+        { $match: { _id: new ObjectId(req.params.id) } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "user",
+            foreignField: "_id",
+            as: "user",
+            pipeline: [
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+      ];
+
+      const allow = cekValid.allow;
+
+      let dbRelate: string = "";
+
+      switch (allow) {
+        case "user":
+          dbRelate = "users";
+          break;
+        case "branch":
+          dbRelate = "branches";
+          break;
+        case "usergroup":
+          dbRelate = "usergroups";
+          break;
+        case "customer":
+          dbRelate = "customers";
+          break;
+        case "customergroup":
+          dbRelate = "customergroups";
+          break;
+
+        default:
+          break;
+      }
+
+      if (dbRelate) {
+        pipeline.push(
+          {
+            $lookup: {
+              from: dbRelate,
+              localField: "value",
+              foreignField: "_id",
+              as: "value",
+              pipeline: [
+                {
+                  $project: {
+                    _id: 1,
+                    name: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$value",
+          }
+        );
+      }
+
+      const getData = await Db.aggregate(pipeline);
+
+      if (getData.length === 0) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+      }
+
+      const result = getData[0];
 
       const cekPermission = await cekValidPermission(
         req.userId,

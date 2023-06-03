@@ -39,7 +39,7 @@ const Permission = new mongoose.Schema(
       default: 0,
     },
     value: {
-      type: String,
+      type: Schema.Types.ObjectId,
       require: true,
       index: 1,
     },

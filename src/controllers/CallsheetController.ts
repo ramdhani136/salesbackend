@@ -1321,7 +1321,7 @@ class CallsheetController implements IController {
               }
 
               if (result.status !== "0" && checkedWorkflow.data.status !== 1) {
-                console.log(result);
+                console.log(result.taskNotes);
                 // hapus taskNotes
                 // Hapus relasi schedulelist
                 // Hapus schedulelist

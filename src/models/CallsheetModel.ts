@@ -46,6 +46,36 @@ const CallsheetModel = new mongoose.Schema(
         },
       ],
     },
+    taskNotes: {
+      type: [
+        {
+          type: {
+            _id: {
+              type: Schema.Types.ObjectId,
+              required: true,
+            },
+            from: {
+              type: String,
+              enum: ["Memo", "Schedule"],
+              required: true,
+            },
+            name: {
+              type: String,
+              required: true,
+            },
+            title: {
+              type: String,
+              required: true,
+            },
+            notes: {
+              type: String,
+              required: true,
+            },
+          },
+          required: false,
+        },
+      ],
+    },
     status: {
       type: String,
       enum: ["0", "1", "2"],
@@ -70,6 +100,5 @@ CallsheetModel.index({
 CallsheetModel.index({
   updatedAt: -1,
 });
-
 
 export default mongoose.model("callsheet", CallsheetModel);

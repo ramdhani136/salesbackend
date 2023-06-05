@@ -1013,7 +1013,9 @@ class CallsheetController implements IController {
       );
 
       if (userGroupList.length > 0) {
-        const validUserGroup = userGroupList.map((item) => item.userGroup);
+        const validUserGroup: any[] = userGroupList.map(
+          (item) => item.userGroup
+        );
 
         memoPipeline.unshift({
           $or: [{ userGroup: [] }, { userGroup: { $in: validUserGroup } }],
@@ -1036,8 +1038,8 @@ class CallsheetController implements IController {
 
       const finalMemoNotes: any = memo.map((item: any) => {
         return {
-          from: "Memo",
           _id: item._id,
+          from: "Memo",
           name: item.name,
           title: item.title,
           notes: item.notes,
@@ -1065,8 +1067,8 @@ class CallsheetController implements IController {
           .filter((item: any) => item.schedule.status === "3")
           .map((i) => {
             return {
-              from: "Schedule",
               _id: i._id,
+              from: "Schedule",
               name: i.schedule.name,
               notes: `${i.notes} & ${i.schedule.notes}`,
             };
@@ -1260,7 +1262,7 @@ class CallsheetController implements IController {
         // End
 
         if (req.body.nextState) {
-          const checkedWorkflow =
+          const checkedWorkflow: any =
             await WorkflowController.permissionUpdateAction(
               redisName,
               req.userId,
@@ -1269,7 +1271,19 @@ class CallsheetController implements IController {
             );
 
           if (checkedWorkflow.status) {
-            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+            if (result.status == "0" && checkedWorkflow.data.status == 1) {
+              const getTaskNotes: any = await this.CheckNotes(
+                result.customer._id,
+                req.userId
+              );
+              if (getTaskNotes.length > 0) {
+                checkedWorkflow.data.taskNotes = getTaskNotes;
+                // result.taskNotes = getTaskNotes;
+              }
+            }
+
+            console.log(checkedWorkflow.data);
+            // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
           } else {
             return res
               .status(403)

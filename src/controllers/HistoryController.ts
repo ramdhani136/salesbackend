@@ -337,18 +337,30 @@ class HistoryController implements IController {
     nextData: any,
     user: any,
     userId: any,
-    doc: String
+    doc: String,
+    dontUpdate?: any[string]
   ): Promise<any> => {
     const props = Object.keys(prevData._doc);
 
     let differentProps = [];
 
     for (const i of props) {
+      let validCondition = true;
+      if (dontUpdate.length > 0) {
+        const checkDontUpdate = dontUpdate.includes(i);
+        if (checkDontUpdate) {
+          validCondition = false;
+        } else {
+          validCondition = true;
+        }
+      }
+
       if (
         i !== "_id" &&
         i !== "createdAt" &&
         i !== "updatedAt" &&
-        i !== "__v"
+        i !== "__v" &&
+        validCondition
       ) {
         if (`${prevData[i]}` !== `${nextData[i]}`) {
           differentProps.push(i);

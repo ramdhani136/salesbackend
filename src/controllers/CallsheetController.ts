@@ -1462,7 +1462,8 @@ class CallsheetController implements IController {
           getData,
           req.user,
           req.userId,
-          redisName
+          redisName,
+          ["taskNotes"]
         );
 
         return res.status(200).json({ status: 200, data: resultUpdate[0] });

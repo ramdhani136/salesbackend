@@ -743,7 +743,7 @@ class ScheduleController implements IController {
     try {
       const getData: any = await Db.findOne(
         { _id: req.params.id },
-        { userGroup: 1, createdBy: 1 }
+        { userGroup: 1, createdBy: 1, name: 1 }
       );
 
       if (!getData) {
@@ -790,51 +790,67 @@ class ScheduleController implements IController {
       //     msg: "Anda tidak memiliki akses untuk dokumen ini!",
       //   });
       // // }
-      // const result = await Db.deleteOne({ _id: req.params.id });
-      // await Redis.client.del(`${redisName}-${req.params.id}`);
+
       // Delete Child
-      await this.DeletedRelateChild(new ObjectId(req.params.id));
+      await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       //End;
-      return res.status(200).json({ status: 200, data: "result" });
+      const result = await Db.deleteOne({ _id: req.params.id });
+      await Redis.client.del(`${redisName}-${req.params.id}`);
+
+      return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
 
-  protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
+  protected DeletedRelateChild = async (
+    id: ObjectId,
+    data: any
+  ): Promise<any> => {
     // schedulelist
     try {
-      const schedulelist = await ScheduleListModel.find({
-        schedule: new ObjectId(id),
-      }).populate("schedule", "name type");
+      const schedulelist = await ScheduleListModel.find(
+        {
+          schedule: new ObjectId(id),
+        },
+        { status: 1, _id: 1, schedule: 1 }
+      ).populate("schedule", "name type");
 
       if (schedulelist.length > 0) {
         for (const item of schedulelist) {
           let schedule: any = item.schedule;
 
-          // Update Visit
-          if (item.status !== "0" && schedule.type === "visit") {
-            const visit = await visitModel.find(
-              {
-                schedulelist: { $in: [item._id] },
-              },
-              { schedulelist: 1 }
-            );
+          // // Update Visit
+          // if (item.status === "1" && schedule.type === "visit") {
+          //   const visit = await visitModel.find(
+          //     {
+          //       schedulelist: { $in: [item._id] },
+          //     },
+          //     { schedulelist: 1, taskNotes: 1 }
+          //   );
 
-            if (visit.length > 0) {
-              for (const visitItem of visit) {
-                let visitId = visitItem._id;
-                let schedulelist = visitItem.schedulelist.filter((i: any) => {
-                  return i.toString() !== item._id.toString();
-                });
+          //   if (visit.length > 0) {
+          //     for (const visitItem of visit) {
+          //       let upData: any = {};
+          //       let visitId = visitItem._id;
+          //       let schedulelist = visitItem.schedulelist.filter((i: any) => {
+          //         return i.toString() !== item._id.toString();
+          //       });
 
-                await visitModel.findByIdAndUpdate(visitId, {
-                  schedulelist: schedulelist,
-                });
-              }
-            }
-          }
-          // End
+          //       upData = { schedulelist: schedulelist };
+
+          //       if (visitItem.taskNotes.length > 0) {
+          //         let taskNotes: any = visitItem.taskNotes.filter((i: any) => {
+          //           return i.from !== "Schedule" && i.name !== data.name;
+          //         });
+          //         upData = { ...upData, taskNotes: taskNotes };
+          //       }
+
+          //       await visitModel.findByIdAndUpdate(visitId, upData);
+          //     }
+          //   }
+          // }
+          // // End
 
           // Update callsheet
 
@@ -858,26 +874,32 @@ class ScheduleController implements IController {
 
                 upData = { schedulelist: schedulelist };
 
-                // if (callsheetItem.taskNotes.length > 0) {
-                //   let taskNotes: any = callsheetItem.taskNotes.filter(
-                //     (i: any) => {
-                //       return (
-                //         i.from !== "Schedule" && i.name !== data.name
-                //       );
-                //     }
-                //   );
-                //   upData = { ...upData, taskNotes: taskNotes };
-                // }
+                if (callsheetItem.taskNotes.length > 0) {
+                  let taskNotes: any = callsheetItem.taskNotes.filter(
+                    (i: any) => {
+                      return i.from !== "Schedule" || i.name !== data.name;
+                    }
+                  );
+                  upData = { ...upData, taskNotes: taskNotes };
+                }
 
-                // await CallsheetModel.findByIdAndUpdate(callsheetId,upData);
+                try {
+                  await CallsheetModel.findByIdAndUpdate(callsheetId, upData);
+                } catch (error) {
+                  throw error;
+                }
+                console.log("update visit");
               }
             }
           }
           // End
+        }
 
-          // Hapus schedulelist
-          // await ScheduleListModel.findByIdAndDelete(item._id);
-          // End
+        try {
+          await ScheduleListModel.deleteMany({ schedule: id });
+          console.log("delete many");
+        } catch (error) {
+          throw error;
         }
       }
     } catch (error) {

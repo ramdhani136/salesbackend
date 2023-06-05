@@ -1279,7 +1279,7 @@ class ScheduleListController implements IController {
 
             if (callsheetItem.taskNotes.length > 0) {
               let taskNotes: any = callsheetItem.taskNotes.filter((i: any) => {
-                return i.from !== "Schedule" && i.name !== data.schedule.name;
+                return i.from !== "Schedule" || i.name !== data.schedule.name;
               });
               upData = { ...upData, taskNotes: taskNotes };
             }

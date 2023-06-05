@@ -16,6 +16,8 @@ import {
   CustomerModel,
   CallsheetModel as Db,
   History,
+  MemoModel,
+  ScheduleListModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -634,52 +636,52 @@ class CallsheetController implements IController {
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.createdBy._id,
-            branch: isCache.branch._id,
-            group: isCache.customerGroup._id,
-            customer: isCache.customer._id,
-          },
-          selPermissionType.CALLSHEET
-        );
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.createdBy._id,
+      //       branch: isCache.branch._id,
+      //       group: isCache.customerGroup._id,
+      //       customer: isCache.customer._id,
+      //     },
+      //     selPermissionType.CALLSHEET
+      //   );
 
-        if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
-        }
+      //   if (!cekPermission) {
+      //     return res.status(403).json({
+      //       status: 403,
+      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //     });
+      //   }
 
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
 
       let pipeline: any[] = [
         {
@@ -809,7 +811,7 @@ class CallsheetController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      const result = getData[0];
+      let result = getData[0];
 
       const cekPermission = await cekValidPermission(
         req.userId,
@@ -847,6 +849,17 @@ class CallsheetController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
+      // Cek Notes dari memo dan juga dari schedule jika status draft
+
+      if (result.status === "0") {
+        const getTaskNotes: any = await this.CheckNotes(result.customer._id);
+        if (getTaskNotes.length > 0) {
+          result.taskNotes = getTaskNotes;
+        }
+      }
+
+      // End
+
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
         JSON.stringify(result)
@@ -861,6 +874,66 @@ class CallsheetController implements IController {
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });
     }
+  };
+
+  protected CheckNotes = async (customerId: ObjectId): Promise<any[]> => {
+    let taskNotes: any[] = [];
+    // Cek memo
+    try {
+      const memo: any = await MemoModel.find(
+        {
+          $and: [{ display: "callsheet" }, { status: "1" }],
+        },
+        { notes: 1, name: 1, title: 1 }
+      );
+      const finalMemoNotes: any = memo.map((item: any) => {
+        return {
+          from: "memo",
+          _id: item._id,
+          name: item.name,
+          title: item.title,
+          notes: item.notes,
+        };
+      });
+      if (finalMemoNotes.length > 0) {
+        taskNotes.push(...finalMemoNotes);
+      }
+    } catch (error) {
+      throw error;
+    }
+    // End
+
+    // Cek Schedulelist
+    try {
+      let data: any[] = await ScheduleListModel.find(
+        {
+          $and: [{ status: "0" }, { customer: customerId }],
+        },
+        { schedule: 1, notes: 1 }
+      ).populate("schedule", "name notes status");
+
+      if (data.length > 0) {
+        const finalNotesSchedule = data
+          .filter((item: any) => item.schedule.status === "3")
+          .map((i) => {
+            return {
+              from: "schedule",
+              _id: i._id,
+              name: i.schedule.name,
+              notes: `${i.notes} & ${i.schedule.notes}`,
+            };
+          });
+
+        if (finalNotesSchedule.length > 0) {
+          taskNotes.push(...finalNotesSchedule);
+        }
+      }
+    } catch (error) {
+      throw error;
+    }
+    // End
+
+    return taskNotes;
   };
 
   update = async (req: Request | any, res: Response): Promise<any> => {

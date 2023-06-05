@@ -1272,6 +1272,15 @@ class CallsheetController implements IController {
             );
 
           if (checkedWorkflow.status) {
+            const prevData = {
+              status: parseInt(result.status),
+              workflowState: result.workflowState,
+            };
+
+            if (`${prevData}` !== `${checkedWorkflow.data}`) {
+              console.log("beda");
+            }
+
             if (result.status == "0" && checkedWorkflow.data.status == 1) {
               const getTaskNotes: any = await this.CheckNotes(
                 result.customer._id,

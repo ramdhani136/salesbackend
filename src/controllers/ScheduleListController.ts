@@ -1183,10 +1183,9 @@ class ScheduleListController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id }).populate(
-        "customer",
-        "branch customerGroup createdBy"
-      );
+      const getData: any = await Db.findOne({ _id: req.params.id })
+        .populate("customer", "branch customerGroup createdBy")
+        .populate("schedule", "type name");
 
       if (!getData) {
         return res
@@ -1212,12 +1211,12 @@ class ScheduleListController implements IController {
         });
       }
 
-      // const result = await Db.deleteOne({ _id: req.params.id });
-      // await Redis.client.del(`${redisName}-${req.params.id}`);
+      const result = await Db.deleteOne({ _id: req.params.id });
+      await Redis.client.del(`${redisName}-${req.params.id}`);
       // Delete Child
       await this.DeletedRelateChild(getData);
       // End
-      return res.status(200).json({ status: 200, data: 'result' });
+      return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
@@ -1226,51 +1225,68 @@ class ScheduleListController implements IController {
   protected DeletedRelateChild = async (data: any): Promise<any> => {
     try {
       // Update Visit
-      if (data.status !== "0" && data.schedule.type === "visit") {
+      if (data.schedule.type === "visit") {
         const visit = await visitModel.find(
           {
             schedulelist: { $in: [data._id] },
           },
-          { schedulelist: 1 }
+          { schedulelist: 1, taskNotes: 1 }
         );
 
         if (visit.length > 0) {
           for (const visitItem of visit) {
+            let upData: any = {};
             let visitId = visitItem._id;
             let schedulelist = visitItem.schedulelist.filter((i: any) => {
               return i.toString() !== data._id.toString();
             });
 
-            await visitModel.findByIdAndUpdate(visitId, {
-              schedulelist: schedulelist,
-            });
+            upData = { schedulelist: schedulelist };
+
+            // if (visitItem.taskNotes.length > 0) {
+            //   let taskNotes: any = visitItem.taskNotes.filter((i: any) => {
+            //     return i.from !== "Schedule" && i.name !== data.schedule.name;
+            //   });
+            //   upData = { ...upData, taskNotes: taskNotes };
+            // }
+
+            await visitModel.findByIdAndUpdate(visitId, upData);
           }
         }
       }
       // End
 
       // Update callsheet
-      console.log('tes')
-      if (data.status !== "0" && data.schedule.type === "callsheet") {
-        const callsheet = await CallsheetModel.find(
+      if (data.schedule.type === "callsheet") {
+        const callsheet: any = await CallsheetModel.find(
           {
             schedulelist: { $in: [data._id] },
           },
-          { schedulelist: 1 }
+          { schedulelist: 1, taskNotes: 1 }
         );
 
-        // if (callsheet.length > 0) {
-        //   for (const callsheetItem of callsheet) {
-        //     let callsheetId = callsheetItem._id;
-        //     let schedulelist = callsheetItem.schedulelist.filter((i: any) => {
-        //       return i.toString() !== data._id.toString();
-        //     });
+        if (callsheet.length > 0) {
+          for (const callsheetItem of callsheet) {
+            let upData: any = {};
+            let callsheetId = callsheetItem._id;
+            let schedulelist: any = callsheetItem.schedulelist.filter(
+              (i: any) => {
+                return i.toString() !== data._id.toString();
+              }
+            );
 
-        //     await CallsheetModel.findByIdAndUpdate(callsheetId, {
-        //       schedulelist: schedulelist,
-        //     });
-        //   }
-        // }
+            upData = { schedulelist: schedulelist };
+
+            if (callsheetItem.taskNotes.length > 0) {
+              let taskNotes: any = callsheetItem.taskNotes.filter((i: any) => {
+                return i.from !== "Schedule" && i.name !== data.schedule.name;
+              });
+              upData = { ...upData, taskNotes: taskNotes };
+            }
+
+            await CallsheetModel.findByIdAndUpdate(callsheetId, upData);
+          }
+        }
       }
       // End
     } catch (error) {

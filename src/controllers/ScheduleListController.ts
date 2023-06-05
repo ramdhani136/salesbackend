@@ -1212,12 +1212,12 @@ class ScheduleListController implements IController {
         });
       }
 
-      const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // const result = await Db.deleteOne({ _id: req.params.id });
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       // Delete Child
       await this.DeletedRelateChild(getData);
       // End
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({ status: 200, data: 'result' });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
@@ -1250,6 +1250,7 @@ class ScheduleListController implements IController {
       // End
 
       // Update callsheet
+      console.log('tes')
       if (data.status !== "0" && data.schedule.type === "callsheet") {
         const callsheet = await CallsheetModel.find(
           {
@@ -1258,18 +1259,18 @@ class ScheduleListController implements IController {
           { schedulelist: 1 }
         );
 
-        if (callsheet.length > 0) {
-          for (const callsheetItem of callsheet) {
-            let callsheetId = callsheetItem._id;
-            let schedulelist = callsheetItem.schedulelist.filter((i: any) => {
-              return i.toString() !== data._id.toString();
-            });
+        // if (callsheet.length > 0) {
+        //   for (const callsheetItem of callsheet) {
+        //     let callsheetId = callsheetItem._id;
+        //     let schedulelist = callsheetItem.schedulelist.filter((i: any) => {
+        //       return i.toString() !== data._id.toString();
+        //     });
 
-            await CallsheetModel.findByIdAndUpdate(callsheetId, {
-              schedulelist: schedulelist,
-            });
-          }
-        }
+        //     await CallsheetModel.findByIdAndUpdate(callsheetId, {
+        //       schedulelist: schedulelist,
+        //     });
+        //   }
+        // }
       }
       // End
     } catch (error) {

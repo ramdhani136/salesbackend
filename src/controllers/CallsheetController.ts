@@ -1071,7 +1071,11 @@ class CallsheetController implements IController {
               _id: i._id,
               from: "Schedule",
               name: i.schedule.name,
-              notes: `${i.notes} & ${i.schedule.notes}`,
+              notes: `${i.notes ? i.notes : ""}${
+                i.notes !== undefined && i.schedule.notes !== undefined
+                  ? " & "
+                  : ""
+              }${i.schedule.notes ? i.schedule.notes : ""}`,
             };
           });
 

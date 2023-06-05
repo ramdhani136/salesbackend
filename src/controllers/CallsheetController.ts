@@ -1562,11 +1562,11 @@ class CallsheetController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      // if (getData.status === "1") {
-      //   return res
-      //     .status(404)
-      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      // }
+      if (getData.status === "1") {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Error, status dokumen aktif!" });
+      }
 
       const cekPermission = await cekValidPermission(
         req.userId,

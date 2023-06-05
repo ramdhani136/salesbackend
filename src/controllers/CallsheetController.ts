@@ -796,6 +796,7 @@ class CallsheetController implements IController {
             createdAt: 1,
             updatedAt: 1,
             rate: 1,
+            taskNotes: 1,
           },
         },
       ];
@@ -1278,12 +1279,40 @@ class CallsheetController implements IController {
               );
               if (getTaskNotes.length > 0) {
                 checkedWorkflow.data.taskNotes = getTaskNotes;
-                // result.taskNotes = getTaskNotes;
+
+                const schedulelist: any[] = getTaskNotes
+                  .filter((item: any) => {
+                    return item.from === "Schedule";
+                  })
+                  .map((i: any) => i._id);
+
+                if (schedulelist.length > 0) {
+                  checkedWorkflow.data.schedulelist = schedulelist;
+                  // Update status relasi schedulelist
+                  try {
+                    const updateShedulelist =
+                      await ScheduleListModel.updateMany(
+                        {
+                          _id: { $in: schedulelist },
+                        },
+                        {
+                          status: 1,
+                          closing: {
+                            date: new Date(),
+                            user: req.userId,
+                            doc: result.name,
+                          },
+                        }
+                      );
+                  } catch (error) {
+                    throw error;
+                  }
+                  // End
+                }
               }
             }
 
-            console.log(checkedWorkflow.data);
-            // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
           } else {
             return res
               .status(403)

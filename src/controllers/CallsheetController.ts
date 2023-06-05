@@ -1321,7 +1321,31 @@ class CallsheetController implements IController {
               }
 
               if (result.status !== "0" && checkedWorkflow.data.status !== 1) {
-                console.log(result.taskNotes);
+                if (result.schedulelist.length > 0) {
+                  const schedule = result.schedulelist;
+                  const getSchedule: any = await ScheduleListModel.find(
+                    {
+                      _id: { $in: schedule },
+                    },
+                    { _id: 1, schedule: 1 }
+                  ).populate("schedule", "name status");
+                  if (getSchedule.length > 0) {
+                    const cekStatusSchedule = getSchedule
+                      .filter((item: any) => {
+                        return item.schedule.status == "1";
+                      })
+                      .map((i: any) => i.schedule.name);
+                    if (cekStatusSchedule.length > 0) {
+                      return res.status(400).json({
+                        status: 400,
+                        msg: `Gagal, schedule ${cekStatusSchedule} tidak aktif!`,
+                      });
+                    }
+                  }
+
+                  
+                }
+
                 // hapus taskNotes
                 // Hapus relasi schedulelist
                 // Hapus schedulelist

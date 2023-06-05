@@ -1343,12 +1343,10 @@ class CallsheetController implements IController {
                     }
                   }
 
-                  
+                  // Hapus relasi schedulelist dan hapus shedulelist
                 }
 
                 // hapus taskNotes
-                // Hapus relasi schedulelist
-                // Hapus schedulelist
               }
 
               // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);

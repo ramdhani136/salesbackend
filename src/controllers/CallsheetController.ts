@@ -1545,10 +1545,16 @@ class CallsheetController implements IController {
         _id: new ObjectId(req.params.id),
       });
 
-      const getData: any = await Db.findOne({ $and: pipeline }).populate(
-        "customer",
-        "customerGroup branch"
-      );
+      const getData: any = await Db.findOne(
+        { $and: pipeline },
+        {
+          customer: 1,
+          customerGroup: 1,
+          createdBy: 1,
+          status: 1,
+          schedulelist: 1,
+        }
+      ).populate("customer", "customerGroup branch");
 
       if (!getData) {
         return res
@@ -1556,11 +1562,11 @@ class CallsheetController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      if (getData.status === "1") {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      }
+      // if (getData.status === "1") {
+      //   return res
+      //     .status(404)
+      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
+      // }
 
       const cekPermission = await cekValidPermission(
         req.userId,
@@ -1580,19 +1586,22 @@ class CallsheetController implements IController {
         });
       }
 
-      const result: any = await Db.deleteOne({ _id: req.params.id });
-
-      await Redis.client.del(`${redisName}-${req.params.id}`);
       // Delete Child
-      await this.DeletedRelateChild(new ObjectId(req.params.id));
+      await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       // End
+      const result: any = await Db.deleteOne({ _id: req.params.id });
+      await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
 
-  protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
+  protected DeletedRelateChild = async (
+    id: ObjectId,
+    data: any
+  ): Promise<any> => {
+    // Hapus relasi callsheetnotes
     try {
       await CallSheetNoteModel.deleteMany({
         callsheet: id,
@@ -1600,6 +1609,23 @@ class CallsheetController implements IController {
     } catch (error) {
       throw error;
     }
+    // End
+
+    // Update schedulelist
+    try {
+      await ScheduleListModel.updateMany(
+        {
+          _id: { $in: data.schedulelist },
+        },
+        {
+          status: 0,
+          $unset: { closing: 1 },
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+    // End
   };
 }
 

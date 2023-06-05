@@ -1065,7 +1065,7 @@ class CallsheetController implements IController {
 
       if (data.length > 0) {
         const finalNotesSchedule = data
-          .filter((item: any) => item.schedule.status === "3")
+          .filter((item: any) => item.schedule.status === "1")
           .map((i) => {
             return {
               _id: i._id,

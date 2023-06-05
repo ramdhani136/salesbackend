@@ -1298,20 +1298,19 @@ class CallsheetController implements IController {
                     checkedWorkflow.data.schedulelist = schedulelist;
                     // Update status relasi schedulelist
                     try {
-                      const updateShedulelist =
-                        await ScheduleListModel.updateMany(
-                          {
-                            _id: { $in: schedulelist },
+                      await ScheduleListModel.updateMany(
+                        {
+                          _id: { $in: schedulelist },
+                        },
+                        {
+                          status: 1,
+                          closing: {
+                            date: new Date(),
+                            user: req.userId,
+                            doc: result.name,
                           },
-                          {
-                            status: 1,
-                            closing: {
-                              date: new Date(),
-                              user: req.userId,
-                              doc: result.name,
-                            },
-                          }
-                        );
+                        }
+                      );
                     } catch (error) {
                       throw error;
                     }
@@ -1519,7 +1518,7 @@ class CallsheetController implements IController {
           req.user,
           req.userId,
           redisName,
-          ["taskNotes"]
+          ["taskNotes", "schedulelist"]
         );
 
         return res.status(200).json({ status: 200, data: resultUpdate[0] });

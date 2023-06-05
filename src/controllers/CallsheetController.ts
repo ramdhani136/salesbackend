@@ -1332,7 +1332,7 @@ class CallsheetController implements IController {
                   if (getSchedule.length > 0) {
                     const cekStatusSchedule = getSchedule
                       .filter((item: any) => {
-                        return item.schedule.status == "1";
+                        return item.schedule.status != "1";
                       })
                       .map((i: any) => i.schedule.name);
                     if (cekStatusSchedule.length > 0) {
@@ -1343,13 +1343,31 @@ class CallsheetController implements IController {
                     }
                   }
 
-                  // Hapus relasi schedulelist dan hapus shedulelist
-                }
+                  //  Hapus relasi
+                  try {
+                    await ScheduleListModel.updateMany(
+                      {
+                        _id: { $in: result.schedulelist },
+                      },
+                      { $unset: { closing: 1 }, status: 0 }
+                    );
+                  } catch (error) {
+                    throw error;
+                  }
+                  // End
 
-                // hapus taskNotes
+                  checkedWorkflow.data["$unset"] = {
+                    schedulelist: 1,
+                    taskNotes: 1,
+                  };
+
+                  // Hapus relasi schedulelist dan hapus shedulelist
+                } else {
+                  checkedWorkflow.data["$unset"] = { taskNotes: 1 };
+                }
               }
 
-              // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+              await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
             }
           } else {
             return res

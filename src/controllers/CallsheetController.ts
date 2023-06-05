@@ -1277,7 +1277,9 @@ class CallsheetController implements IController {
               workflowState: result.workflowState,
             };
 
-            if (`${prevData}` !== `${checkedWorkflow.data}`) {
+            if (
+              JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
+            ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
                 const getTaskNotes: any = await this.CheckNotes(
                   result.customer._id,
@@ -1325,7 +1327,7 @@ class CallsheetController implements IController {
                 // Hapus schedulelist
               }
 
-              await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+              // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
             }
           } else {
             return res

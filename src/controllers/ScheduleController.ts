@@ -790,12 +790,12 @@ class ScheduleController implements IController {
       //     msg: "Anda tidak memiliki akses untuk dokumen ini!",
       //   });
       // // }
-      const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // const result = await Db.deleteOne({ _id: req.params.id });
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       // Delete Child
       await this.DeletedRelateChild(new ObjectId(req.params.id));
       //End;
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({ status: 200, data: "result" });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
@@ -810,10 +810,6 @@ class ScheduleController implements IController {
 
       if (schedulelist.length > 0) {
         for (const item of schedulelist) {
-          // Hapus schedulelist
-          await ScheduleListModel.findByIdAndDelete(item._id);
-          // End
-
           let schedule: any = item.schedule;
 
           // Update Visit
@@ -841,6 +837,7 @@ class ScheduleController implements IController {
           // End
 
           // Update Visit
+          console.log(item);
           if (item.status !== "0" && schedule.type === "callsheet") {
             const callsheet = await CallsheetModel.find(
               {
@@ -849,21 +846,25 @@ class ScheduleController implements IController {
               { schedulelist: 1 }
             );
 
-            if (callsheet.length > 0) {
-              for (const callsheetItem of callsheet) {
-                let callsheetId = callsheetItem._id;
-                let schedulelist = callsheetItem.schedulelist.filter(
-                  (i: any) => {
-                    return i.toString() !== item._id.toString();
-                  }
-                );
+            // if (callsheet.length > 0) {
+            //   for (const callsheetItem of callsheet) {
+            //     let callsheetId = callsheetItem._id;
+            //     let schedulelist = callsheetItem.schedulelist.filter(
+            //       (i: any) => {
+            //         return i.toString() !== item._id.toString();
+            //       }
+            //     );
 
-                await CallsheetModel.findByIdAndUpdate(callsheetId, {
-                  schedulelist: schedulelist,
-                });
-              }
-            }
+            //     await CallsheetModel.findByIdAndUpdate(callsheetId, {
+            //       schedulelist: schedulelist,
+            //     });
+            //   }
+            // }
           }
+          // End
+
+          // Hapus schedulelist
+          await ScheduleListModel.findByIdAndDelete(item._id);
           // End
         }
       }

@@ -34,10 +34,12 @@ const CustomerModel = new mongoose.Schema(
       type: {
         type: String,
         enum: ["Point"],
-        default: "Point",
+        // default: "Point",
+        required: false,
       },
       coordinates: {
         type: [Number],
+        required: false,
       },
     },
     createdBy: {

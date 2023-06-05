@@ -836,35 +836,47 @@ class ScheduleController implements IController {
           }
           // End
 
-          // Update Visit
-          console.log(item);
-          if (item.status !== "0" && schedule.type === "callsheet") {
+          // Update callsheet
+
+          if (item.status === "1" && schedule.type === "callsheet") {
             const callsheet = await CallsheetModel.find(
               {
                 schedulelist: { $in: [item._id] },
               },
-              { schedulelist: 1 }
+              { schedulelist: 1, taskNotes: 1 }
             );
 
-            // if (callsheet.length > 0) {
-            //   for (const callsheetItem of callsheet) {
-            //     let callsheetId = callsheetItem._id;
-            //     let schedulelist = callsheetItem.schedulelist.filter(
-            //       (i: any) => {
-            //         return i.toString() !== item._id.toString();
-            //       }
-            //     );
+            if (callsheet.length > 0) {
+              for (const callsheetItem of callsheet) {
+                let upData: any = {};
+                let callsheetId = callsheetItem._id;
+                let schedulelist = callsheetItem.schedulelist.filter(
+                  (i: any) => {
+                    return i.toString() !== item._id.toString();
+                  }
+                );
 
-            //     await CallsheetModel.findByIdAndUpdate(callsheetId, {
-            //       schedulelist: schedulelist,
-            //     });
-            //   }
-            // }
+                upData = { schedulelist: schedulelist };
+
+                // if (callsheetItem.taskNotes.length > 0) {
+                //   let taskNotes: any = callsheetItem.taskNotes.filter(
+                //     (i: any) => {
+                //       return (
+                //         i.from !== "Schedule" && i.name !== data.name
+                //       );
+                //     }
+                //   );
+                //   upData = { ...upData, taskNotes: taskNotes };
+                // }
+
+                // await CallsheetModel.findByIdAndUpdate(callsheetId,upData);
+              }
+            }
           }
           // End
 
           // Hapus schedulelist
-          await ScheduleListModel.findByIdAndDelete(item._id);
+          // await ScheduleListModel.findByIdAndDelete(item._id);
           // End
         }
       }

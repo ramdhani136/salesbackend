@@ -1278,50 +1278,48 @@ class CallsheetController implements IController {
             };
 
             if (`${prevData}` !== `${checkedWorkflow.data}`) {
-              console.log("beda");
-            }
+              if (result.status == "0" && checkedWorkflow.data.status == 1) {
+                const getTaskNotes: any = await this.CheckNotes(
+                  result.customer._id,
+                  req.userId
+                );
+                if (getTaskNotes.length > 0) {
+                  checkedWorkflow.data.taskNotes = getTaskNotes;
 
-            if (result.status == "0" && checkedWorkflow.data.status == 1) {
-              const getTaskNotes: any = await this.CheckNotes(
-                result.customer._id,
-                req.userId
-              );
-              if (getTaskNotes.length > 0) {
-                checkedWorkflow.data.taskNotes = getTaskNotes;
+                  const schedulelist: any[] = getTaskNotes
+                    .filter((item: any) => {
+                      return item.from === "Schedule";
+                    })
+                    .map((i: any) => i._id);
 
-                const schedulelist: any[] = getTaskNotes
-                  .filter((item: any) => {
-                    return item.from === "Schedule";
-                  })
-                  .map((i: any) => i._id);
-
-                if (schedulelist.length > 0) {
-                  checkedWorkflow.data.schedulelist = schedulelist;
-                  // Update status relasi schedulelist
-                  try {
-                    const updateShedulelist =
-                      await ScheduleListModel.updateMany(
-                        {
-                          _id: { $in: schedulelist },
-                        },
-                        {
-                          status: 1,
-                          closing: {
-                            date: new Date(),
-                            user: req.userId,
-                            doc: result.name,
+                  if (schedulelist.length > 0) {
+                    checkedWorkflow.data.schedulelist = schedulelist;
+                    // Update status relasi schedulelist
+                    try {
+                      const updateShedulelist =
+                        await ScheduleListModel.updateMany(
+                          {
+                            _id: { $in: schedulelist },
                           },
-                        }
-                      );
-                  } catch (error) {
-                    throw error;
+                          {
+                            status: 1,
+                            closing: {
+                              date: new Date(),
+                              user: req.userId,
+                              doc: result.name,
+                            },
+                          }
+                        );
+                    } catch (error) {
+                      throw error;
+                    }
+                    // End
                   }
-                  // End
                 }
               }
-            }
 
-            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+              await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+            }
           } else {
             return res
               .status(403)

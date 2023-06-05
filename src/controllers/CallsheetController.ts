@@ -11,13 +11,16 @@ import {
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  BranchModel,
   CallSheetNoteModel,
   ContactModel,
+  CustomerGroupModel,
   CustomerModel,
   CallsheetModel as Db,
   History,
   MemoModel,
   ScheduleListModel,
+  UserGroupListModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -852,7 +855,10 @@ class CallsheetController implements IController {
       // Cek Notes dari memo dan juga dari schedule jika status draft
 
       if (result.status === "0") {
-        const getTaskNotes: any = await this.CheckNotes(result.customer._id);
+        const getTaskNotes: any = await this.CheckNotes(
+          result.customer._id,
+          req.userId
+        );
         if (getTaskNotes.length > 0) {
           result.taskNotes = getTaskNotes;
         }
@@ -876,19 +882,161 @@ class CallsheetController implements IController {
     }
   };
 
-  protected CheckNotes = async (customerId: ObjectId): Promise<any[]> => {
+  protected CheckNotes = async (
+    customerId: ObjectId,
+    userId: string
+  ): Promise<any[]> => {
     let taskNotes: any[] = [];
+
     // Cek memo
     try {
+      let memoPipeline: any[] = [{ display: "callsheet" }, { status: "1" }];
+
+      // Cek permission user
+
+      // Branch
+      // Mengecek permission user
+      const userBranchPermission = await PermissionMiddleware.getPermission(
+        userId,
+        selPermissionAllow.USER,
+        selPermissionType.BRANCH
+      );
+      // End
+
+      // Mengecek permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.BRANCH
+      );
+
+      if (branchPermission.length > 0 || userBranchPermission.length > 0) {
+        let pipelineBranch: any = [];
+
+        if (userBranchPermission.length > 0) {
+          pipelineBranch.push({ createdBy: { $in: userBranchPermission } });
+        }
+
+        if (branchPermission.length > 0) {
+          pipelineBranch.push({ _id: { $in: branchPermission } });
+        }
+        const branch = await BranchModel.find(
+          { $and: pipelineBranch },
+          { _id: 1 }
+        );
+
+        if (branch.length > 0) {
+          const validBranch = branch.map((item) => item._id);
+
+          memoPipeline.unshift({
+            $or: [{ branch: [] }, { branch: { $in: validBranch } }],
+          });
+        } else {
+          memoPipeline.unshift({
+            $or: [{ branch: [] }],
+          });
+        }
+      }
+
+      // End Branch
+
+      // CustomerGroup
+
+      // Mengecek customer Group
+      // Mengambil rincian permission user
+      const groupUserPermission = await PermissionMiddleware.getPermission(
+        userId,
+        selPermissionAllow.USER,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+      // Mengambil rincian permission branch
+      const groupBanchPermission = await PermissionMiddleware.getPermission(
+        userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+      // Mengambil rincian permission customerGroup
+      const groupGroupPermission = await PermissionMiddleware.getPermission(
+        userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.CUSTOMERGROUP
+      );
+      // End
+
+      if (
+        groupUserPermission.length > 0 ||
+        groupBanchPermission.length > 0 ||
+        groupGroupPermission.length > 0
+      ) {
+        let pipelineGroup: any = [];
+
+        if (groupUserPermission.length > 0) {
+          pipelineGroup.push({ createdBy: { $in: groupUserPermission } });
+        }
+
+        if (groupBanchPermission.length > 0) {
+          pipelineGroup.push({ branch: { $in: groupBanchPermission } });
+        }
+
+        if (groupGroupPermission.length > 0) {
+          pipelineGroup.push({ _id: { $in: groupGroupPermission } });
+        }
+        const group = await CustomerGroupModel.find(
+          { $and: pipelineGroup },
+          { _id: 1 }
+        );
+        if (group.length > 0) {
+          const validGroup = group.map((item) => item._id);
+          memoPipeline.unshift({
+            $or: [
+              { customerGroup: [] },
+              { customerGroup: { $in: validGroup } },
+            ],
+          });
+        } else {
+          memoPipeline.unshift({
+            $or: [{ customerGroup: [] }],
+          });
+        }
+      }
+
+      // End CustomerGroup
+
+      // Cek userGroup
+      const userGroupList = await UserGroupListModel.find(
+        {
+          user: new ObjectId(userId),
+        },
+        { userGroup: 1 }
+      );
+
+      if (userGroupList.length > 0) {
+        const validUserGroup = userGroupList.map((item) => item.userGroup);
+
+        memoPipeline.unshift({
+          $or: [{ userGroup: [] }, { userGroup: { $in: validUserGroup } }],
+        });
+      } else {
+        memoPipeline.unshift({
+          $or: [{ userGroup: [] }],
+        });
+      }
+      // End
+
+      // End permission user
+
       const memo: any = await MemoModel.find(
         {
-          $and: [{ display: "callsheet" }, { status: "1" }],
+          $and: memoPipeline,
         },
         { notes: 1, name: 1, title: 1 }
       );
+
       const finalMemoNotes: any = memo.map((item: any) => {
         return {
-          from: "memo",
+          from: "Memo",
           _id: item._id,
           name: item.name,
           title: item.title,
@@ -917,7 +1065,7 @@ class CallsheetController implements IController {
           .filter((item: any) => item.schedule.status === "3")
           .map((i) => {
             return {
-              from: "schedule",
+              from: "Schedule",
               _id: i._id,
               name: i.schedule.name,
               notes: `${i.notes} & ${i.schedule.notes}`,

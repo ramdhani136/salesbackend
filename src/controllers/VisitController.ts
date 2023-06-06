@@ -1646,11 +1646,11 @@ class VistController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      if (getData.status === "1") {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      }
+      // if (getData.status === "1") {
+      //   return res
+      //     .status(404)
+      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
+      // }
 
       const cekPermission = await cekValidPermission(
         req.userId,
@@ -1670,32 +1670,57 @@ class VistController implements IController {
         });
       }
 
-      // Delete Child
-      await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
-      // End
-      const result: any = await Db.deleteOne({ _id: req.params.id });
-      if (
-        fs.existsSync(path.join(__dirname, "../public/images/" + getData.img))
-      ) {
-        fs.unlink(
-          path.join(__dirname, "../public/images/" + getData.img),
-          function (err) {
-            if (err && err.code == "ENOENT") {
-              // file doens't exist
-              console.log(err);
-            } else if (err) {
-              // other errors, e.g. maybe we don't have enough permission
-              console.log("Error occurred while trying to remove file");
-            } else {
-              console.log(`removed`);
-            }
+      // Cek Status
+      if (getData.schedulelist.length > 0) {
+        const schedule: any = await ScheduleListModel.find(
+          {
+            _id: { $in: getData.schedulelist },
+          },
+          { _id: 1, schedule: 1 }
+        ).populate("schedule", "status name");
+        if (schedule.length > 0) {
+          const scheduleNotActive = schedule
+            .filter(
+              (item: any) =>
+                item.schedule.status != "1" || item.schedule.status != "0"
+            )
+            .map((i: any) => i.schedule.name);
+          if (scheduleNotActive.length > 0) {
+            return res.status(404).json({
+              status: 404,
+              msg: `Gagal, schedule ${scheduleNotActive} tidak aktif !`,
+            });
           }
-        );
+        }
       }
+      // Cek Status
 
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // // Delete Child
+      // await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
+      // // End
+      // const result: any = await Db.deleteOne({ _id: req.params.id });
+      // if (
+      //   fs.existsSync(path.join(__dirname, "../public/images/" + getData.img))
+      // ) {
+      //   fs.unlink(
+      //     path.join(__dirname, "../public/images/" + getData.img),
+      //     function (err) {
+      //       if (err && err.code == "ENOENT") {
+      //         // file doens't exist
+      //         console.log(err);
+      //       } else if (err) {
+      //         // other errors, e.g. maybe we don't have enough permission
+      //         console.log("Error occurred while trying to remove file");
+      //       } else {
+      //         console.log(`removed`);
+      //       }
+      //     }
+      //   );
+      // }
 
-      return res.status(200).json({ status: 200, data: result });
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
+
+      return res.status(200).json({ status: 200, data: "result" });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

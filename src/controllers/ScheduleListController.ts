@@ -1225,8 +1225,8 @@ class ScheduleListController implements IController {
   protected DeletedRelateChild = async (data: any): Promise<any> => {
     try {
       // Update Visit
-      if (data.schedule.type === "visit") {
-        const visit = await visitModel.find(
+      if (data.status === "1" && data.schedule.type === "visit") {
+        const visit: any = await visitModel.find(
           {
             schedulelist: { $in: [data._id] },
           },
@@ -1237,18 +1237,18 @@ class ScheduleListController implements IController {
           for (const visitItem of visit) {
             let upData: any = {};
             let visitId = visitItem._id;
-            let schedulelist = visitItem.schedulelist.filter((i: any) => {
+            let schedulelist: any = visitItem.schedulelist.filter((i: any) => {
               return i.toString() !== data._id.toString();
             });
 
             upData = { schedulelist: schedulelist };
 
-            // if (visitItem.taskNotes.length > 0) {
-            //   let taskNotes: any = visitItem.taskNotes.filter((i: any) => {
-            //     return i.from !== "Schedule" && i.name !== data.schedule.name;
-            //   });
-            //   upData = { ...upData, taskNotes: taskNotes };
-            // }
+            if (visitItem.taskNotes.length > 0) {
+              let taskNotes: any = visitItem.taskNotes.filter((i: any) => {
+                return i.from !== "Schedule" || i.name !== data.schedule.name;
+              });
+              upData = { ...upData, taskNotes: taskNotes };
+            }
 
             await visitModel.findByIdAndUpdate(visitId, upData);
           }
@@ -1257,7 +1257,7 @@ class ScheduleListController implements IController {
       // End
 
       // Update callsheet
-      if (data.schedule.type === "callsheet") {
+      if (data.status === "1" && data.schedule.type === "callsheet") {
         const callsheet: any = await CallsheetModel.find(
           {
             schedulelist: { $in: [data._id] },

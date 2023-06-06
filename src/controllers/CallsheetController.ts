@@ -372,17 +372,17 @@ class CallsheetController implements IController {
           ["_id", "customerGroup", "branch"]
         );
 
-        let pipeline: any = [validCustomer.data];
+        let pipelineCustomer: any = [validCustomer.data];
 
         if (branchPermission.length > 0) {
-          pipeline.unshift({ branch: { $in: branchPermission } });
+          pipelineCustomer.unshift({ branch: { $in: branchPermission } });
         }
 
         if (groupPermission.length > 0) {
-          pipeline.unshift({ customerGroup: { $in: groupPermission } });
+          pipelineCustomer.unshift({ customerGroup: { $in: groupPermission } });
         }
 
-        const customerData = await CustomerModel.find({ $and: pipeline }, [
+        const customerData = await CustomerModel.find({ $and: pipelineCustomer }, [
           "_id",
         ]);
 

@@ -236,9 +236,9 @@ class VistController implements IController {
       }
       // End
 
-      let pipelineTotal: any = [isFilter.data];
+      let pipelineTotal: any[] = [isFilter.data];
 
-      let pipeline: any = [
+      let pipeline: any[] = [
         { $match: isFilter.data },
         {
           $sort: order_by,
@@ -391,19 +391,20 @@ class VistController implements IController {
           ["_id", "customerGroup", "branch"]
         );
 
-        let pipeline: any = [validCustomer.data];
+        let pipelineCustomer: any = [validCustomer.data];
 
         if (branchPermission.length > 0) {
-          pipeline.unshift({ branch: { $in: branchPermission } });
+          pipelineCustomer.unshift({ branch: { $in: branchPermission } });
         }
 
         if (groupPermission.length > 0) {
-          pipeline.unshift({ customerGroup: { $in: groupPermission } });
+          pipelineCustomer.unshift({ customerGroup: { $in: groupPermission } });
         }
 
-        const customerData = await CustomerModel.find({ $and: pipeline }, [
-          "_id",
-        ]);
+        const customerData = await CustomerModel.find(
+          { $and: pipelineCustomer },
+          ["_id"]
+        );
 
         if (customerData.length > 0) {
           const finalFilterCustomer = customerData.map((item) => {
@@ -444,6 +445,7 @@ class VistController implements IController {
       // End
 
       const getAll = await Db.find({ $and: pipelineTotal }).count();
+      console.log(JSON.stringify(pipeline));
       const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {

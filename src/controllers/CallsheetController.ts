@@ -854,7 +854,6 @@ class CallsheetController implements IController {
         .sort({ createdAt: -1 });
 
       // Cek Notes dari memo dan juga dari schedule jika status draft
-
       if (result.status === "0") {
         const getTaskNotes: any = await this.CheckNotes(
           result.customer._id,
@@ -864,7 +863,6 @@ class CallsheetController implements IController {
           result.taskNotes = getTaskNotes;
         }
       }
-
       // End
 
       await Redis.client.set(
@@ -883,10 +881,7 @@ class CallsheetController implements IController {
     }
   };
 
-  protected CheckNotes = async (
-    customerId: ObjectId,
-    userId: string
-  ): Promise<any[]> => {
+  CheckNotes = async (customerId: ObjectId, userId: string): Promise<any[]> => {
     let taskNotes: any[] = [];
 
     // Cek memo
@@ -1503,6 +1498,7 @@ class CallsheetController implements IController {
               createdAt: 1,
               updatedAt: 1,
               rate: 1,
+              taskNotes: 1,
             },
           },
         ]);

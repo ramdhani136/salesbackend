@@ -346,12 +346,14 @@ class HistoryController implements IController {
 
     for (const i of props) {
       let validCondition = true;
-      if (dontUpdate.length > 0) {
-        const checkDontUpdate = dontUpdate.includes(i);
-        if (checkDontUpdate) {
-          validCondition = false;
-        } else {
-          validCondition = true;
+      if (dontUpdate) {
+        if (dontUpdate.length > 0) {
+          const checkDontUpdate = dontUpdate.includes(i);
+          if (checkDontUpdate) {
+            validCondition = false;
+          } else {
+            validCondition = true;
+          }
         }
       }
 

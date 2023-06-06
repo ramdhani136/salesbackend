@@ -15,6 +15,7 @@ import {
   CustomerModel,
   visitModel as Db,
   History,
+  ScheduleListModel,
   VisitNoteModel,
   namingSeriesModel,
 } from "../models";
@@ -32,6 +33,7 @@ import path from "path";
 import { ISearch } from "../utils/FilterQuery";
 import CustomerController from "./CustomerController";
 import { GetNameLocation } from "../utils/GetNameLocation";
+import CallsheetController from "./CallsheetController";
 
 const redisName = "visit";
 
@@ -609,13 +611,14 @@ class VistController implements IController {
 
       // Cek lokasi ketika type insite
       if (req.body.type === "insite") {
-        const inLocation = await CustomerController.getLocatonNearby({
+        const inLocation: any = await CustomerController.getLocatonNearby({
           lat: req.body.checkInLat,
           lng: req.body.checkInLng,
           maxDistance: req.body.maxDistance
             ? parseInt(`${req.body.maxDistance}`)
             : 100,
           customerId: new ObjectId(req.body.customer),
+          withNoLocation: true,
         });
 
         if (inLocation.length === 0) {
@@ -623,6 +626,13 @@ class VistController implements IController {
             status: 400,
             msg: `Error, Lokasi anda berada diluar area ${cekCustomer.name}!`,
           });
+        }
+
+        if (!inLocation.location) {
+          req.body.location = {
+            type: "Point",
+            coordinates: [req.body.checkInLng, req.body.checkInLat],
+          };
         }
       }
 
@@ -691,6 +701,13 @@ class VistController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save({});
 
+      if (req.body.location) {
+        await CustomerModel.updateOne(
+          { _id: new ObjectId(req.body.customer) },
+          { location: req.body.location }
+        );
+      }
+
       // Upload data ketika outsite
       if (req.body.type === "outsite") {
         const compressedImage = path.join(
@@ -751,52 +768,52 @@ class VistController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.createdBy._id,
-            branch: isCache.branch._id,
-            group: isCache.customerGroup._id,
-            customer: isCache.customer._id,
-          },
-          selPermissionType.VISIT
-        );
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.createdBy._id,
+      //       branch: isCache.branch._id,
+      //       group: isCache.customerGroup._id,
+      //       customer: isCache.customer._id,
+      //     },
+      //     selPermissionType.VISIT
+      //   );
 
-        if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
-        }
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   if (!cekPermission) {
+      //     return res.status(403).json({
+      //       status: 403,
+      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //     });
+      //   }
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
 
       const getData: any = await Db.aggregate([
         {
@@ -917,6 +934,7 @@ class VistController implements IController {
             createdAt: 1,
             updatedAt: 1,
             rate: 1,
+            taskNotes: 1,
           },
         },
       ]);
@@ -964,6 +982,18 @@ class VistController implements IController {
       )
         .populate("user", "name")
         .sort({ createdAt: -1 });
+
+      // Cek Notes dari memo dan juga dari schedule jika status draft
+      if (result.status === "0") {
+        const getTaskNotes: any = await CallsheetController.CheckNotes(
+          result.customer._id,
+          req.userId
+        );
+        if (getTaskNotes.length > 0) {
+          result.taskNotes = getTaskNotes;
+        }
+      }
+      // End
 
       await Redis.client.set(
         `${redisName}-${req.params.id}`,
@@ -1071,8 +1101,6 @@ class VistController implements IController {
           { _id: 1, customer: 1, createdBy: 1 }
         ).populate("customer", "customerGroup branch");
 
-
-        
         const cekPermission = await cekValidPermission(
           req.userId,
           {
@@ -1258,7 +1286,7 @@ class VistController implements IController {
         // End
 
         if (req.body.nextState) {
-          const checkedWorkflow =
+          const checkedWorkflow: any =
             await WorkflowController.permissionUpdateAction(
               redisName,
               req.userId,
@@ -1267,7 +1295,102 @@ class VistController implements IController {
             );
 
           if (checkedWorkflow.status) {
-            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+            const prevData = {
+              status: parseInt(result.status),
+              workflowState: result.workflowState,
+            };
+
+            if (
+              JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
+            ) {
+              if (result.status == "0" && checkedWorkflow.data.status == 1) {
+                const getTaskNotes: any = await CallsheetController.CheckNotes(
+                  result.customer._id,
+                  req.userId
+                );
+                if (getTaskNotes.length > 0) {
+                  checkedWorkflow.data.taskNotes = getTaskNotes;
+
+                  const schedulelist: any[] = getTaskNotes
+                    .filter((item: any) => {
+                      return item.from === "Schedule";
+                    })
+                    .map((i: any) => i._id);
+
+                  if (schedulelist.length > 0) {
+                    checkedWorkflow.data.schedulelist = schedulelist;
+                    // Update status relasi schedulelist
+                    try {
+                      await ScheduleListModel.updateMany(
+                        {
+                          _id: { $in: schedulelist },
+                        },
+                        {
+                          status: 1,
+                          closing: {
+                            date: new Date(),
+                            user: req.userId,
+                            doc: result.name,
+                          },
+                        }
+                      );
+                    } catch (error) {
+                      throw error;
+                    }
+                    // End
+                  }
+                }
+              }
+
+              if (result.status !== "0" && checkedWorkflow.data.status !== 1) {
+                if (result.schedulelist.length > 0) {
+                  const schedule = result.schedulelist;
+                  const getSchedule: any = await ScheduleListModel.find(
+                    {
+                      _id: { $in: schedule },
+                    },
+                    { _id: 1, schedule: 1 }
+                  ).populate("schedule", "name status");
+                  if (getSchedule.length > 0) {
+                    const cekStatusSchedule = getSchedule
+                      .filter((item: any) => {
+                        return item.schedule.status != "1";
+                      })
+                      .map((i: any) => i.schedule.name);
+                    if (cekStatusSchedule.length > 0) {
+                      return res.status(400).json({
+                        status: 400,
+                        msg: `Gagal, schedule ${cekStatusSchedule} tidak aktif!`,
+                      });
+                    }
+                  }
+
+                  //  Hapus relasi
+                  try {
+                    await ScheduleListModel.updateMany(
+                      {
+                        _id: { $in: result.schedulelist },
+                      },
+                      { $unset: { closing: 1 }, status: 0 }
+                    );
+                  } catch (error) {
+                    throw error;
+                  }
+                  // End
+
+                  checkedWorkflow.data["$unset"] = {
+                    schedulelist: 1,
+                    taskNotes: 1,
+                  };
+
+                  // Hapus relasi schedulelist dan hapus shedulelist
+                } else {
+                  checkedWorkflow.data["$unset"] = { taskNotes: 1 };
+                }
+              }
+
+              await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+            }
           } else {
             return res
               .status(403)
@@ -1459,6 +1582,7 @@ class VistController implements IController {
               createdAt: 1,
               updatedAt: 1,
               rate: 1,
+              taskNotes: 1,
             },
           },
         ]);
@@ -1477,8 +1601,12 @@ class VistController implements IController {
           getData,
           req.user,
           req.userId,
-          redisName
+          redisName,
+          ["taskNotes", "schedulelist"]
         );
+        // End
+
+        console.log("coba");
 
         return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End

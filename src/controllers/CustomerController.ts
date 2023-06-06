@@ -27,6 +27,7 @@ interface IGeoLOc {
   lng: number;
   maxDistance: number;
   customerId?: ObjectId;
+  withNoLocation?: Boolean;
 }
 
 class CustomerController implements IController {
@@ -724,22 +725,49 @@ class CustomerController implements IController {
     const isMaxDistance = parseInt(`${data.maxDistance}`);
 
     try {
-      const result: any = await CustomerModel.find({
-        $and: [
-          {
-            location: {
-              $near: {
-                $geometry: {
-                  type: "Point",
-                  coordinates: [targetLongitude, targetLatitude],
-                },
-                $maxDistance: isMaxDistance,
+      const pipelineNear: any[] = [
+        {
+          location: {
+            $near: {
+              $geometry: {
+                type: "Point",
+                coordinates: [targetLongitude, targetLatitude],
               },
+              $maxDistance: isMaxDistance,
             },
           },
-          { _id: data.customerId },
-        ],
-      });
+        },
+      ];
+
+      if (data.customerId) {
+        pipelineNear.push({ _id: data.customerId });
+      }
+
+      let result: any[] = await CustomerModel.find(
+        {
+          $and: pipelineNear,
+        },
+        { _id: 1, location: 1 }
+      );
+
+      if (data.withNoLocation) {
+        let pipeline: any[] = [{ location: { $exists: false } }];
+
+        if (data.customerId) {
+          pipeline.push({ _id: data.customerId });
+        }
+
+        const noLocation: any[] = await CustomerModel.find(
+          {
+            $and: pipeline,
+          },
+          { _id: 1, location: 1 }
+        );
+
+        if (noLocation.length > 0) {
+          result = [...result, ...noLocation];
+        }
+      }
 
       return result;
     } catch (error) {

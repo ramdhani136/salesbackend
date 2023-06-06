@@ -186,6 +186,53 @@ class PermissionMiddleware {
 
     return finalPermission;
   };
+
+  getCustomerChild = async (data: ObjectId[]): Promise<any[]> => {
+    const result: any = await CustomerGroupModel.aggregate([
+      {
+        $match: { _id: { $in: data } },
+      },
+      {
+        $project: {
+          parent: 1,
+        },
+      },
+      {
+        $graphLookup: {
+          from: "customergroups",
+          startWith: "$_id",
+          connectFromField: "_id",
+          connectToField: "parent._id",
+          as: "childs",
+          restrictSearchWithMatch: {},
+        },
+      },
+      {
+        $project: {
+          "childs._id": 1,
+        },
+      },
+    ]);
+
+    if (result.length > 0) {
+      let finalCG: any[] = [];
+      const isCGFil = result.map((item: any) => {
+        if (item.childs.length > 0) {
+          let getChild = item.childs.map((ic: any) => {
+            return ic._id;
+          });
+          finalCG = [...finalCG, ...getChild];
+        }
+        return item._id;
+      });
+
+      const merg = [...isCGFil, ...finalCG];
+
+      const uniqueData = this.CheckDuplicateObjectId(merg);
+      return uniqueData;
+    }
+    return [];
+  };
 }
 
 export default new PermissionMiddleware();

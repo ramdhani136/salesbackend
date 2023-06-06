@@ -401,6 +401,13 @@ class VistController implements IController {
           pipelineCustomer.unshift({ customerGroup: { $in: groupPermission } });
         }
 
+        const childGroup = await PermissionMiddleware.getCustomerChild([
+          new ObjectId("647d4f65679a5e708e930ec9"),
+          new ObjectId("647d4f78679a5e708e930ecf"),
+        ]);
+
+        console.log(childGroup);
+
         const customerData = await CustomerModel.find(
           { $and: pipelineCustomer },
           ["_id"]
@@ -445,7 +452,6 @@ class VistController implements IController {
       // End
 
       const getAll = await Db.find({ $and: pipelineTotal }).count();
-      console.log(JSON.stringify(pipeline));
       const result = await Db.aggregate(pipeline);
 
       if (result.length > 0) {

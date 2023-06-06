@@ -1606,8 +1606,6 @@ class VistController implements IController {
         );
         // End
 
-        console.log("coba");
-
         return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End
       } else {
@@ -1622,7 +1620,16 @@ class VistController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const getData: any = await Db.findOne({ _id: req.params.id });
+      const getData: any = await Db.findOne(
+        { _id: req.params.id },
+        {
+          customer: 1,
+          customerGroup: 1,
+          createdBy: 1,
+          status: 1,
+          schedulelist: 1,
+        }
+      ).populate("customer", "customerGroup branch");
 
       if (!getData) {
         return res
@@ -1654,6 +1661,9 @@ class VistController implements IController {
         });
       }
 
+      // Delete Child
+      await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
+      // End
       const result: any = await Db.deleteOne({ _id: req.params.id });
       if (
         fs.existsSync(path.join(__dirname, "../public/images/" + getData.img))
@@ -1675,23 +1685,42 @@ class VistController implements IController {
       }
 
       await Redis.client.del(`${redisName}-${req.params.id}`);
-      // Delete Child
-      await this.DeletedRelateChild(new ObjectId(req.params.id));
-      // End
+
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
 
-  protected DeletedRelateChild = async (id: ObjectId): Promise<any> => {
+  protected DeletedRelateChild = async (
+    id: ObjectId,
+    data: any
+  ): Promise<any> => {
+    // Hapus relasi visitnotes
     try {
       await VisitNoteModel.deleteMany({
-        viist: new ObjectId(id),
+        visit: id,
       });
     } catch (error) {
       throw error;
     }
+    // End
+
+    // Update schedulelist
+    try {
+      await ScheduleListModel.updateMany(
+        {
+          _id: { $in: data.schedulelist },
+        },
+        {
+          status: 0,
+          $unset: { closing: 1 },
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+    // End
   };
 }
 

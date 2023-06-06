@@ -1,14 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  CallSheetNoteModel,
-  CallsheetModel,
-  ContactModel,
-  CustomerGroupModel,
-  CustomerModel,
-  ScheduleListModel,
-  VisitNoteModel,
-  visitModel,
-} from "../../models";
+import { CustomerGroupModel, CustomerModel, MemoModel } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
 
@@ -25,10 +16,16 @@ export const EventDeleteCGt = async (
 ): Promise<any> => {
   const data: IData[] = [
     {
+      doc: "Memo",
+      filters: ["customerGroup"],
+      model: MemoModel,
+    },
+    {
       doc: "Parent CustomerGroup",
       filters: ["parent._id"],
       model: CustomerGroupModel,
     },
+
     {
       doc: "Customer",
       filters: ["customerGroup"],

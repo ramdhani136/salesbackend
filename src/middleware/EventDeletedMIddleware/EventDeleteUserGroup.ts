@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 // import { ScheduleModel } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
+import { MemoModel } from "../../models";
 
 interface IData {
   model: any;
@@ -15,11 +16,11 @@ export const EventDeleteUserGroup = async (
   next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
-    // {
-    //   doc: "Schedule",
-    //   filters: ["userGroup"],
-    //   model: ScheduleModel,
-    // },
+    {
+      doc: "Memo",
+      filters: ["userGroup"],
+      model: MemoModel,
+    },
   ];
 
   for (const i of data) {

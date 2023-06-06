@@ -5,6 +5,7 @@ import {
   ContactModel,
   CustomerGroupModel,
   CustomerModel,
+  MemoModel,
   ScheduleListModel,
   VisitNoteModel,
   namingSeriesModel,
@@ -25,6 +26,11 @@ export const EventDeleteBranch = async (
   next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
+    {
+      doc: "Memo",
+      filters: ["branch"],
+      model: MemoModel,
+    },
     {
       doc: "CustomerGroup",
       filters: ["branch"],

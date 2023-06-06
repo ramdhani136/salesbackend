@@ -1304,6 +1304,15 @@ class VistController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
+                // Cek apakah sudah checkout
+                if (!result.checkOut.createdAt) {
+                  return res.status(403).json({
+                    status: 403,
+                    msg: "Gagal, Belum melakukan checkout kunjungan ini!",
+                  });
+                }
+                // End
+
                 const getTaskNotes: any = await CallsheetController.CheckNotes(
                   result.customer._id,
                   req.userId

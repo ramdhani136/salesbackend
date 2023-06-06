@@ -3,7 +3,7 @@ import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { BranchModel, History } from "../models";
+import { BranchModel, History, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -558,6 +558,27 @@ class BranchController implements IController {
           .status(404)
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
+
+      // Cek apakah digunakan di permission data
+      const permission = await PermissionModel.findOne(
+        {
+          $and: [
+            { allow: "branch" },
+            {
+              value: new ObjectId(req.params.id),
+            },
+          ],
+        },
+        { _id: 1 }
+      );
+
+      if (permission) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Branch ini sudah digunakan oleh data permission!",
+        });
+      }
+      // End
 
       // if (result.status === "1") {
       //   return res

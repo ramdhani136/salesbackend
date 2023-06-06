@@ -7,7 +7,7 @@ import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { History } from "../models";
+import { History, PermissionModel } from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
@@ -461,6 +461,27 @@ class UserController implements IController {
           });
         }
       }
+
+        // Cek apakah digunakan di permission data
+        const permission = await PermissionModel.findOne(
+          {
+            $and: [
+              { allow: "user" },
+              {
+                value: new ObjectId(req.params.id),
+              },
+            ],
+          },
+          { _id: 1 }
+        );
+  
+        if (permission) {
+          return res.status(404).json({
+            status: 404,
+            msg: "User ini sudah digunakan oleh data permission!",
+          });
+        }
+        // End
 
       const users = await User.findOneAndDelete({ _id: req.params.id });
       if (users) {

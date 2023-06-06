@@ -9,6 +9,7 @@ import {
   CustomerModel,
   CustomerModel as Db,
   History,
+  PermissionModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -704,6 +705,27 @@ class CustomerController implements IController {
           msg: "Anda tidak mempunyai akses untuk dok ini!",
         });
       }
+
+      // Cek apakah digunakan di permission data
+      const permission = await PermissionModel.findOne(
+        {
+          $and: [
+            { allow: "customer" },
+            {
+              value: new ObjectId(req.params.id),
+            },
+          ],
+        },
+        { _id: 1 }
+      );
+
+      if (permission) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Customer ini sudah digunakan oleh data permission!",
+        });
+      }
+      // End
 
       // if (getData.status === "1") {
       //   return res

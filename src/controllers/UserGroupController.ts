@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { UserGroupModel as Db, History, UserGroupListModel } from "../models";
+import { UserGroupModel as Db, History, PermissionModel, UserGroupListModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -441,6 +441,27 @@ class UserGroupController implements IController {
           });
         }
       }
+
+         // Cek apakah digunakan di permission data
+         const permission = await PermissionModel.findOne(
+          {
+            $and: [
+              { allow: "usergroup" },
+              {
+                value: new ObjectId(req.params.id),
+              },
+            ],
+          },
+          { _id: 1 }
+        );
+  
+        if (permission) {
+          return res.status(404).json({
+            status: 404,
+            msg: "UserGroup Group ini sudah digunakan oleh data permission!",
+          });
+        }
+        // End
 
       const result = await Db.deleteOne({ _id: req.params.id });
 

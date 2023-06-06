@@ -4,7 +4,7 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { BranchModel, CustomerGroupModel as Db, History } from "../models";
+import { BranchModel, CustomerGroupModel as Db, History, PermissionModel } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -764,14 +764,35 @@ class CustomerGroupController implements IController {
         });
       }
 
+        // Cek apakah digunakan di permission data
+        const permission = await PermissionModel.findOne(
+          {
+            $and: [
+              { allow: "customergroup" },
+              {
+                value: new ObjectId(req.params.id),
+              },
+            ],
+          },
+          { _id: 1 }
+        );
+  
+        if (permission) {
+          return res.status(404).json({
+            status: 404,
+            msg: "Customer Group ini sudah digunakan oleh data permission!",
+          });
+        }
+        // End
+
       // if (getData.status === "1") {
       //   return res
       //     .status(404)
       //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
       // }
 
-      // const result = await Db.deleteOne({ _id: req.params.id });
-      // await Redis.client.del(`${redisName}-${req.params.id}`);
+      const result = await Db.deleteOne({ _id: req.params.id });
+      await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: getData });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

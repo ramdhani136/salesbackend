@@ -820,40 +820,43 @@ class ScheduleController implements IController {
         for (const item of schedulelist) {
           let schedule: any = item.schedule;
 
-          // // Update Visit
-          // if (item.status === "1" && schedule.type === "visit") {
-          //   const visit = await visitModel.find(
-          //     {
-          //       schedulelist: { $in: [item._id] },
-          //     },
-          //     { schedulelist: 1, taskNotes: 1 }
-          //   );
+          // Update visit
+          if (item.status === "1" && schedule.type === "visit") {
+            const visit = await visitModel.find(
+              {
+                schedulelist: { $in: [item._id] },
+              },
+              { schedulelist: 1, taskNotes: 1 }
+            );
 
-          //   if (visit.length > 0) {
-          //     for (const visitItem of visit) {
-          //       let upData: any = {};
-          //       let visitId = visitItem._id;
-          //       let schedulelist = visitItem.schedulelist.filter((i: any) => {
-          //         return i.toString() !== item._id.toString();
-          //       });
+            if (visit.length > 0) {
+              for (const visitItem of visit) {
+                let upData: any = {};
+                let visitId = visitItem._id;
+                let schedulelist = visitItem.schedulelist.filter((i: any) => {
+                  return i.toString() !== item._id.toString();
+                });
 
-          //       upData = { schedulelist: schedulelist };
+                upData = { schedulelist: schedulelist };
 
-          //       if (visitItem.taskNotes.length > 0) {
-          //         let taskNotes: any = visitItem.taskNotes.filter((i: any) => {
-          //           return i.from !== "Schedule" && i.name !== data.name;
-          //         });
-          //         upData = { ...upData, taskNotes: taskNotes };
-          //       }
+                if (visitItem.taskNotes.length > 0) {
+                  let taskNotes: any = visitItem.taskNotes.filter((i: any) => {
+                    return i.from !== "Schedule" || i.name !== data.name;
+                  });
+                  upData = { ...upData, taskNotes: taskNotes };
+                }
 
-          //       await visitModel.findByIdAndUpdate(visitId, upData);
-          //     }
-          //   }
-          // }
-          // // End
+                try {
+                  await visitModel.findByIdAndUpdate(visitId, upData);
+                } catch (error) {
+                  throw error;
+                }
+              }
+            }
+          }
+          // End visit
 
           // Update callsheet
-
           if (item.status === "1" && schedule.type === "callsheet") {
             const callsheet = await CallsheetModel.find(
               {
@@ -897,7 +900,6 @@ class ScheduleController implements IController {
 
         try {
           await ScheduleListModel.deleteMany({ schedule: id });
-          console.log("delete many");
         } catch (error) {
           throw error;
         }

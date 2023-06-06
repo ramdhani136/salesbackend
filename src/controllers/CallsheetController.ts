@@ -365,14 +365,30 @@ class CallsheetController implements IController {
           filter: ["name"],
           value: req.query.search || "",
         };
+
+        const notCustomerGroupFilter = customerFIlter.filter(
+          (item: any[]) => item[0] !== "customerGroup"
+        );
+
         const validCustomer = FilterQuery.getFilter(
-          customerFIlter,
+          notCustomerGroupFilter,
           stateCustomer,
           search,
           ["_id", "customerGroup", "branch"]
         );
 
         let pipelineCustomer: any = [validCustomer.data];
+
+        const isCustomerGroup = customerFIlter
+          .filter((item: any[]) => item[0] === "customerGroup")
+          .map((i: any) => new ObjectId(i[2]));
+
+        if (isCustomerGroup.length > 0) {
+          const childGroup = await PermissionMiddleware.getCustomerChild(
+            isCustomerGroup
+          );
+          pipelineCustomer.unshift({ customerGroup: { $in: childGroup } });
+        }
 
         if (branchPermission.length > 0) {
           pipelineCustomer.unshift({ branch: { $in: branchPermission } });
@@ -382,9 +398,10 @@ class CallsheetController implements IController {
           pipelineCustomer.unshift({ customerGroup: { $in: groupPermission } });
         }
 
-        const customerData = await CustomerModel.find({ $and: pipelineCustomer }, [
-          "_id",
-        ]);
+        const customerData = await CustomerModel.find(
+          { $and: pipelineCustomer },
+          ["_id"]
+        );
 
         if (customerData.length > 0) {
           const finalFilterCustomer = customerData.map((item) => {

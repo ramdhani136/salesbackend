@@ -813,24 +813,24 @@ class MemoController implements IController {
         msg: "Error, Tidak dapat merubah nomor dokumen!",
       });
     }
-    if (req.body.status) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, status tidak dapat dirubah",
-      });
-    }
+    // if (req.body.status) {
+    //   return res.status(404).json({
+    //     status: 404,
+    //     msg: "Error, status tidak dapat dirubah",
+    //   });
+    // }
     if (req.body.img) {
       return res.status(404).json({
         status: 404,
         msg: "Error, Tidak dapat merubah img name!",
       });
     }
-    if (req.body.workflowState) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, workflowState tidak dapat dirubah",
-      });
-    }
+    // if (req.body.workflowState) {
+    //   return res.status(404).json({
+    //     status: 404,
+    //     msg: "Error, workflowState tidak dapat dirubah",
+    //   });
+    // }
     // End
 
     if (req.body.display) {

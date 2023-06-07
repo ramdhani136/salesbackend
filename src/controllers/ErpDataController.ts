@@ -131,12 +131,27 @@ class ErpDataController {
 
       const ErpSite = cekUsers.ErpSite;
       const ErpToken = cekUsers.ErpToken;
-      const uri = `https:///${ErpSite}/api/resource/${req.params.doc}/${req.params.id}`;
       const headers = {
         Authorization: `token ${ErpToken}`,
       };
+      const uri = `https://${ErpSite}/api/resource/${req.params.doc}/${req.params.id}`;
       const result = await axios.get(uri, { headers });
       const data = result.data.data;
+
+      // Cek User Login
+      const isUser = await axios.get(
+        `https://${ErpSite}/api/method/frappe.auth.get_logged_user`,
+        { headers }
+      );
+
+      const getDataUser = await axios.get(
+        `https://${ErpSite}/api/resource/User/${isUser.data.message}`,
+        { headers }
+      );
+      const roles = getDataUser.data.data.roles.map((item: any) => item.role);
+      console.log(roles);
+
+      // End
 
       //   await Redis.client.set(
       //     `${redisName}-${req.params.id}`,

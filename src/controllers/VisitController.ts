@@ -34,6 +34,7 @@ import { ISearch } from "../utils/FilterQuery";
 import CustomerController from "./CustomerController";
 import { GetNameLocation } from "../utils/GetNameLocation";
 import CallsheetController from "./CallsheetController";
+import { getDistance } from "geolib";
 
 const redisName = "visit";
 
@@ -1248,18 +1249,19 @@ class VistController implements IController {
             });
           }
 
-          // Cek lokasi dulu apabila type insite maka checkout harus dilakukan di posisi konsumen tersebut
-
-          let cekCurrentLocation = false;
-
-          if (req.body.type) {
-            if (req.body.type === "insite") {
-              cekCurrentLocation = true;
+          const distance = getDistance(
+            { latitude: result.checkIn.lat, longitude: result.checkIn.lng },
+            {
+              latitude: parseFloat(req.body.checkOutLat),
+              longitude: parseFloat(req.body.checkOutLng),
             }
-          } else {
-            if (result.type === "insite") {
-              cekCurrentLocation = true;
-            }
+          );
+
+          if (distance > 100) {
+            return res.status(400).json({
+              status: 400,
+              msg: `Gagal Checkout, Anda berada diluar area checkIn!`,
+            });
           }
 
           const getLocation: any = await GetNameLocation({
@@ -1274,30 +1276,6 @@ class VistController implements IController {
               createdAt: new Date(),
               address: getLocation.data.display_name,
             };
-          }
-
-          if (cekCurrentLocation) {
-            const inLocation = await CustomerController.getLocatonNearby({
-              lat: req.body.checkOut.lat,
-              lng: req.body.checkOut.lng,
-              maxDistance: req.body.maxDistance
-                ? parseInt(`${req.body.maxDistance}`)
-                : 200,
-              customerId: req.body.customer
-                ? new ObjectId(req.body.customer)
-                : result.customer._id,
-            });
-
-            if (inLocation.length === 0) {
-              return res.status(404).json({
-                status: 404,
-                msg: `Gagal, Anda berada diluar area ${
-                  req.body.customerName
-                    ? req.body.customerName
-                    : result.customer.name
-                } !`,
-              });
-            }
           }
         }
 

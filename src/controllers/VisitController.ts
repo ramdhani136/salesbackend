@@ -1321,6 +1321,17 @@ class VistController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
+                const notes = await VisitNoteModel.findOne({
+                  visit: new ObjectId(req.params.id),
+                });
+
+                if (!notes) {
+                  return res.status(400).json({
+                    status: 400,
+                    msg: `Gagal, Catatan wajib diisi minimal 1 catatan!`,
+                  });
+                }
+
                 // Cek apakah sudah checkout
                 if (!result.checkOut.createdAt) {
                   return res.status(403).json({

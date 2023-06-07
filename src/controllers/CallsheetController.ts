@@ -1298,6 +1298,17 @@ class CallsheetController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
+                const notes = await CallSheetNoteModel.findOne({
+                  callsheet: new ObjectId(req.params.id),
+                });
+
+                if (!notes) {
+                  return res.status(400).json({
+                    status: 400,
+                    msg: `Gagal, Catatan wajib diisi minimal 1 catatan!`,
+                  });
+                }
+
                 const getTaskNotes: any = await this.CheckNotes(
                   result.customer._id,
                   req.userId

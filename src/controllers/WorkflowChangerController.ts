@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
@@ -260,11 +260,11 @@ class WorkflowChangerController implements IController {
 
   show = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        console.log("Cache");
-        return res.status(200).json({ status: 200, data: JSON.parse(cache) });
-      }
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   console.log("Cache");
+      //   return res.status(200).json({ status: 200, data: JSON.parse(cache) });
+      // }
       const result = await Db.findOne({ _id: req.params.id })
         .populate("user", "name")
         .populate("workflow", "name")
@@ -276,10 +276,10 @@ class WorkflowChangerController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result)
+      // );
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });
@@ -336,10 +336,10 @@ class WorkflowChangerController implements IController {
         .populate("user", "name")
         .populate("workflow", "name")
         .populate("state", "name");
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result)
+      // );
       return res.status(200).json({ status: 200, data: result });
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
@@ -357,7 +357,7 @@ class WorkflowChangerController implements IController {
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

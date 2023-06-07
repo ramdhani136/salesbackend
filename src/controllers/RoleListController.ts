@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
@@ -385,42 +385,42 @@ class RoleListController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.roleprofile.createdBy,
-          },
-          selPermissionType.ROLEPROFILE
-        );
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.roleprofile.createdBy,
+      //     },
+      //     selPermissionType.ROLEPROFILE
+      //   );
 
-        if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
-        }
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   if (!cekPermission) {
+      //     return res.status(403).json({
+      //       status: 403,
+      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //     });
+      //   }
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-        });
-      }
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //   });
+      // }
       const result: any = await Db.findOne({ _id: req.params.id })
         .populate("roleprofile", "name createdBy")
         .populate("createdBy", "name");
@@ -458,10 +458,10 @@ class RoleListController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result)
+      // );
 
       return res.status(200).json({
         status: 200,
@@ -558,10 +558,10 @@ class RoleListController implements IController {
         );
         // End
 
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(data)
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(data)
+        // );
 
         return res.status(200).json({ status: 200, data: data });
       }
@@ -602,7 +602,7 @@ class RoleListController implements IController {
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

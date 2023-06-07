@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
@@ -283,13 +283,13 @@ class BranchController implements IController {
       });
       // End
 
-      await Redis.client.set(
-        `${redisName}-${response._id}`,
-        JSON.stringify(response),
-        {
-          EX: 30,
-        }
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${response._id}`,
+      //   JSON.stringify(response),
+      //   {
+      //     EX: 30,
+      //   }
+      // );
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
@@ -315,59 +315,59 @@ class BranchController implements IController {
       );
       // End
 
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        if (userPermission.length > 0) {
-          const validPermission = userPermission.find((item) => {
-            return item.toString() === isCache.createdBy._id.toString();
-          });
+      //   if (userPermission.length > 0) {
+      //     const validPermission = userPermission.find((item) => {
+      //       return item.toString() === isCache.createdBy._id.toString();
+      //     });
 
-          if (!validPermission) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Data tidak ditemukan!" });
-          }
-        }
+      //     if (!validPermission) {
+      //       return res
+      //         .status(404)
+      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
+      //     }
+      //   }
 
-        if (branchPermission.length > 0) {
-          const validBranchPermission = branchPermission.find((item) => {
-            return item.toString() === isCache.createdBy._id.toString();
-          });
+      //   if (branchPermission.length > 0) {
+      //     const validBranchPermission = branchPermission.find((item) => {
+      //       return item.toString() === isCache.createdBy._id.toString();
+      //     });
 
-          if (!validBranchPermission) {
-            return res
-              .status(404)
-              .json({ status: 404, msg: "Data tidak ditemukan!" });
-          }
-        }
+      //     if (!validBranchPermission) {
+      //       return res
+      //         .status(404)
+      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
+      //     }
+      //   }
 
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
 
       let pipeline: any = [{ _id: req.params.id }];
 
@@ -408,13 +408,13 @@ class BranchController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result),
-        {
-          EX: 30,
-        }
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result),
+      //   {
+      //     EX: 30,
+      //   }
+      // );
 
       return res.status(200).json({
         status: 200,
@@ -491,13 +491,13 @@ class BranchController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         }).populate("createdBy", "name");
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
-          {
-            EX: 30,
-          }
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(getData),
+        //   {
+        //     EX: 30,
+        //   }
+        // );
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -587,7 +587,7 @@ class BranchController implements IController {
       // }
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       // push history
       await HistoryController.pushHistory({
         document: {

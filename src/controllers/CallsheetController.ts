@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import {
   CekKarakterSama,
@@ -882,10 +882,10 @@ class CallsheetController implements IController {
       }
       // End
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result)
+      // );
 
       return res.status(200).json({
         status: 200,
@@ -1521,13 +1521,13 @@ class CallsheetController implements IController {
           },
         ]);
 
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(resultUpdate[0]),
-          {
-            EX: 30,
-          }
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(resultUpdate[0]),
+        //   {
+        //     EX: 30,
+        //   }
+        // );
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -1627,7 +1627,7 @@ class CallsheetController implements IController {
       await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       // End
       const result: any = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

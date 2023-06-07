@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import User from "../models/UserModel";
@@ -226,9 +226,9 @@ class UserController implements IController {
         { password: 0 }
       );
 
-      await Redis.client.set(`user-${users._id}`, JSON.stringify(resultData), {
-        EX: 10,
-      });
+      // await Redis.client.set(`user-${users._id}`, JSON.stringify(resultData), {
+      //   EX: 10,
+      // });
       // push history
       await HistoryController.pushHistory({
         document: {
@@ -257,41 +257,41 @@ class UserController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`user-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // const cache = await Redis.client.get(`user-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache._id,
-          },
-          selPermissionType.USER
-        );
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache._id,
+      //     },
+      //     selPermissionType.USER
+      //   );
 
-        if (!cekPermission) {
-          if (`${req.userId}` !== `${isCache._id}`) {
-            return res.status(403).json({
-              status: 403,
-              msg: "Anda tidak mempunyai akses untuk dok ini!",
-            });
-          }
-        }
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": "user" },
-            ],
-          },
-          ["_id", "user", "message", "createdAt", "updatedAt"]
-        )
-          .sort({ createdAt: -1 })
-          .populate("user", "name");
-        return res
-          .status(200)
-          .json({ status: 200, data: JSON.parse(cache), history: getHistory });
-      }
+      //   if (!cekPermission) {
+      //     if (`${req.userId}` !== `${isCache._id}`) {
+      //       return res.status(403).json({
+      //         status: 403,
+      //         msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //       });
+      //     }
+      //   }
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": "user" },
+      //       ],
+      //     },
+      //     ["_id", "user", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .sort({ createdAt: -1 })
+      //     .populate("user", "name");
+      //   return res
+      //     .status(200)
+      //     .json({ status: 200, data: JSON.parse(cache), history: getHistory });
+      // }
       const users: any = await User.findOne(
         { _id: req.params.id },
         { password: 0 }
@@ -334,7 +334,7 @@ class UserController implements IController {
       )
         .sort({ createdAt: -1 })
         .populate("user", "name");
-      await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
+      // await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
       return res.status(200).json({
         status: 200,
         data: users,
@@ -423,10 +423,10 @@ class UserController implements IController {
         req.body.img = `${req.params.id}${typeimage}`;
       }
 
-      await Redis.client.set(
-        `user-${req.params.id}`,
-        JSON.stringify(resultData)
-      );
+      // await Redis.client.set(
+      //   `user-${req.params.id}`,
+      //   JSON.stringify(resultData)
+      // );
       // push history semua field yang di update
       await HistoryController.pushUpdateMany(
         user,
@@ -485,7 +485,7 @@ class UserController implements IController {
 
       const users = await User.findOneAndDelete({ _id: req.params.id });
       if (users) {
-        await Redis.client.del(`user-${req.params.id}`);
+        // await Redis.client.del(`user-${req.params.id}`);
         // push history
         await HistoryController.pushHistory({
           document: {

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import {
   CekKarakterSama,
@@ -1012,10 +1012,10 @@ class VistController implements IController {
       }
       // End
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result)
+      // );
 
       return res.status(200).json({
         status: 200,
@@ -1613,13 +1613,13 @@ class VistController implements IController {
           },
         ]);
 
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(resultUpdate[0]),
-          {
-            EX: 30,
-          }
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(resultUpdate[0]),
+        //   {
+        //     EX: 30,
+        //   }
+        // );
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -1732,7 +1732,7 @@ class VistController implements IController {
         );
       }
 
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
 
       return res.status(200).json({ status: 200, data: "result" });
     } catch (error) {

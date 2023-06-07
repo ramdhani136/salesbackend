@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
@@ -237,13 +237,13 @@ class RoleProfileController implements IController {
       });
       // End
 
-      await Redis.client.set(
-        `${redisName}-${response._id}`,
-        JSON.stringify(response),
-        {
-          EX: 30,
-        }
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${response._id}`,
+      //   JSON.stringify(response),
+      //   {
+      //     EX: 30,
+      //   }
+      // );
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
@@ -253,51 +253,51 @@ class RoleProfileController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
 
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.createdBy._id,
-          },
-          selPermissionType.ROLEPROFILE
-        );
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.createdBy._id,
+      //     },
+      //     selPermissionType.ROLEPROFILE
+      //   );
 
-        if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
-        }
+      //   if (!cekPermission) {
+      //     return res.status(403).json({
+      //       status: 403,
+      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //     });
+      //   }
 
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
       const result: any = await Db.findOne({ _id: req.params.id }).populate(
         "createdBy",
         "name"
@@ -343,10 +343,10 @@ class RoleProfileController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result)
+      // );
       return res.status(200).json({
         status: 200,
         data: result,
@@ -410,13 +410,13 @@ class RoleProfileController implements IController {
           _id: req.params.id,
         }).populate("createdBy", "name");
 
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
-          {
-            EX: 30,
-          }
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(getData),
+        //   {
+        //     EX: 30,
+        //   }
+        // );
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -465,7 +465,7 @@ class RoleProfileController implements IController {
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
 
       // Delete Child
       await this.DeletedRelateChild(new ObjectId(req.params.id));

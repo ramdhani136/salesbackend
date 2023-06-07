@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
@@ -374,78 +374,78 @@ class CustomerGroupController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        // Mengambil rincian permission user
-        const branchPermission = await PermissionMiddleware.getPermission(
-          req.userId,
-          selPermissionAllow.BRANCH,
-          selPermissionType.CUSTOMERGROUP
-        );
-        // End
+      //   // Mengambil rincian permission user
+      //   const branchPermission = await PermissionMiddleware.getPermission(
+      //     req.userId,
+      //     selPermissionAllow.BRANCH,
+      //     selPermissionType.CUSTOMERGROUP
+      //   );
+      //   // End
 
-        if (branchPermission.length > 0) {
-          const data = isCache.branch;
+      //   if (branchPermission.length > 0) {
+      //     const data = isCache.branch;
 
-          const parseString: any[] = branchPermission.map((i) => {
-            return `${i}`;
-          });
+      //     const parseString: any[] = branchPermission.map((i) => {
+      //       return `${i}`;
+      //     });
 
-          const found = data.some((item: any) => {
-            return parseString.includes(`${item._id}`);
-          });
+      //     const found = data.some((item: any) => {
+      //       return parseString.includes(`${item._id}`);
+      //     });
 
-          if (!found) {
-            return res.status(403).json({
-              status: 403,
-              msg: "Anda tidak mempunyai akses untuk dok ini!",
-            });
-          }
-        }
+      //     if (!found) {
+      //       return res.status(403).json({
+      //         status: 403,
+      //         msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //       });
+      //     }
+      //   }
 
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.createdBy._id,
-            group: isCache._id,
-          },
-          selPermissionType.CUSTOMERGROUP
-        );
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.createdBy._id,
+      //       group: isCache._id,
+      //     },
+      //     selPermissionType.CUSTOMERGROUP
+      //   );
 
-        if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
-        }
+      //   if (!cekPermission) {
+      //     return res.status(403).json({
+      //       status: 403,
+      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //     });
+      //   }
 
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        const buttonActions = await WorkflowController.getButtonAction(
-          redisName,
-          req.userId,
-          isCache.workflowState
-        );
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-          workflow: buttonActions,
-        });
-      }
+      //   const buttonActions = await WorkflowController.getButtonAction(
+      //     redisName,
+      //     req.userId,
+      //     isCache.workflowState
+      //   );
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //     workflow: buttonActions,
+      //   });
+      // }
 
       // Mengambil rincian permission user
       const branchPermission = await PermissionMiddleware.getPermission(
@@ -558,10 +558,10 @@ class CustomerGroupController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(data)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(data)
+      // );
 
       return res.status(200).json({
         status: 200,
@@ -690,13 +690,13 @@ class CustomerGroupController implements IController {
           .populate("branch", "name")
           .populate("createdBy", "name");
 
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
-          {
-            EX: 30,
-          }
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(getData),
+        //   {
+        //     EX: 30,
+        //   }
+        // );
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -792,7 +792,7 @@ class CustomerGroupController implements IController {
       // }
 
       const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: getData });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

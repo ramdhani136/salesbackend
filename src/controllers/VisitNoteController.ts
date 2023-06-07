@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
@@ -673,47 +673,47 @@ class VisitNoteController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      if (cache) {
-        const isCache = JSON.parse(cache);
+      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+      // if (cache) {
+      //   const isCache = JSON.parse(cache);
 
-        const cekPermission = await cekValidPermission(
-          req.userId,
-          {
-            user: isCache.callsheet.createdBy._id,
-            branch: isCache.callsheet.branch._id,
-            group: isCache.callsheet.customerGroup._id,
-            customer: isCache.callsheet.customer._id,
-          },
-          selPermissionType.CALLSHEET
-        );
+      //   const cekPermission = await cekValidPermission(
+      //     req.userId,
+      //     {
+      //       user: isCache.callsheet.createdBy._id,
+      //       branch: isCache.callsheet.branch._id,
+      //       group: isCache.callsheet.customerGroup._id,
+      //       customer: isCache.callsheet.customer._id,
+      //     },
+      //     selPermissionType.CALLSHEET
+      //   );
 
-        if (!cekPermission) {
-          return res.status(403).json({
-            status: 403,
-            msg: "Anda tidak mempunyai akses untuk dok ini!",
-          });
-        }
+      //   if (!cekPermission) {
+      //     return res.status(403).json({
+      //       status: 403,
+      //       msg: "Anda tidak mempunyai akses untuk dok ini!",
+      //     });
+      //   }
 
-        const getHistory = await History.find(
-          {
-            $and: [
-              { "document._id": `${isCache._id}` },
-              { "document.type": redisName },
-            ],
-          },
+      //   const getHistory = await History.find(
+      //     {
+      //       $and: [
+      //         { "document._id": `${isCache._id}` },
+      //         { "document.type": redisName },
+      //       ],
+      //     },
 
-          ["_id", "message", "createdAt", "updatedAt"]
-        )
-          .populate("user", "name")
-          .sort({ createdAt: -1 });
+      //     ["_id", "message", "createdAt", "updatedAt"]
+      //   )
+      //     .populate("user", "name")
+      //     .sort({ createdAt: -1 });
 
-        return res.status(200).json({
-          status: 200,
-          data: JSON.parse(cache),
-          history: getHistory,
-        });
-      }
+      //   return res.status(200).json({
+      //     status: 200,
+      //     data: JSON.parse(cache),
+      //     history: getHistory,
+      //   });
+      // }
 
       const getData: any = await Db.aggregate([
         {
@@ -914,10 +914,10 @@ class VisitNoteController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result)
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result)
+      // );
 
       return res.status(200).json({
         status: 200,
@@ -1195,13 +1195,13 @@ class VisitNoteController implements IController {
           },
         ]);
 
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(resultUpdate[0]),
-          {
-            EX: 30,
-          }
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(resultUpdate[0]),
+        //   {
+        //     EX: 30,
+        //   }
+        // );
 
         return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End
@@ -1253,7 +1253,7 @@ class VisitNoteController implements IController {
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

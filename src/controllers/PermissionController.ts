@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Redis from "../config/Redis";
+// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
@@ -477,13 +477,13 @@ class PermissionController implements IController {
 
       // End
 
-      await Redis.client.set(
-        `${redisName}-${response._id}`,
-        JSON.stringify(response),
-        {
-          EX: 30,
-        }
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${response._id}`,
+      //   JSON.stringify(response),
+      //   {
+      //     EX: 30,
+      //   }
+      // );
 
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
@@ -691,13 +691,13 @@ class PermissionController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
-      await Redis.client.set(
-        `${redisName}-${req.params.id}`,
-        JSON.stringify(result),
-        {
-          EX: 30,
-        }
-      );
+      // await Redis.client.set(
+      //   `${redisName}-${req.params.id}`,
+      //   JSON.stringify(result),
+      //   {
+      //     EX: 30,
+      //   }
+      // );
 
       return res.status(200).json({
         status: 200,
@@ -802,13 +802,13 @@ class PermissionController implements IController {
         })
           .populate("createdBy", "name")
           .populate("user", "name");
-        await Redis.client.set(
-          `${redisName}-${req.params.id}`,
-          JSON.stringify(getData),
-          {
-            EX: 30,
-          }
-        );
+        // await Redis.client.set(
+        //   `${redisName}-${req.params.id}`,
+        //   JSON.stringify(getData),
+        //   {
+        //     EX: 30,
+        //   }
+        // );
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -859,7 +859,7 @@ class PermissionController implements IController {
       }
 
       const result = await Db.findByIdAndDelete(req.params.id);
-      await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       // push history
       // await HistoryController.pushHistory({
       //   document: {

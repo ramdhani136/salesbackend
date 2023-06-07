@@ -38,7 +38,7 @@ import {
   CallsheetNoteRoutes,
   MemoRoutes,
 } from "./routes";
-import Redis from "./config/Redis";
+// import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
 import cron from "node-cron";
 import { AuthMiddleware, RoleMiddleware } from "./middleware";
@@ -75,7 +75,7 @@ class App {
     this.app.use(morgan("dev"));
     this.app.use(helmet());
     this.app.use(cors(corsOptions));
-    Redis.getConnect();
+    // Redis.getConnect();
     this.getSocket();
     this.app.use(
       "/public",

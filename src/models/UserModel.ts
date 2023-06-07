@@ -20,10 +20,13 @@ const User = new mongoose.Schema(
     phone: {
       type: Number,
     },
-    img: {
+    ErpSite: {
       type: String,
     },
-    erpToken: {
+    ErpToken: {
+      type: String,
+    },
+    img: {
       type: String,
     },
     password: {

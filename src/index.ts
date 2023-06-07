@@ -51,6 +51,7 @@ import {
   RoleUserModel,
   ScheduleModel,
   User,
+  WorkflowState,
 } from "./models";
 
 const cookieParser = require("cookie-parser");
@@ -213,6 +214,20 @@ class App {
           user: userId,
           createdBy: userId,
         });
+      }
+      // End
+
+      // Cek WorkflowState
+      const state = ["Draft", "Submitted"];
+
+      for (const iState of state) {
+        let getState = await WorkflowState.findOne(
+          { name: iState },
+          { _id: 1 }
+        );
+        if (!getState) {
+          await WorkflowState.create({ name: iState, user: userId });
+        }
       }
       // End
     } catch (error) {

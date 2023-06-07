@@ -427,14 +427,30 @@ class CallsheetNoteController implements IController {
           filter: ["name"],
           value: req.query.search || "",
         };
+
+        const notCustomerGroupFilter = customerFIlter.filter(
+          (item: any[]) => item[0] !== "customerGroup"
+        );
+
         const validCustomer = FilterQuery.getFilter(
-          customerFIlter,
+          notCustomerGroupFilter,
           stateCustomer,
           searchCust,
           ["_id", "customerGroup", "branch"]
         );
 
         let custPipeline: any[] = [validCustomer.data];
+
+        const isCustomerGroup = customerFIlter
+          .filter((item: any[]) => item[0] === "customerGroup")
+          .map((i: any) => new ObjectId(i[2]));
+
+        if (isCustomerGroup.length > 0) {
+          const childGroup = await PermissionMiddleware.getCustomerChild(
+            isCustomerGroup
+          );
+          custPipeline.unshift({ customerGroup: { $in: childGroup } });
+        }
 
         if (branchPermission.length > 0) {
           custPipeline.unshift({ branch: { $in: branchPermission } });
@@ -1261,7 +1277,7 @@ class CallsheetNoteController implements IController {
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });
-      // await Redis.client.del(`${redisName}-${req.params.id}`); 
+      // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

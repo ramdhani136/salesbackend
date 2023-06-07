@@ -1,12 +1,39 @@
 import { Request, Response } from "express";
 // import Redis from "../config/Redis";
 import axios from "axios";
+import { User } from "../models";
 
 // const redisName = "packingid";
 
 class ErpDataController {
-  index = async (req: Request, res: Response): Promise<any> => {
+  index = async (req: Request | any, res: Response): Promise<any> => {
     try {
+      const cekUsers = await User.findById(req.userId);
+
+      if (!cekUsers) {
+        return res.status(400).json({
+          status: 404,
+          msg: "User tidak terdaftar!",
+        });
+      }
+
+      if (!cekUsers.ErpSite) {
+        return res.status(400).json({
+          status: 404,
+          msg: "Gagal, akun anda tidak terkoneksi dengan ERP",
+        });
+      }
+
+      if (!cekUsers.ErpToken) {
+        return res.status(400).json({
+          status: 404,
+          msg: "Gagal, akun anda tidak terkoneksi dengan ERP",
+        });
+      }
+
+      const ErpSite = cekUsers.ErpSite;
+      const ErpToken = cekUsers.ErpToken;
+
       let filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
@@ -33,7 +60,7 @@ class ErpDataController {
 
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
-      const uri = `${process.env.ERP_HOST}/api/resource/${req.params.doc}?${
+      const uri = `https://${ErpSite}/api/resource/${req.params.doc}?${
         filters.length > 0 ? `filters=${JSON.stringify(filters)}&&` : ``
       }limit_start=${
         page == 1 ? 0 : page * limit
@@ -44,7 +71,7 @@ class ErpDataController {
       }`;
 
       const headers = {
-        Authorization: `${process.env.ERP_TOKEN}`,
+        Authorization: `token ${ErpToken}`,
       };
 
       const result = await axios.get(uri, { headers });
@@ -53,7 +80,7 @@ class ErpDataController {
         return res.status(200).json({
           status: 200,
           limit,
-          //   nextPage: page + 1,
+          nextPage: page + 1,
           hasMore: true,
           data: result.data.data,
         });
@@ -71,16 +98,42 @@ class ErpDataController {
     }
   };
 
-  show = async (req: Request, res: Response): Promise<Response> => {
+  show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       //   const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       //   if (cache) {
       //     console.log("Cache");
       //     return res.status(200).json({ status: 200, data: JSON.parse(cache) });
       //   }
-      const uri = `${process.env.ERP_HOST}/api/resource/${req.params.doc}/${req.params.id}`;
+
+      const cekUsers = await User.findById(req.userId);
+
+      if (!cekUsers) {
+        return res.status(400).json({
+          status: 404,
+          msg: "User tidak terdaftar!",
+        });
+      }
+
+      if (!cekUsers.ErpSite) {
+        return res.status(400).json({
+          status: 404,
+          msg: "Gagal, akun anda tidak terkoneksi dengan ERP",
+        });
+      }
+
+      if (!cekUsers.ErpToken) {
+        return res.status(400).json({
+          status: 404,
+          msg: "Gagal, akun anda tidak terkoneksi dengan ERP",
+        });
+      }
+
+      const ErpSite = cekUsers.ErpSite;
+      const ErpToken = cekUsers.ErpToken;
+      const uri = `https:///${ErpSite}/api/resource/${req.params.doc}/${req.params.id}`;
       const headers = {
-        Authorization: `${process.env.ERP_TOKEN}`,
+        Authorization: `token ${ErpToken}`,
       };
       const result = await axios.get(uri, { headers });
       const data = result.data.data;

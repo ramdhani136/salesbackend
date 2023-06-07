@@ -192,7 +192,7 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
-    this.app.use("/erp", ErpDataRoutes);
+    this.app.use("/erp", AuthMiddleware, ErpDataRoutes);
     this.app.use("/branch", AuthMiddleware, BranchRoutes);
     this.app.use("/permission", AuthMiddleware, PermissionRoutes);
     this.app.use("/customer", AuthMiddleware, CustomerRoutes);

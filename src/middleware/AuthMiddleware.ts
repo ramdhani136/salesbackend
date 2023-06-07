@@ -22,6 +22,7 @@ export const AuthMiddleware = (
           status: 403,
           msg: "Forbiden, you have to login to access the data!",
         });
+
       req.userId = decoded._id;
       req.username = decoded.username;
       req.user = decoded.name;

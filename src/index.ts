@@ -9,6 +9,7 @@ import DataConnect from "./config/db";
 import http from "http";
 import path from "path";
 import bcrypt from "bcrypt";
+import { mkdirp } from "mkdirp";
 import {
   ChatRoutes,
   HistoryRoutes,
@@ -235,6 +236,26 @@ class App {
     }
   };
 
+  protected SetPath = (): void => {
+    const imagePath = path.join(__dirname, "public/images");
+    const memoPath = path.join(__dirname, "public/memo");
+    const userPage = path.join(__dirname, "public/users");
+    const assetPath = path.join(__dirname, "assets/images");
+
+    const dir = [imagePath, memoPath, userPage, assetPath];
+
+    for (const item of dir) {
+      mkdirp(item)
+        .then((made) => console.log(`Membuat folder ${item}`))
+        .catch((err) => {
+          console.log(`Gagal Mebuat folder ${item} `);
+        });
+    }
+    this.app.use("/public", express.static(imagePath));
+    this.app.use("/public", express.static(path.join(memoPath)));
+    this.app.use("/images/users", express.static(userPage));
+  };
+
   protected plugins(): void {
     this.app.use(cookieParser());
     dotenv();
@@ -245,18 +266,7 @@ class App {
     this.app.use(cors(corsOptions));
     // Redis.getConnect();
     this.getSocket();
-    this.app.use(
-      "/public",
-      express.static(path.join(__dirname, "public/images"))
-    );
-    this.app.use(
-      "/public",
-      express.static(path.join(__dirname, "public/memo"))
-    );
-    this.app.use(
-      "/images/users",
-      express.static(path.join(__dirname, "public/users"))
-    );
+    this.SetPath();
     this.SettingDefaultData();
   }
 

@@ -1261,7 +1261,7 @@ class CallsheetNoteController implements IController {
       }
 
       const result = await Db.deleteOne({ _id: req.params.id });
-      // await Redis.client.del(`${redisName}-${req.params.id}`);
+      // await Redis.client.del(`${redisName}-${req.params.id}`); 
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

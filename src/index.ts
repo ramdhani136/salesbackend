@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application } from "express";
 import bodyParser from "body-parser";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -8,6 +8,7 @@ import compression from "compression";
 import DataConnect from "./config/db";
 import http from "http";
 import path from "path";
+import bcrypt from "bcrypt";
 import {
   ChatRoutes,
   HistoryRoutes,
@@ -43,7 +44,14 @@ import {
 import { SocketIO } from "./utils";
 import cron from "node-cron";
 import { AuthMiddleware, RoleMiddleware } from "./middleware";
-import { MemoModel, ScheduleModel } from "./models";
+import {
+  MemoModel,
+  RoleListModel,
+  RoleProfileModel,
+  RoleUserModel,
+  ScheduleModel,
+  User,
+} from "./models";
 
 const cookieParser = require("cookie-parser");
 
@@ -68,6 +76,150 @@ class App {
     // this.Cron();
   }
 
+  protected SettingDefaultData = async (): Promise<any> => {
+    try {
+      let userId = null;
+      let roleProfileId = null;
+
+      // Cek User
+      const user: any = await User.findOne(
+        { username: "administrator" },
+        { _id: 1 }
+      );
+
+      if (!user) {
+        const salt = await bcrypt.genSalt();
+
+        const insertUser = new User({
+          name: "Administrator",
+          password: await bcrypt.hash("!Etms000!", salt),
+          username: "administrator",
+          status: "1",
+          workflowState: "Enabled",
+        });
+
+        const getUser: any = await insertUser.save({});
+
+        userId = getUser._id;
+      } else {
+        userId = user._id;
+      }
+
+      // End Check User
+
+      // Cek RoleProfile
+
+      const doc = [
+        "users",
+        "branch",
+        "permission",
+        "customer",
+        "customergroup",
+        "visit",
+        "callsheet",
+        "contact",
+        "namingseries",
+        "usergroup",
+        "usergrouplist",
+        "schedule",
+        "schedulelist",
+        "roleprofile",
+        "rolelist",
+        "roleuser",
+        "tag",
+        "memo",
+        "erp",
+        "namingseries",
+        "workflowstate",
+        "workflowaction",
+        "workflow",
+        "workflowtransition",
+        "workflowchanger",
+      ];
+
+      const roleProfile: any = await RoleProfileModel.findOne({
+        name: "Administrator",
+      });
+
+      if (!roleProfile) {
+        const insertRoleProfile = new RoleProfileModel(
+          {
+            name: "Administrator",
+            status: "1",
+            workflowState: "Submitted",
+            createdBy: userId,
+          },
+          { _id: 1 }
+        );
+        const getRoleProfile: any = await insertRoleProfile.save({});
+        roleProfileId = getRoleProfile._id;
+
+        for (const item of doc) {
+          await RoleListModel.create({
+            roleprofile: roleProfileId,
+            doc: item,
+            create: 1,
+            read: 1,
+            update: 1,
+            delete: 1,
+            amend: 1,
+            submit: 1,
+            report: 1,
+            export: 1,
+            createdBy: userId,
+          });
+        }
+      } else {
+        roleProfileId = roleProfile._id;
+        for (const item of doc) {
+          let valid = await RoleListModel.findOne(
+            {
+              $and: [{ roleprofile: roleProfileId }, { doc: item }],
+            },
+            { _id: 1 }
+          );
+
+          if (!valid) {
+            await RoleListModel.create({
+              roleprofile: roleProfileId,
+              doc: item,
+              create: 1,
+              read: 1,
+              update: 1,
+              delete: 1,
+              amend: 1,
+              submit: 1,
+              report: 1,
+              export: 1,
+              createdBy: userId,
+            });
+          }
+        }
+      }
+
+      // End Cek RoleProfile
+
+      // Cek roleuser
+      const roleuser = await RoleUserModel.findOne(
+        {
+          $and: [{ roleprofile: roleProfileId }, { user: userId }],
+        },
+        { _id: 1 }
+      );
+
+      if (!roleuser) {
+        await RoleUserModel.create({
+          roleprofile: roleProfileId,
+          user: userId,
+          createdBy: userId,
+        });
+      }
+      // End
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   protected plugins(): void {
     this.app.use(cookieParser());
     dotenv();
@@ -90,6 +242,7 @@ class App {
       "/images/users",
       express.static(path.join(__dirname, "public/users"))
     );
+    this.SettingDefaultData();
   }
 
   protected Cron(): void {
@@ -192,41 +345,72 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
-    this.app.use("/erp", AuthMiddleware, ErpDataRoutes);
-    this.app.use("/branch", AuthMiddleware, BranchRoutes);
-    this.app.use("/permission", AuthMiddleware, PermissionRoutes);
-    this.app.use("/customer", AuthMiddleware, CustomerRoutes);
-    this.app.use("/customergroup", AuthMiddleware, CustomerGroupRoutes);
-    this.app.use("/visit", AuthMiddleware, VisitRoutes);
-    this.app.use("/callsheet", AuthMiddleware, CallsheetRoutes);
-    this.app.use("/contact", AuthMiddleware, ContactRoutes);
-    this.app.use("/namingseries", AuthMiddleware, NamingSeriesRoutes);
-    this.app.use("/usergroup", AuthMiddleware, UserGroupRoutes);
+    this.app.use("/erp", AuthMiddleware, RoleMiddleware, ErpDataRoutes);
+    this.app.use("/branch", AuthMiddleware, RoleMiddleware, BranchRoutes);
+    this.app.use(
+      "/permission",
+      AuthMiddleware,
+      RoleMiddleware,
+      PermissionRoutes
+    );
+    this.app.use("/customer", AuthMiddleware, RoleMiddleware, CustomerRoutes);
+    this.app.use(
+      "/customergroup",
+      AuthMiddleware,
+      RoleMiddleware,
+      CustomerGroupRoutes
+    );
+    this.app.use("/visit", AuthMiddleware, RoleMiddleware, VisitRoutes);
+    this.app.use("/callsheet", AuthMiddleware, RoleMiddleware, CallsheetRoutes);
+    this.app.use("/contact", AuthMiddleware, RoleMiddleware, ContactRoutes);
+    this.app.use(
+      "/namingseries",
+      AuthMiddleware,
+      RoleMiddleware,
+      NamingSeriesRoutes
+    );
+    this.app.use("/usergroup", AuthMiddleware, RoleMiddleware, UserGroupRoutes);
     this.app.use("/usergrouplist", AuthMiddleware, UserGroupListRoutes);
-    this.app.use("/schedule", AuthMiddleware, ScheduleRoutes);
+    this.app.use("/schedule", AuthMiddleware, RoleMiddleware, ScheduleRoutes);
     this.app.use("/schedulelist", AuthMiddleware, ScheduleListRoutes);
     this.app.use(
       "/roleprofile",
       AuthMiddleware,
-      // RoleValidation,
+      RoleMiddleware,
       RoleProfileRoutes
     );
-    this.app.use("/rolelist", AuthMiddleware, RoleListRoutes);
-    this.app.use("/roleuser", AuthMiddleware, RoleUserRoutes);
-    this.app.use("/tag", AuthMiddleware, TagRoutes);
+    this.app.use("/rolelist", AuthMiddleware, RoleMiddleware, RoleListRoutes);
+    this.app.use("/roleuser", AuthMiddleware, RoleMiddleware, RoleUserRoutes);
+    this.app.use("/tag", AuthMiddleware, RoleMiddleware, TagRoutes);
     this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
     this.app.use("/callsheetnote", AuthMiddleware, CallsheetNoteRoutes);
-    this.app.use("/memo", AuthMiddleware, MemoRoutes);
+    this.app.use("/memo", AuthMiddleware, RoleMiddleware, MemoRoutes);
 
-    this.app.use("/workflowstate", AuthMiddleware, WorkflowStateRoutes);
-    this.app.use("/workflowaction", AuthMiddleware, workflowActionRoutes);
-    this.app.use("/workflow", AuthMiddleware, WorkflowRoutes);
+    this.app.use(
+      "/workflowstate",
+      AuthMiddleware,
+      RoleMiddleware,
+      WorkflowStateRoutes
+    );
+    this.app.use(
+      "/workflowaction",
+      AuthMiddleware,
+      RoleMiddleware,
+      workflowActionRoutes
+    );
+    this.app.use("/workflow", AuthMiddleware, RoleMiddleware, WorkflowRoutes);
     this.app.use(
       "/workflowtransition",
       AuthMiddleware,
+      RoleMiddleware,
       WorkflowTransitionRoutes
     );
-    this.app.use("/workflowchanger", AuthMiddleware, WorkflowCangerRoutes);
+    this.app.use(
+      "/workflowchanger",
+      AuthMiddleware,
+      RoleMiddleware,
+      WorkflowCangerRoutes
+    );
     // this.app.use("/history", AuthMiddleware, HistoryRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);

@@ -25,7 +25,7 @@ class UserRoutes extends RouteBase {
       "/",
       upload.single("img"),
       AuthMiddleware,
-      // RoleMiddleware,
+      RoleMiddleware,
       UserController.create
     );
     this.router.post("/login", UserController.login);
@@ -34,20 +34,20 @@ class UserRoutes extends RouteBase {
     this.router.get(
       "/:id",
       AuthMiddleware,
-      // RoleMiddleware,
+      RoleMiddleware,
       UserController.show
     );
     this.router.delete(
       "/:id",
       AuthMiddleware,
-      // RoleMiddleware,
-      // DeletedValidMiddleware,
+      RoleMiddleware,
+      DeletedValidMiddleware,
       UserController.delete
     );
     this.router.put(
       "/:id",
       AuthMiddleware,
-      // RoleMiddleware,
+      RoleMiddleware,
       upload.single("img"),
       UserController.update
     );

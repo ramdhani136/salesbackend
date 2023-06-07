@@ -26,6 +26,7 @@ import VisitNoteRoutes from "./VisitNoteRoutes";
 import CallsheetRoutes from "./CallsheetRoutes";
 import CallsheetNoteRoutes from "./CallsheetNoteRoutes";
 import MemoRoutes from "./MemoRoutes";
+import ErpDataRoutes from "./ErpDataRoutes";
 
 export {
   UserRoutes,
@@ -56,4 +57,5 @@ export {
   CallsheetRoutes,
   CallsheetNoteRoutes,
   MemoRoutes,
+  ErpDataRoutes,
 };

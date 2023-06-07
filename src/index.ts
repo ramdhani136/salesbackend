@@ -37,6 +37,7 @@ import {
   CallsheetRoutes,
   CallsheetNoteRoutes,
   MemoRoutes,
+  ErpDataRoutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -191,6 +192,7 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
+    this.app.use("/erp", ErpDataRoutes);
     this.app.use("/branch", AuthMiddleware, BranchRoutes);
     this.app.use("/permission", AuthMiddleware, PermissionRoutes);
     this.app.use("/customer", AuthMiddleware, CustomerRoutes);

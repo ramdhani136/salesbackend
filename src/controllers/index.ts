@@ -1,5 +1,5 @@
 import UserController from "./UserController";
-
+import ErpDataController from "./ErpDataController";
 import RoleProfileController from "./RoleProfileController";
 import RoleListController from "./RoleListController";
 import RoleUserController from "./RoleUserController";
@@ -57,4 +57,5 @@ export {
   CallsheetController,
   CallsheetNoteController,
   MemoController,
+  ErpDataController
 };

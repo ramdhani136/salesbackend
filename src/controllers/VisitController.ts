@@ -1004,7 +1004,8 @@ class VistController implements IController {
       if (result.status === "0") {
         const getTaskNotes: any = await CallsheetController.CheckNotes(
           result.customer._id,
-          req.userId
+          req.userId,
+          "visit"
         );
         if (getTaskNotes.length > 0) {
           result.taskNotes = getTaskNotes;
@@ -1343,7 +1344,8 @@ class VistController implements IController {
 
                 const getTaskNotes: any = await CallsheetController.CheckNotes(
                   result.customer._id,
-                  req.userId
+                  req.userId,
+                  "visit"
                 );
                 if (getTaskNotes.length > 0) {
                   checkedWorkflow.data.taskNotes = getTaskNotes;

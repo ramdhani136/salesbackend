@@ -898,12 +898,19 @@ class CallsheetController implements IController {
     }
   };
 
-  CheckNotes = async (customerId: ObjectId, userId: string): Promise<any[]> => {
+  CheckNotes = async (
+    customerId: ObjectId,
+    userId: string,
+    doc?: String
+  ): Promise<any[]> => {
     let taskNotes: any[] = [];
 
     // Cek memo
     try {
-      let memoPipeline: any[] = [{ display: redisName }, { status: "1" }];
+      let memoPipeline: any[] = [
+        { display: doc ? doc : redisName },
+        { status: "1" },
+      ];
 
       // Cek permission user
 
@@ -1068,12 +1075,17 @@ class CallsheetController implements IController {
 
     // Cek Schedulelist
     try {
-      let data: any[] = await ScheduleListModel.find(
+      let schedulelist: any[] = await ScheduleListModel.find(
         {
           $and: [{ status: "0" }, { customer: customerId }],
         },
         { schedule: 1, notes: 1 }
-      ).populate("schedule", "name notes status");
+      ).populate("schedule", "name notes status type");
+
+      let isDoc = !doc ? redisName : doc;
+      const data = schedulelist.filter((item) => item.schedule.type == isDoc);
+
+      // console.log(data);
 
       if (data.length > 0) {
         const finalNotesSchedule = data

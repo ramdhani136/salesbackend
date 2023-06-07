@@ -204,7 +204,7 @@ class MemoController implements IController {
         );
         if (branch.length > 0) {
           const validBranch = branch.map((item) => item._id);
-         
+
           FinalFIlter.unshift({
             $or: [{ branch: [] }, { branch: { $in: validBranch } }],
           });
@@ -865,6 +865,8 @@ class MemoController implements IController {
           display: req.body.display,
           activeDate: req.body.activeDate,
           closingDate: req.body.closingDate,
+          status: req.body.status,
+          workflowState: req.body.workflowState,
         };
 
         if (req.body.notes) {

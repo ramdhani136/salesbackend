@@ -20,57 +20,57 @@ class WorkflowTransitionController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias:"Id",
+        alias: "Id",
         name: "_id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
 
       {
-        alias:"User",
+        alias: "User",
         name: "user",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"Workflow",
+        alias: "Workflow",
         name: "workflow",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"Action",
+        alias: "Action",
         name: "action",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"StateActive",
+        alias: "StateActive",
         name: "stateActive",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"NextState",
+        alias: "NextState",
         name: "nextState",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-      alias:"RoleProfile",
+        alias: "RoleProfile",
         name: "roleprofile",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
-        alias:"UpdatedAt",
+        alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
-        alias:"CreatedAt",
+        alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -257,22 +257,6 @@ class WorkflowTransitionController implements IController {
       }
       // End
 
-      // NextState
-      if (!req.body.nextState) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "nextState Required!" });
-      }
-
-      const nextState = await WorkflowState.findById(`${req.body.nextState}`);
-      if (!nextState) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "nextState Tidak ditemukan!" });
-      }
-
-      // End
-
       // CheckstateActive
       if (!req.body.stateActive) {
         return res
@@ -287,6 +271,22 @@ class WorkflowTransitionController implements IController {
         return res
           .status(400)
           .json({ status: 400, msg: "stateActive Tidak ditemukan!" });
+      }
+
+      // End
+
+      // NextState
+      if (!req.body.nextState) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "nextState Required!" });
+      }
+
+      const nextState = await WorkflowState.findById(`${req.body.nextState}`);
+      if (!nextState) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "nextState Tidak ditemukan!" });
       }
 
       // End

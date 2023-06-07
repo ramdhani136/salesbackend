@@ -903,7 +903,7 @@ class CallsheetController implements IController {
 
     // Cek memo
     try {
-      let memoPipeline: any[] = [{ display: "callsheet" }, { status: "1" }];
+      let memoPipeline: any[] = [{ display: redisName }, { status: "1" }];
 
       // Cek permission user
 

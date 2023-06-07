@@ -48,6 +48,13 @@ class CustomerController implements IController {
         isSort: true,
       },
       {
+        alias: "ErpId",
+        name: "erpId",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
         alias: "CustomerGroup",
         name: "customerGroup",
         operator: ["=", "!="],
@@ -97,6 +104,7 @@ class CustomerController implements IController {
             "updatedAt",
             "customerGroup.name",
             "branch.name",
+            "erpId",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)

@@ -176,8 +176,9 @@ class ErpDataController {
         { headers }
       );
 
-      if (WorkflowActive) {
+      if (WorkflowActive.data.data.length > 0) {
         const workflowActive = WorkflowActive.data.data[0].name;
+
         const getWorkflow = await axios.get(
           `https://${ErpSite}/api/resource/Workflow/${workflowActive}`,
           { headers }

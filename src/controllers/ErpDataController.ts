@@ -165,7 +165,11 @@ class ErpDataController {
         }
       }
 
-      const roles = getDataUser.data.data.roles.map((item: any) => item.role);
+      let roles: any[] = getDataUser.data.data.roles.map(
+        (item: any) => item.role
+      );
+
+      roles.push("All");
 
       const WorkflowActive = await axios.get(
         `https://${ErpSite}/api/resource/Workflow?filters=[["is_active","=","1"],["document_type","=","${req.params.doc}"]]`,

@@ -630,12 +630,13 @@ class VistController implements IController {
 
       // Cek lokasi ketika type insite
       if (req.body.type === "insite") {
+        const configVisit: any = await ConfigModel.findOne({}, { visit: 1 });
         const inLocation: any = await CustomerController.getLocatonNearby({
           lat: req.body.checkInLat,
           lng: req.body.checkInLng,
           maxDistance: req.body.maxDistance
             ? parseInt(`${req.body.maxDistance}`)
-            : 100,
+            : configVisit.visit.checkInDistance,
           customerId: new ObjectId(req.body.customer),
           withNoLocation: true,
         });
@@ -1258,10 +1259,17 @@ class VistController implements IController {
             }
           );
 
-          if (distance > 100) {
+          const configVisit: any = await ConfigModel.findOne({}, { visit: 1 });
+
+          let maxDistance = 50;
+          if (configVisit) {
+            maxDistance = configVisit.visit.checkOutDistance;
+          }
+
+          if (distance > maxDistance) {
             return res.status(400).json({
               status: 400,
-              msg: `Gagal Checkout, Anda berada diluar area checkIn!`,
+              msg: `Gagal Checkout, Lokasi anda lebih dari ${maxDistance} Meter dari lokasi checkIn !`,
             });
           }
 

@@ -149,7 +149,64 @@ class ErpDataController {
         { headers }
       );
       const roles = getDataUser.data.data.roles.map((item: any) => item.role);
-      console.log(roles);
+
+      const WorkflowActive = await axios.get(
+        `https://${ErpSite}/api/resource/Workflow?filters=[["is_active","=","1"],["document_type","=","${req.params.doc}"]]`,
+        { headers }
+      );
+
+      if (WorkflowActive.data.data.length > 0) {
+        const workflowActive = WorkflowActive.data.data[0].name;
+        const getWorkflow = await axios.get(
+          `https://${ErpSite}/api/resource/Workflow/${workflowActive}`,
+          { headers }
+        );
+
+        if (getWorkflow) {
+          const transitions = getWorkflow.data.data.transitions;
+          const state = getWorkflow.data.data.states;
+
+          const filterWithWorkflowActive = transitions.filter((item: any) => {
+            return (
+              item.docstatus === data.docstatus &&
+              item.state === data.workflow_state
+            );
+          });
+
+          if (filterWithWorkflowActive.length > 0) {
+            const filteredData = filterWithWorkflowActive.filter((i: any) =>
+              roles.includes(i.allowed)
+            );
+
+            if (filteredData.length > 0) {
+              let uniqueActions = new Set();
+              const oncom = filteredData.filter((item: any) => {
+                if (
+                  !uniqueActions.has(item.action) &&
+                  !uniqueActions.has(item.next_state)
+                ) {
+                  uniqueActions.add(item.action);
+                  uniqueActions.add(item.next_state);
+                  return true;
+                }
+                return false;
+              });
+
+              const finalNextState = oncom.map((item: any) => {
+                let getState = state.filter((i: any) => {
+                  return i.state === item.next_state;
+                });
+                return {
+                  action: item.action,
+                  nextState: getState[0].state,
+                  nextStatus: getState[0].doc_status,
+                };
+              });
+              console.log(finalNextState);
+            }
+          }
+        }
+      }
 
       // End
 

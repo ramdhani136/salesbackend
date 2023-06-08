@@ -138,16 +138,33 @@ class ErpDataController {
       const result = await axios.get(uri, { headers });
       const data = result.data.data;
 
+      let isWorkflow: any[] = [];
+
       // Cek User Login
       const isUser = await axios.get(
         `https://${ErpSite}/api/method/frappe.auth.get_logged_user`,
         { headers }
       );
 
+      if (!isUser) {
+        return res
+          .status(403)
+          .json({ status: 403, msg: "User tidak terdaftar!" });
+      }
+
       const getDataUser = await axios.get(
         `https://${ErpSite}/api/resource/User/${isUser.data.message}`,
         { headers }
       );
+
+      if (!getDataUser) {
+        if (!isUser) {
+          return res
+            .status(403)
+            .json({ status: 403, msg: "User tidak terdaftar!" });
+        }
+      }
+
       const roles = getDataUser.data.data.roles.map((item: any) => item.role);
 
       const WorkflowActive = await axios.get(
@@ -155,7 +172,7 @@ class ErpDataController {
         { headers }
       );
 
-      if (WorkflowActive.data.data.length > 0) {
+      if (WorkflowActive) {
         const workflowActive = WorkflowActive.data.data[0].name;
         const getWorkflow = await axios.get(
           `https://${ErpSite}/api/resource/Workflow/${workflowActive}`,
@@ -167,10 +184,18 @@ class ErpDataController {
           const state = getWorkflow.data.data.states;
 
           const filterWithWorkflowActive = transitions.filter((item: any) => {
-            return (
-              item.docstatus === data.docstatus &&
-              item.state === data.workflow_state
-            );
+            const allowSelf = item.allow_self_approval;
+            let isOwner = false;
+            if (allowSelf === 1) {
+              if (data.owner === isUser.data.message) {
+                isOwner = true;
+              } else {
+                isOwner = false;
+              }
+            } else {
+              isOwner = false;
+            }
+            return item.state === data.workflow_state || isOwner;
           });
 
           if (filterWithWorkflowActive.length > 0) {
@@ -180,7 +205,7 @@ class ErpDataController {
 
             if (filteredData.length > 0) {
               let uniqueActions = new Set();
-              const oncom = filteredData.filter((item: any) => {
+              const uniqData = filteredData.filter((item: any) => {
                 if (
                   !uniqueActions.has(item.action) &&
                   !uniqueActions.has(item.next_state)
@@ -192,7 +217,7 @@ class ErpDataController {
                 return false;
               });
 
-              const finalNextState = oncom.map((item: any) => {
+              const finalNextState = uniqData.map((item: any) => {
                 let getState = state.filter((i: any) => {
                   return i.state === item.next_state;
                 });
@@ -202,7 +227,7 @@ class ErpDataController {
                   nextStatus: getState[0].doc_status,
                 };
               });
-              console.log(finalNextState);
+              isWorkflow = finalNextState;
             }
           }
         }
@@ -217,9 +242,75 @@ class ErpDataController {
       //       EX: 5,
       //     }
       //   );
-      return res.status(200).json({ status: 200, data: data });
-    } catch (error) {
-      return res.status(404).json({ status: 404, data: error });
+      return res
+        .status(200)
+        .json({ status: 200, data: data, workflow: isWorkflow });
+    } catch (error: any) {
+      return res.status(404).json({ status: 404, data: error.message });
+    }
+  };
+
+  update = async (req: Request | any, res: Response): Promise<any> => {
+    try {
+      // if (!req.body.docstatus) {
+      //   return res.status(400).json({
+      //     status: 404,
+      //     msg: "docstatus wajib diisi!",
+      //   });
+      // }
+
+      // if (!req.body.workflow_state) {
+      //   return res.status(400).json({
+      //     status: 404,
+      //     msg: "workflow_state wajib diisi!",
+      //   });
+      // }
+
+      // Cek Dokumen
+      const cekUsers = await User.findById(req.userId);
+
+      if (!cekUsers) {
+        return res.status(400).json({
+          status: 404,
+          msg: "User tidak terdaftar!",
+        });
+      }
+
+      if (!cekUsers.ErpSite) {
+        return res.status(400).json({
+          status: 404,
+          msg: "Gagal, akun anda tidak terkoneksi dengan ERP",
+        });
+      }
+
+      if (!cekUsers.ErpToken) {
+        return res.status(400).json({
+          status: 404,
+          msg: "Gagal, akun anda tidak terkoneksi dengan ERP",
+        });
+      }
+
+      const ErpSite = cekUsers.ErpSite;
+      const ErpToken = cekUsers.ErpToken;
+      const headers = {
+        Authorization: `token ${ErpToken}`,
+      };
+      const uri = `https://${ErpSite}/api/resource/${req.params.doc}/${req.params.id}`;
+      const result = await axios.get(uri, { headers });
+      const data = result.data.data;
+
+      if (!data) {
+        return res.status(400).json({
+          status: 404,
+          msg: "Gagal, data tidak ditemukan!",
+        });
+      }
+      // End
+
+      const update = await axios.put(uri, req.body, { headers });
+      res.status(200).json({ status: true, data: update.data.data });
+    } catch (error: any) {
+      res.status(400).json({ status: false, msg: error.message });
     }
   };
 }

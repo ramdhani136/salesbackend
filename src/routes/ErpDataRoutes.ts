@@ -5,6 +5,7 @@ class ErpDataRoutes extends RouteBase {
   routes(): void {
     this.router.get("/:doc", Controller.index);
     this.router.get("/:doc/:id", Controller.show);
+    this.router.put("/:doc/:id", Controller.update);
   }
 }
 

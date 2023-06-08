@@ -1448,7 +1448,7 @@ class CallsheetController implements IController {
                 }
               }
 
-              // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+              await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
             }
           } else {
             return res

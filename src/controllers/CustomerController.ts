@@ -5,6 +5,7 @@ import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  ConfigModel,
   CustomerGroupModel,
   CustomerModel,
   CustomerModel as Db,
@@ -286,11 +287,33 @@ class CustomerController implements IController {
       // End
 
       // Menambahkan filter nearby gps
+
       if (nearby.length === 3) {
         const targetLatitude = parseFloat(`${nearby[0]}`);
         const targetLongitude = parseFloat(`${nearby[1]}`);
-        const maxDistance = parseInt(`${nearby[2]}`);
+        let maxDistance = parseInt(`${nearby[2]}`);
+
+        // Cek Default jarak
+        const config: any = await ConfigModel.findOne({}, { customer: 1 });
+        if (config) {
+          if (config?.customer.locationDistance !== 0) {
+            maxDistance = parseInt(`${config?.customer.locationDistance}`);
+          }
+        }
+        // End
+
         pipelineTotal.unshift({
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [targetLongitude, targetLatitude],
+            },
+            distanceField: "distance",
+            maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
+            spherical: true,
+          },
+        });
+        pipelineResult.unshift({
           $geoNear: {
             near: {
               type: "Point",
@@ -309,26 +332,6 @@ class CustomerController implements IController {
       if (limit > 0) {
         pipelineResult.splice(2, 0, { $limit: limit });
       }
-      // End
-
-      // Menambahkan filter nearby gps
-      if (nearby.length === 3) {
-        const targetLatitude = parseFloat(`${nearby[0]}`);
-        const targetLongitude = parseFloat(`${nearby[1]}`);
-        const maxDistance = parseInt(`${nearby[2]}`);
-        pipelineResult.unshift({
-          $geoNear: {
-            near: {
-              type: "Point",
-              coordinates: [targetLongitude, targetLatitude],
-            },
-            distanceField: "distance",
-            maxDistance: maxDistance,
-            spherical: true,
-          },
-        });
-      }
-
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);

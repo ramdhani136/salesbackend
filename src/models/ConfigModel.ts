@@ -15,10 +15,6 @@ const ConfigModel = new mongoose.Schema(
         type: Number,
         default: 1,
       },
-      tagsLength: {
-        type: Number,
-        default: 1,
-      },
       tagsMandatory: {
         type: [
           {
@@ -32,10 +28,6 @@ const ConfigModel = new mongoose.Schema(
     },
     callsheet: {
       notesLength: {
-        type: Number,
-        default: 1,
-      },
-      tagsLength: {
         type: Number,
         default: 1,
       },
@@ -53,7 +45,7 @@ const ConfigModel = new mongoose.Schema(
     customer: {
       locationDistance: {
         type: Number,
-        default: 50,
+        default: 0,
       },
     },
   },

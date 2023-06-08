@@ -13,6 +13,7 @@ import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   BranchModel,
   CallSheetNoteModel,
+  ConfigModel,
   ContactModel,
   CustomerGroupModel,
   CustomerModel,
@@ -1310,16 +1311,57 @@ class CallsheetController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
-                const notes = await CallSheetNoteModel.findOne({
-                  callsheet: new ObjectId(req.params.id),
-                });
+                // Cek config callsheet
+                const config: any = await ConfigModel.findOne(
+                  {},
+                  { callsheet: 1 }
+                ).populate("callsheet.tagsMandatory", "name");
 
-                if (!notes) {
-                  return res.status(400).json({
-                    status: 400,
-                    msg: `Gagal, Catatan wajib diisi minimal 1 catatan!`,
-                  });
+                if (config) {
+                  // Cek minimal catatan
+                  const notes: any = await CallSheetNoteModel.find(
+                    { callsheet: new ObjectId(req.params.id) },
+                    { _id: 1 }
+                  );
+
+                  if (notes.length < config.callsheet.notesLength) {
+                    return res.status(400).json({
+                      status: 400,
+                      msg: `Gagal, Catatan wajib diisi minimal ${config.callsheet.notesLength} catatan!`,
+                    });
+                  }
+                  // End
+
+                  // Cek mandatory tag
+                  const tagMandatory: any[] = config.callsheet.tagsMandatory;
+                  if (tagMandatory.length > 0) {
+                    let notValidMandatory: any[] = [];
+                    for (const item of tagMandatory) {
+                      let cekData = await CallSheetNoteModel.findOne(
+                        {
+                          $and: [
+                            { callsheet: new ObjectId(req.params.id) },
+                            { tags: item._id },
+                          ],
+                        },
+                        { _id: 1 }
+                      );
+
+                      if (!cekData) {
+                        notValidMandatory.push(item.name);
+                      }
+                    }
+                    if (notValidMandatory.length > 0) {
+                    }
+                    return res.status(400).json({
+                      status: 400,
+                      msg: `Gagal, Tags ${notValidMandatory} wajib digunakan!`,
+                    });
+                  }
+
+                  // End
                 }
+                //End
 
                 const getTaskNotes: any = await this.CheckNotes(
                   result.customer._id,
@@ -1406,7 +1448,7 @@ class CallsheetController implements IController {
                 }
               }
 
-              await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+              // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
             }
           } else {
             return res

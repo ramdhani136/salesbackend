@@ -11,6 +11,7 @@ import {
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  ConfigModel,
   ContactModel,
   CustomerModel,
   visitModel as Db,
@@ -1300,15 +1301,55 @@ class VistController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
-                const notes = await VisitNoteModel.findOne({
-                  visit: new ObjectId(req.params.id),
-                });
+                // Cek config visit
+                const config: any = await ConfigModel.findOne(
+                  {},
+                  { visit: 1 }
+                ).populate("visit.tagsMandatory", "name");
 
-                if (!notes) {
-                  return res.status(400).json({
-                    status: 400,
-                    msg: `Gagal, Catatan wajib diisi minimal 1 catatan!`,
-                  });
+                if (config) {
+                  // Cek minimal catatan
+                  const notes: any = await VisitNoteModel.find(
+                    { visit: new ObjectId(req.params.id) },
+                    { _id: 1 }
+                  );
+
+                  if (notes.length < config.visit.notesLength) {
+                    return res.status(400).json({
+                      status: 400,
+                      msg: `Gagal, Catatan wajib diisi minimal ${config.visit.notesLength} catatan!`,
+                    });
+                  }
+                  // End
+
+                  // Cek mandatory tag
+                  const tagMandatory: any[] = config.visit.tagsMandatory;
+                  if (tagMandatory.length > 0) {
+                    let notValidMandatory: any[] = [];
+                    for (const item of tagMandatory) {
+                      let cekData = await VisitNoteModel.findOne(
+                        {
+                          $and: [
+                            { visit: new ObjectId(req.params.id) },
+                            { tags: item._id },
+                          ],
+                        },
+                        { _id: 1 }
+                      );
+
+                      if (!cekData) {
+                        notValidMandatory.push(item.name);
+                      }
+                    }
+                    if (notValidMandatory.length > 0) {
+                      return res.status(400).json({
+                        status: 400,
+                        msg: `Gagal, Tags ${notValidMandatory} wajib digunakan!`,
+                      });
+                    }
+                  }
+
+                  // End
                 }
 
                 // Cek apakah sudah checkout
@@ -1406,7 +1447,7 @@ class VistController implements IController {
                 }
               }
 
-              await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+              // await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
             }
           } else {
             return res

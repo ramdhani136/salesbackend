@@ -1352,11 +1352,11 @@ class CallsheetController implements IController {
                       }
                     }
                     if (notValidMandatory.length > 0) {
+                      return res.status(400).json({
+                        status: 400,
+                        msg: `Gagal, Tags ${notValidMandatory} wajib digunakan!`,
+                      });
                     }
-                    return res.status(400).json({
-                      status: 400,
-                      msg: `Gagal, Tags ${notValidMandatory} wajib digunakan!`,
-                    });
                   }
 
                   // End

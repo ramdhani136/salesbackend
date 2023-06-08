@@ -40,12 +40,14 @@ import {
   CallsheetNoteRoutes,
   MemoRoutes,
   ErpDataRoutes,
+  ConfigRoutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
 import cron from "node-cron";
 import { AuthMiddleware, RoleMiddleware } from "./middleware";
 import {
+  ConfigModel,
   MemoModel,
   RoleListModel,
   RoleProfileModel,
@@ -82,6 +84,15 @@ class App {
     try {
       let userId = null;
       let roleProfileId = null;
+
+      // Cek Config
+      const getConfig = await ConfigModel.findOne();
+
+      if (!getConfig) {
+        await ConfigModel.create({});
+      }
+
+      // End
 
       // Cek User
       const user: any = await User.findOne(
@@ -370,6 +381,7 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
+    this.app.use("/config", ConfigRoutes);
     this.app.use("/erp", AuthMiddleware, RoleMiddleware, ErpDataRoutes);
     this.app.use("/branch", AuthMiddleware, RoleMiddleware, BranchRoutes);
     this.app.use(

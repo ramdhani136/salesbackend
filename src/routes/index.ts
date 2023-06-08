@@ -27,8 +27,10 @@ import CallsheetRoutes from "./CallsheetRoutes";
 import CallsheetNoteRoutes from "./CallsheetNoteRoutes";
 import MemoRoutes from "./MemoRoutes";
 import ErpDataRoutes from "./ErpDataRoutes";
+import ConfigRoutes from "./ConfigRoutes";
 
 export {
+  ConfigRoutes,
   UserRoutes,
   ScheduleRoutes,
   RoleProfileRoutes,

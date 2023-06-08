@@ -26,8 +26,10 @@ import VisitNoteModel from "./VisitNoteModel";
 import CallSheetNoteModel from "./CallSheetNoteModel";
 import CallsheetModel from "./CallsheetModel";
 import MemoModel from "./MemoModel";
+import ConfigModel from "./ConfigModel";
 
 export {
+  ConfigModel,
   User,
   ScheduleModel,
   RoleProfileModel,

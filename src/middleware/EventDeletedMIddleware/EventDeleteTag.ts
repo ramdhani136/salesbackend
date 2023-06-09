@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { CallSheetNoteModel, VisitNoteModel } from "../../models";
+import { CallSheetNoteModel, ConfigModel, VisitNoteModel } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
 
@@ -15,6 +15,11 @@ export const EventDeleteTag = async (
   next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
+    {
+      doc: "Config",
+      filters: ["visit.tagsMandatory", "callsheet.tagsMandatory"],
+      model: ConfigModel,
+    },
     {
       doc: "VisitNote",
       filters: ["tags"],

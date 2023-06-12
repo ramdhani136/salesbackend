@@ -522,7 +522,7 @@ class UserController implements IController {
       }
       const match = await bcrypt.compare(req.body.password, result.password);
       if (!match) {
-        return res.status(400).json({ status: 400, msg: "Wrong password" });
+        return res.status(400).json({ status: 400, msg: "Password salah!" });
       }
       const accessToken = jwt.sign(
         {

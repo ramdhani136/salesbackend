@@ -197,13 +197,13 @@ class UserController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     if (!req.body.password) {
-      return res.status(400).json({ status: 400, msg: "Password Required!" });
+      return res.status(400).json({ status: 400, msg: "Password Wajib diisi!" });
     }
     if (!req.body.name) {
-      return res.status(400).json({ status: 400, msg: "Name Required!" });
+      return res.status(400).json({ status: 400, msg: "Name wajib diisi!" });
     }
     if (!req.body.username) {
-      return res.status(400).json({ status: 400, msg: "Username Required!" });
+      return res.status(400).json({ status: 400, msg: "Username wajib diisi!" });
     }
 
     const salt = await bcrypt.genSalt();
@@ -508,10 +508,10 @@ class UserController implements IController {
 
   login = async (req: Request, res: Response): Promise<Response> => {
     if (!req.body.username) {
-      return res.status(400).json({ status: 400, msg: "Username Required!" });
+      return res.status(400).json({ status: 400, msg: "Username wajib diisi!" });
     }
     if (!req.body.password) {
-      return res.status(400).json({ status: 400, msg: "Password Required!" });
+      return res.status(400).json({ status: 400, msg: "Password wajib diiis!" });
     }
     try {
       const result: any = await User.findOne({

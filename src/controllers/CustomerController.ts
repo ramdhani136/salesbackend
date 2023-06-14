@@ -106,6 +106,7 @@ class CustomerController implements IController {
             "customerGroup.name",
             "branch.name",
             "erpId",
+            "distance"
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -323,7 +324,9 @@ class CustomerController implements IController {
             maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
             spherical: true,
           },
-        });
+        },
+        
+        );
       }
 
       // End

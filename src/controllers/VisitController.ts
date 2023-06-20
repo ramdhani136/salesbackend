@@ -192,10 +192,15 @@ class VistController implements IController {
         return !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
       });
 
+      let search: ISearch = {
+        filter: ["name"],
+        value: req.query.search || "",
+      };
+
       let isFilter = FilterQuery.getFilter(
         notCustomer,
         stateFilter,
-        undefined,
+        search,
         ["customer", "schedulelist", "createdBy", "_id", "contact"]
       );
 
@@ -382,10 +387,10 @@ class VistController implements IController {
         branchPermission.length > 0 ||
         groupPermission.length > 0
       ) {
-        let search: ISearch = {
-          filter: ["name"],
-          value: req.query.search || "",
-        };
+        // let search: ISearch = {
+        //   filter: ["name"],
+        //   value: req.query.search || "",
+        // };
 
         const notCustomerGroupFilter = customerFIlter.filter(
           (item: any[]) => item[0] !== "customerGroup"
@@ -394,7 +399,7 @@ class VistController implements IController {
         const validCustomer = FilterQuery.getFilter(
           notCustomerGroupFilter,
           stateCustomer,
-          search,
+          undefined,
           ["_id", "customerGroup", "branch"]
         );
 
@@ -439,7 +444,7 @@ class VistController implements IController {
             customer: { $in: finalFilterCustomer },
           });
         } else {
-          return res.status(400).json({
+          return res.status(404).json({
             status: 404,
             msg: "Data Not found!",
           });
@@ -476,7 +481,7 @@ class VistController implements IController {
           filters: stateFilter,
         });
       }
-      return res.status(400).json({
+      return res.status(404).json({
         status: 404,
         msg: "Data Not found!",
       });

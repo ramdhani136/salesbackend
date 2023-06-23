@@ -1367,8 +1367,8 @@ class VistController implements IController {
 
                 // Cek apakah sudah checkout
                 if (!result.checkOut.createdAt) {
-                  return res.status(403).json({
-                    status: 403,
+                  return res.status(400).json({
+                    status: 400,
                     msg: "Gagal, Belum melakukan checkout kunjungan ini!",
                   });
                 }

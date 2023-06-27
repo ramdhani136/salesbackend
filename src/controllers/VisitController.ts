@@ -1314,12 +1314,21 @@ class VistController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
+                  // Cek apakah sudah checkout
+                  if (!result.checkOut.createdAt) {
+                    return res.status(400).json({
+                      status: 400,
+                      msg: "Gagal, Belum melakukan checkout kunjungan ini!",
+                    });
+                  }
+                  // End
                 // Cek config visit
                 const config: any = await ConfigModel.findOne(
                   {},
                   { visit: 1 }
                 ).populate("visit.tagsMandatory", "name");
 
+                 
                 if (config) {
                   // Cek minimal catatan
                   const notes: any = await VisitNoteModel.find(
@@ -1365,14 +1374,7 @@ class VistController implements IController {
                   // End
                 }
 
-                // Cek apakah sudah checkout
-                if (!result.checkOut.createdAt) {
-                  return res.status(400).json({
-                    status: 400,
-                    msg: "Gagal, Belum melakukan checkout kunjungan ini!",
-                  });
-                }
-                // End
+             
 
                 const getTaskNotes: any = await CallsheetController.CheckNotes(
                   result.customer._id,

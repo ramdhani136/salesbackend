@@ -6,6 +6,7 @@ class VisitNoteRoutes extends RouteBase {
     this.router.get("/", Controller.index);
     this.router.post("/", Controller.create);
     this.router.get("/:id", Controller.show);
+    this.router.get("/visit/:id", Controller.ByVisit);
     this.router.delete("/:id", Controller.delete);
     this.router.put("/:id", Controller.update);
   }

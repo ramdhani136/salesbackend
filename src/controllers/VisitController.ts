@@ -954,6 +954,7 @@ class VistController implements IController {
             "createdBy.name": 1,
             "customerGroup._id": 1,
             "customerGroup.name": 1,
+            "customer.erpId": 1,
             "branch._id": 1,
             "branch.name": 1,
             createdAt: 1,

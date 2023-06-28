@@ -85,8 +85,8 @@ class ErpDataController {
           data: result.data.data,
         });
       }
-      return res.status(400).json({
-        status: 400,
+      return res.status(404).json({
+        status: 404,
         msg: "Data not found!",
         hasMore: false,
       });
@@ -251,7 +251,7 @@ class ErpDataController {
         .status(200)
         .json({ status: 200, data: data, workflow: isWorkflow });
     } catch (error: any) {
-      return res.status(404).json({ status: 404, data: error.message });
+      return res.status(400).json({ status: 400, data: error.message });
     }
   };
 

@@ -11,7 +11,6 @@ const VisitNoteModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "visit",
       required: true,
-      index: -1,
     },
     tags: {
       type: [

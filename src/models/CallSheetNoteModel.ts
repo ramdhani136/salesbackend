@@ -11,7 +11,7 @@ const CallsheetNoteModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "callsheet",
       required: true,
-      index: -1,
+     
     },
     tags: {
       type: [

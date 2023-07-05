@@ -289,7 +289,7 @@ class CustomerController implements IController {
 
       // Menambahkan filter nearby gps
 
-      if (nearby.length === 3) {
+      if (nearby) {
         const targetLatitude = parseFloat(`${nearby[0]}`);
         const targetLongitude = parseFloat(`${nearby[1]}`);
         let maxDistance = parseInt(`${nearby[2]}`);

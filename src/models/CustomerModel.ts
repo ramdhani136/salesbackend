@@ -29,6 +29,9 @@ const CustomerModel = new mongoose.Schema(
     img: {
       type: String,
     },
+    address: {
+      type: String,
+    },
     erpId: {
       type: String,
       required: false,

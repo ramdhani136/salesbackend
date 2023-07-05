@@ -173,7 +173,7 @@ class CustomerController implements IController {
           $count: "total_orders",
         },
       ];
-
+     
       let pipelineResult: any = [
         {
           $match: isFilter.data,
@@ -289,7 +289,8 @@ class CustomerController implements IController {
 
       // Menambahkan filter nearby gps
 
-      if (nearby) {
+      if (nearby.length === 3) {
+        
         const targetLatitude = parseFloat(`${nearby[0]}`);
         const targetLongitude = parseFloat(`${nearby[1]}`);
         let maxDistance = parseInt(`${nearby[2]}`);
@@ -333,11 +334,14 @@ class CustomerController implements IController {
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
-        pipelineResult.splice(2, 0, { $limit: limit });
+      
+          pipelineResult.splice(nearby.length===3?3:2, 0, { $limit: limit });
+        
       }
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
+
 
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);

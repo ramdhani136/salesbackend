@@ -359,7 +359,7 @@ class CustomerController implements IController {
       }
       return res.status(400).json({
         status: 404,
-        msg: "Data Not found!",
+        msg: "No Data",
       });
     } catch (error: any) {
       return res.status(400).json({

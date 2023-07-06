@@ -6,7 +6,7 @@ const MemoModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: 1,
+    index: 1,
     },
     display: {
       type: [

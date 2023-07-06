@@ -296,10 +296,12 @@ class CustomerController implements IController {
         let maxDistance = parseInt(`${nearby[2]}`);
 
         // Cek Default jarak
-        const config: any = await ConfigModel.findOne({}, { customer: 1 });
-        if (config) {
-          if (config?.customer.locationDistance !== 0) {
-            maxDistance = parseInt(`${config?.customer.locationDistance}`);
+        if(parseInt(`${nearby[2]}`)<1){
+          const config: any = await ConfigModel.findOne({}, { customer: 1 });
+          if (config) {
+            if (config?.customer.locationDistance !== 0) {
+              maxDistance = parseInt(`${config?.customer.locationDistance}`);
+            }
           }
         }
         // End

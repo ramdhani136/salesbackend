@@ -21,7 +21,9 @@ import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
-
+import fs from "fs";
+import sharp from "sharp";
+import path from "path";
 const redisName = "customer";
 
 interface IGeoLOc {
@@ -106,7 +108,8 @@ class CustomerController implements IController {
             "customerGroup.name",
             "branch.name",
             "erpId",
-            "distance"
+            "distance",
+            "img"    
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -425,6 +428,37 @@ class CustomerController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save();
 
+            // Upload data ketika outsite
+            if (req.file) {
+              const compressedImage = path.join(
+                __dirname,
+                "../public/customers",
+                `${response._id}.jpg`
+              );
+              sharp(req.file.path)
+                .resize(640, 480, {
+                  fit: sharp.fit.inside,
+                  withoutEnlargement: true,
+                })
+                .jpeg({
+                  quality: 100,
+                  progressive: true,
+                  chromaSubsampling: "4:4:4",
+                })
+                .withMetadata()
+                .toFile(compressedImage, async (err, info): Promise<any> => {
+                  if (err) {
+                    console.log(err);
+                  } else {
+                    await Db.updateOne(
+                      { _id: response._id },
+                      { img: `${response._id}.jpg` }
+                    );
+                  }
+                });
+            }
+            // End
+
       // push history
       await HistoryController.pushHistory({
         document: {
@@ -669,6 +703,34 @@ class CustomerController implements IController {
           _id: req.params.id,
         });
 
+        // Upload data ketika outsite
+        if (req.file) {
+          const compressedImage = path.join(
+            __dirname,
+            "../public/customers",
+            getData.img
+          );
+          sharp(req.file.path)
+            .resize(640, 480, {
+              fit: sharp.fit.inside,
+              withoutEnlargement: true,
+            })
+            .jpeg({
+              quality: 100,
+              progressive: true,
+              chromaSubsampling: "4:4:4",
+            })
+            .withMetadata()
+            .toFile(compressedImage, async (err, info): Promise<any> => {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log(info);
+              }
+            });
+        }
+        // End
+
         // await Redis.client.set(
         //   `${redisName}-${req.params.id}`,
         //   JSON.stringify(getData),
@@ -753,6 +815,24 @@ class CustomerController implements IController {
       //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
       // }
 
+      if (
+        fs.existsSync(path.join(__dirname, "../public/customers/" + getData.img))
+      ) {
+        fs.unlink(
+          path.join(__dirname, "../public/customers/" + getData.img),
+          function (err) {
+            if (err && err.code == "ENOENT") {
+              // file doens't exist
+              console.log(err);
+            } else if (err) {
+              // other errors, e.g. maybe we don't have enough permission
+              console.log("Error occurred while trying to remove file");
+            } else {
+              console.log(`removed`);
+            }
+          }
+        );
+      }
       const result = await Db.deleteOne({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });

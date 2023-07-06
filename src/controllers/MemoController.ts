@@ -465,7 +465,7 @@ class MemoController implements IController {
         const compressedImage = path.join(
           __dirname,
           "../public/memo",
-          `${response.name}.jpg`
+          `${response._id}.jpg`
         );
         sharp(req.file.path)
           .resize(640, 480, {
@@ -484,7 +484,7 @@ class MemoController implements IController {
             } else {
               await Db.updateOne(
                 { _id: response._id },
-                { img: `${response.name}.jpg` }
+                { img: `${response._id}.jpg` }
               );
             }
           });

@@ -252,8 +252,9 @@ class App {
     const memoPath = path.join(__dirname, "public/memo");
     const userPage = path.join(__dirname, "public/users");
     const assetPath = path.join(__dirname, "assets/images");
+    const customerPath = path.join(__dirname, "public/customers");
 
-    const dir = [imagePath, memoPath, userPage, assetPath];
+    const dir = [imagePath, memoPath, userPage, assetPath, customerPath];
 
     for (const item of dir) {
       mkdirp(item)
@@ -265,6 +266,7 @@ class App {
     this.app.use("/public", express.static(imagePath));
     this.app.use("/public", express.static(path.join(memoPath)));
     this.app.use("/images/users", express.static(userPage));
+    this.app.use("/public/customer", express.static(customerPath));
   };
 
   protected plugins(): void {

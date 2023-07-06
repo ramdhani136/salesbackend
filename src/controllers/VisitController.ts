@@ -635,29 +635,29 @@ class VistController implements IController {
 
       // Cek lokasi ketika type insite
       if (req.body.type === "insite") {
-        const configVisit: any = await ConfigModel.findOne({}, { visit: 1 });
-        const inLocation: any = await CustomerController.getLocatonNearby({
-          lat: req.body.checkInLat,
-          lng: req.body.checkInLng,
-          maxDistance: req.body.maxDistance
-            ? parseInt(`${req.body.maxDistance}`)
-            : configVisit.visit.checkInDistance,
-          customerId: new ObjectId(req.body.customer),
-          withNoLocation: true,
-        });
+        // const configVisit: any = await ConfigModel.findOne({}, { visit: 1 });
+        // const inLocation: any = await CustomerController.getLocatonNearby({
+        //   lat: req.body.checkInLat,
+        //   lng: req.body.checkInLng,
+        //   maxDistance: req.body.maxDistance
+        //     ? parseInt(`${req.body.maxDistance}`)
+        //     : configVisit.visit.checkInDistance,
+        //   customerId: new ObjectId(req.body.customer),
+        //   withNoLocation: true,
+        // });
 
-        if (inLocation.length === 0) {
-          return res.status(400).json({
-            status: 400,
-            msg: `Error, Lokasi anda berada diluar area ${cekCustomer.name}!`,
-          });
-        }
+        // if (inLocation.length === 0) {
+        //   return res.status(400).json({
+        //     status: 400,
+        //     msg: `Error, Lokasi anda berada diluar area ${cekCustomer.name}!`,
+        //   });
+        // }
 
-        if (!inLocation.location) {
+        // if (!inLocation.location) {
           req.body.location = {
             type: "Point",
             coordinates: [req.body.checkInLng, req.body.checkInLat],
-          };
+          // };
         }
       }
 

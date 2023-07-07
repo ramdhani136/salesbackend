@@ -172,10 +172,14 @@ class CallsheetController implements IController {
         return !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
       });
 
+        let search: ISearch = {
+          filter: ["name"],
+          value: req.query.search || "",
+        };
       let isFilter = FilterQuery.getFilter(
         notCustomer,
         stateFilter,
-        undefined,
+        search,
         ["customer", "schedulelist", "createdBy", "_id", "contact"]
       );
 
@@ -357,15 +361,16 @@ class CallsheetController implements IController {
         });
 
       if (
-        customerFIlter.length > 0 ||
-        req.query.search ||
+        customerFIlter.length > 0 
+        ||
+        // req.query.search ||
         branchPermission.length > 0 ||
         groupPermission.length > 0
       ) {
-        let search: ISearch = {
-          filter: ["name"],
-          value: req.query.search || "",
-        };
+        // let search: ISearch = {
+        //   filter: ["name"],
+        //   value: req.query.search || "",
+        // };
 
         const notCustomerGroupFilter = customerFIlter.filter(
           (item: any[]) => item[0] !== "customerGroup"
@@ -374,7 +379,8 @@ class CallsheetController implements IController {
         const validCustomer = FilterQuery.getFilter(
           notCustomerGroupFilter,
           stateCustomer,
-          search,
+          // search,
+          undefined,
           ["_id", "customerGroup", "branch"]
         );
 

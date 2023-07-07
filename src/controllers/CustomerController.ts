@@ -673,6 +673,35 @@ class CustomerController implements IController {
         }
         // End
 
+          // Upload gambar
+          if (req.file) {
+            req.body.img= `${req.params.id}.jpg` 
+            const compressedImage = path.join(
+              __dirname,
+              "../public/customers",
+              req.params.id,
+            );
+            sharp(req.file.path)
+              .resize(640, 480, {
+                fit: sharp.fit.inside,
+                withoutEnlargement: true,
+              })
+              .jpeg({
+                quality: 100,
+                progressive: true,
+                chromaSubsampling: "4:4:4",
+              })
+              .withMetadata()
+              .toFile(compressedImage, async (err, info): Promise<any> => {
+                if (err) {
+                  console.log(err);
+                } else {
+                  console.log(info);
+                }
+              });
+          }
+          // End
+
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -699,37 +728,13 @@ class CustomerController implements IController {
           );
         }
 
+        
+
         const getData: any = await Db.findOne({
           _id: req.params.id,
         });
 
-        // Upload data ketika outsite
-        if (req.file) {
-          const compressedImage = path.join(
-            __dirname,
-            "../public/customers",
-            getData.img
-          );
-          sharp(req.file.path)
-            .resize(640, 480, {
-              fit: sharp.fit.inside,
-              withoutEnlargement: true,
-            })
-            .jpeg({
-              quality: 100,
-              progressive: true,
-              chromaSubsampling: "4:4:4",
-            })
-            .withMetadata()
-            .toFile(compressedImage, async (err, info): Promise<any> => {
-              if (err) {
-                console.log(err);
-              } else {
-                console.log(info);
-              }
-            });
-        }
-        // End
+      
 
         // await Redis.client.set(
         //   `${redisName}-${req.params.id}`,

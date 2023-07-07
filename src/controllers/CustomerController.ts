@@ -679,7 +679,7 @@ class CustomerController implements IController {
             const compressedImage = path.join(
               __dirname,
               "../public/customers",
-              req.params.id,
+             `${req.params.id}.jpg`,
             );
             sharp(req.file.path)
               .resize(640, 480, {

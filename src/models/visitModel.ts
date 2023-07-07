@@ -23,7 +23,6 @@ const VisitModel = new mongoose.Schema(
     contact: {
       type: Schema.Types.ObjectId,
       ref: "contact",
-      required: true,
       index: true,
     },
     img: {

@@ -228,8 +228,14 @@ class VisitNoteController implements IController {
           },
         },
         {
-          $unwind: "$visit.contact",
+          $unwind: {
+            path: "$visit.contact",
+            preserveNullAndEmptyArrays: true
+          },
         },
+        // {
+        //   $unwind: "$visit.contact",
+        // },
         {
           $lookup: {
             from: "users",
@@ -768,8 +774,15 @@ class VisitNoteController implements IController {
           },
         },
         {
-          $unwind: "$visit.contact",
+          $unwind: {
+            path: "$visit.contact",
+            preserveNullAndEmptyArrays: true
+          },
         },
+        // {
+        //   $unwind: "$visit.contact",
+          
+        // },
         {
           $lookup: {
             from: "users",
@@ -1093,8 +1106,14 @@ class VisitNoteController implements IController {
             },
           },
           {
-            $unwind: "$visit.contact",
+            $unwind: {
+              path: "$visit.contact",
+              preserveNullAndEmptyArrays: true
+            },
           },
+          // {
+          //   $unwind: "$visit.contact",
+          // },
           {
             $lookup: {
               from: "users",

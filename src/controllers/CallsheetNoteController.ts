@@ -214,8 +214,14 @@ class CallsheetNoteController implements IController {
             as: "callsheet.contact",
           },
         },
+        // {
+        //   $unwind: "$callsheet.contact",
+        // },
         {
-          $unwind: "$callsheet.contact",
+          $unwind: {
+            path: "$callsheet.contact",
+            preserveNullAndEmptyArrays: true
+          },
         },
         {
           $lookup: {
@@ -777,7 +783,10 @@ class CallsheetNoteController implements IController {
           },
         },
         {
-          $unwind: "$callsheet.contact",
+          $unwind: {
+            path: "$callsheet.contact",
+            preserveNullAndEmptyArrays: true
+          },
         },
         {
           $lookup: {
@@ -1101,7 +1110,10 @@ class CallsheetNoteController implements IController {
             },
           },
           {
-            $unwind: "$callsheet.contact",
+            $unwind: {
+              path: "$callsheet.contact",
+              preserveNullAndEmptyArrays: true
+            },
           },
           {
             $lookup: {

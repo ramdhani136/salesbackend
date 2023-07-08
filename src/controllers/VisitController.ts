@@ -1501,10 +1501,11 @@ class VistController implements IController {
           await Db.updateOne({ _id: req.params.id }, req.body);
         }
 
-        if (req.body.type) {
-          // Cek bila ada perubahan type
-          if (req.body.type !== result.type) {
-            if (req.body.type === "outsite") {
+        // if (req.body.type) {
+        //   // Cek bila ada perubahan type
+        //   if (req.body.type !== result.type) {
+            if (req.file && result.type=== "outsite") {
+              console.log("hhhhhh");
               const compressedImage = path.join(
                 __dirname,
                 "../public/images",
@@ -1551,8 +1552,8 @@ class VistController implements IController {
                   }
                 );
               }
-            }
-          }
+          //   }
+          // }
 
           // End
         }

@@ -197,12 +197,13 @@ class VistController implements IController {
         value: req.query.search || "",
       };
 
-      let isFilter = FilterQuery.getFilter(
-        notCustomer,
-        stateFilter,
-        search,
-        ["customer", "schedulelist", "createdBy", "_id", "contact"]
-      );
+      let isFilter = FilterQuery.getFilter(notCustomer, stateFilter, search, [
+        "customer",
+        "schedulelist",
+        "createdBy",
+        "_id",
+        "contact",
+      ]);
 
       // Mengambil rincian permission user
       const userPermission = await PermissionMiddleware.getPermission(
@@ -308,7 +309,7 @@ class VistController implements IController {
         {
           $unwind: {
             path: "$contact",
-            preserveNullAndEmptyArrays: true
+            preserveNullAndEmptyArrays: true,
           },
         },
         // {
@@ -660,11 +661,11 @@ class VistController implements IController {
         // }
 
         // if (!inLocation.location) {
-          req.body.location = {
-            type: "Point",
-            coordinates: [req.body.checkInLng, req.body.checkInLat],
+        req.body.location = {
+          type: "Point",
+          coordinates: [req.body.checkInLng, req.body.checkInLat],
           // };
-        }
+        };
       }
 
       // Mengecek contact jika terdapat kontak untuk customer tersebut
@@ -673,8 +674,8 @@ class VistController implements IController {
       //     .status(400)
       //     .json({ status: 400, msg: "Error, contact wajib diisi!" });
       // }
-      
-      if(req.body.contact){
+
+      if (req.body.contact) {
         const contact = await ContactModel.findOne(
           {
             $and: [
@@ -686,21 +687,21 @@ class VistController implements IController {
           },
           ["name", "phone", "status"]
         );
-  
+
         if (!contact) {
           return res.status(404).json({
             status: 404,
             msg: "Error, kontak tidak ditemukan!",
           });
         }
-  
+
         if (contact.status !== "1") {
           return res.status(404).json({
             status: 404,
             msg: "Error, kontak tidak aktif!",
           });
         }
-  
+
         // set contact
         req.body.contact = contact._id;
       }
@@ -910,7 +911,7 @@ class VistController implements IController {
         {
           $unwind: {
             path: "$contact",
-            preserveNullAndEmptyArrays: true
+            preserveNullAndEmptyArrays: true,
           },
         },
         {
@@ -1309,7 +1310,6 @@ class VistController implements IController {
         // End
 
         if (req.body.nextState) {
-         
           const checkedWorkflow: any =
             await WorkflowController.permissionUpdateAction(
               redisName,
@@ -1328,29 +1328,37 @@ class VistController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
-                    // Cek Contact           
-             if(!req.body.contact && !result.contact){
-              return res.status(400).json({
-                status: 400,
-                msg: `Gagal, wajib mengisi contact !`,
-              });
-            }
-            // End
-                  // Cek apakah sudah checkout
-                  if (!result.checkOut.createdAt) {
-                    return res.status(400).json({
-                      status: 400,
-                      msg: "Gagal, Belum melakukan checkout kunjungan ini!",
-                    });
-                  }
-                  // End
+                // Cek gambar wajib jika type outsite
+                if (!result.img && result.type === "outsite") {
+                  return res.status(404).json({
+                    status: 404,
+                    msg: "Error, Wajib melakukan foto, karena kunjungan outsite!",
+                  });
+                }
+                // End
+
+                // Cek Contact
+                if (!req.body.contact && !result.contact) {
+                  return res.status(400).json({
+                    status: 400,
+                    msg: `Gagal, wajib mengisi contact !`,
+                  });
+                }
+                // End
+                // Cek apakah sudah checkout
+                if (!result.checkOut.createdAt) {
+                  return res.status(400).json({
+                    status: 400,
+                    msg: "Gagal, Belum melakukan checkout kunjungan ini!",
+                  });
+                }
+                // End
                 // Cek config visit
                 const config: any = await ConfigModel.findOne(
                   {},
                   { visit: 1 }
                 ).populate("visit.tagsMandatory", "name");
 
-                 
                 if (config) {
                   // Cek minimal catatan
                   const notes: any = await VisitNoteModel.find(
@@ -1396,8 +1404,6 @@ class VistController implements IController {
                   // End
                 }
 
-             
-
                 const getTaskNotes: any = await CallsheetController.CheckNotes(
                   result.customer._id,
                   req.userId,
@@ -1438,9 +1444,6 @@ class VistController implements IController {
               }
 
               if (result.status !== "0" && checkedWorkflow.data.status !== 1) {
-
-             
-
                 if (result.schedulelist.length > 0) {
                   const schedule = result.schedulelist;
                   const getSchedule: any = await ScheduleListModel.find(

@@ -1263,6 +1263,14 @@ class VistController implements IController {
 
         // Jika Checkout
         if (req.body.checkOutLat && req.body.checkOutLng) {
+          if (!result.img && result.type === "outsite") {
+            return res.status(404).json({
+              status: 404,
+              msg: "Error, Wajib melakukan foto, karena kunjungan outsite!",
+            });
+          }
+
+
           if (!req.body.signature && !result.signature) {
             return res.status(404).json({
               status: 404,
@@ -1505,7 +1513,6 @@ class VistController implements IController {
         //   // Cek bila ada perubahan type
         //   if (req.body.type !== result.type) {
             if (req.file && result.type=== "outsite") {
-              console.log("hhhhhh");
               const compressedImage = path.join(
                 __dirname,
                 "../public/images",

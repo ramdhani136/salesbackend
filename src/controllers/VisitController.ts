@@ -1134,6 +1134,60 @@ class VistController implements IController {
           }
         }
 
+        if (req.file && result.type === "outsite") {
+          req.body.img = req.params.id + ".jpg";
+          const compressedImage = path.join(
+            __dirname,
+            "../public/images",
+            req.params.id + ".jpg"
+          );
+          sharp(req.file.path)
+            .resize(640, 480, {
+              fit: sharp.fit.inside,
+              withoutEnlargement: true,
+            })
+            .jpeg({
+              quality: 100,
+              progressive: true,
+              chromaSubsampling: "4:4:4",
+            })
+            .withMetadata()
+            .toFile(compressedImage, async (err, info): Promise<any> => {
+              if (err) {
+                console.log(err);
+              } else {
+          
+                console.log("suksess");
+
+                // await Db.findByIdAndUpdate(req.params.id, {
+                //   img: req.params.id + ".jpg",
+                // });
+              }
+            });
+        } else {
+          if (
+            fs.existsSync(
+              path.join(__dirname, "../public/images/" + result.img)
+            )
+          ) {
+            fs.unlink(
+              path.join(__dirname, "../public/images/" + result.img),
+              function (err) {
+                if (err && err.code == "ENOENT") {
+                  // file doens't exist
+                  console.log(err);
+                } else if (err) {
+                  // other errors, e.g. maybe we don't have enough permission
+                  console.log("Error occurred while trying to remove file");
+                } else {
+                  console.log(`removed`);
+                }
+              }
+            );
+          }
+          // End
+        }
+
         const getDataPermit: any = await Db.findOne(
           {
             _id: new ObjectId(req.params.id),
@@ -1269,7 +1323,6 @@ class VistController implements IController {
               msg: "Error, Wajib melakukan foto, karena kunjungan outsite!",
             });
           }
-
 
           if (!req.body.signature && !result.signature) {
             return res.status(404).json({
@@ -1506,63 +1559,8 @@ class VistController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
+          console.log(req.body.img);
           await Db.updateOne({ _id: req.params.id }, req.body);
-        }
-
-        // if (req.body.type) {
-        //   // Cek bila ada perubahan type
-        //   if (req.body.type !== result.type) {
-            if (req.file && result.type=== "outsite") {
-              const compressedImage = path.join(
-                __dirname,
-                "../public/images",
-                req.params.id + ".jpg"
-              );
-              sharp(req.file.path)
-                .resize(640, 480, {
-                  fit: sharp.fit.inside,
-                  withoutEnlargement: true,
-                })
-                .jpeg({
-                  quality: 100,
-                  progressive: true,
-                  chromaSubsampling: "4:4:4",
-                })
-                .withMetadata()
-                .toFile(compressedImage, async (err, info): Promise<any> => {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    await Db.findByIdAndUpdate(req.params.id, {
-                      img: req.params.id + ".jpg",
-                    });
-                  }
-                });
-            } else {
-              if (
-                fs.existsSync(
-                  path.join(__dirname, "../public/images/" + result.img)
-                )
-              ) {
-                fs.unlink(
-                  path.join(__dirname, "../public/images/" + result.img),
-                  function (err) {
-                    if (err && err.code == "ENOENT") {
-                      // file doens't exist
-                      console.log(err);
-                    } else if (err) {
-                      // other errors, e.g. maybe we don't have enough permission
-                      console.log("Error occurred while trying to remove file");
-                    } else {
-                      console.log(`removed`);
-                    }
-                  }
-                );
-              }
-          //   }
-          // }
-
-          // End
         }
 
         const getData: any = await Db.findOne({

@@ -1164,29 +1164,30 @@ class VistController implements IController {
                 // });
               }
             });
-        } else {
-          if (
-            fs.existsSync(
-              path.join(__dirname, "../public/images/" + result.img)
-            )
-          ) {
-            fs.unlink(
-              path.join(__dirname, "../public/images/" + result.img),
-              function (err) {
-                if (err && err.code == "ENOENT") {
-                  // file doens't exist
-                  console.log(err);
-                } else if (err) {
-                  // other errors, e.g. maybe we don't have enough permission
-                  console.log("Error occurred while trying to remove file");
-                } else {
-                  console.log(`removed`);
-                }
-              }
-            );
-          }
-          // End
         }
+        //  else {
+        //   if (
+        //     fs.existsSync(
+        //       path.join(__dirname, "../public/images/" + result.img)
+        //     )
+        //   ) {
+        //     fs.unlink(
+        //       path.join(__dirname, "../public/images/" + result.img),
+        //       function (err) {
+        //         if (err && err.code == "ENOENT") {
+        //           // file doens't exist
+        //           console.log(err);
+        //         } else if (err) {
+        //           // other errors, e.g. maybe we don't have enough permission
+        //           console.log("Error occurred while trying to remove file");
+        //         } else {
+        //           console.log(`removed`);
+        //         }
+        //       }
+        //     );
+        //   }
+        //   // End
+        // }
 
         const getDataPermit: any = await Db.findOne(
           {

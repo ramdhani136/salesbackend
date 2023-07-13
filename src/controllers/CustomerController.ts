@@ -103,9 +103,12 @@ class CustomerController implements IController {
         ? JSON.parse(`${req.query.fields}`)
         : [
             "name",
+            "createdBy._id",
             "createdBy.name",
             "updatedAt",
+            "customerGroup._id",
             "customerGroup.name",
+            "branch._id",
             "branch.name",
             "erpId",
             "distance",

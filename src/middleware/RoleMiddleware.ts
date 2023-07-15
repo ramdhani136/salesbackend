@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+
 import { RoleListModel, RoleUserModel } from "../models";
 
 export const RoleMiddleware = async (

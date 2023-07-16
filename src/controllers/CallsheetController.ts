@@ -816,6 +816,7 @@ class CallsheetController implements IController {
             "contact.name": 1,
             "contact.phone": 1,
             "customer._id": 1,
+            "customer.erpId": 1,
             "customer.name": 1,
             "createdBy._id": 1,
             "createdBy.name": 1,

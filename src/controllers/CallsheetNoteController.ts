@@ -1295,6 +1295,80 @@ class CallsheetNoteController implements IController {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
+
+  
+  ByCallsheet = async (req: Request | any, res: Response): Promise<Response> => {
+  
+    try {
+  
+      const id = req.params.id;
+      const order_by: any = req.query.order_by
+        ? JSON.parse(`${req.query.order_by}`)
+        : { updatedAt: -1 };
+      const limit: number | string = parseInt(`${req.query.limit}`) || 10;
+      let page: number | string = parseInt(`${req.query.page}`) || 1;
+  
+      let pipeline: any = [
+        { $match: {callsheet:new ObjectId(id)} },
+        {
+          $sort: order_by,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $lookup: {
+            from: "tags",
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags",
+            pipeline:[
+              {
+                $project: {
+                  "_id": 1,
+                  "name": 1,
+                },
+              },
+            ]
+          },
+        },
+  
+      ];
+
+      //Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipeline.splice(3, 0, { $limit: limit });
+      }
+      // End
+
+      const getAll: any = await Db.find(
+      {callsheet:new ObjectId(id)}
+      ).count();
+
+      const result = await Db.aggregate(pipeline);
+
+      if (result.length > 0) {
+        return res.status(200).json({
+          status: 200,
+          total: getAll,
+          limit,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
+          data: result,
+         
+        });
+      }
+      return res.status(400).json({
+        status: 404,
+        msg: "Data Not found!",
+      });
+    } catch (error: any) {
+      return res.status(400).json({
+        status: 400,
+        msg: Object.keys(error).length > 0 ? error : "Error,Invalid Request",
+      });
+    }
+  };
 }
 
 export default new CallsheetNoteController();

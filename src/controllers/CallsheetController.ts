@@ -172,16 +172,17 @@ class CallsheetController implements IController {
         return !key.startsWith("customer."); // Kembalikan true jika kunci diawali dengan "schedule."
       });
 
-        let search: ISearch = {
-          filter: ["name"],
-          value: req.query.search || "",
-        };
-      let isFilter = FilterQuery.getFilter(
-        notCustomer,
-        stateFilter,
-        search,
-        ["customer", "schedulelist", "createdBy", "_id", "contact"]
-      );
+      let search: ISearch = {
+        filter: ["name"],
+        value: req.query.search || "",
+      };
+      let isFilter = FilterQuery.getFilter(notCustomer, stateFilter, search, [
+        "customer",
+        "schedulelist",
+        "createdBy",
+        "_id",
+        "contact",
+      ]);
 
       // Mengambil rincian permission user
       const userPermission = await PermissionMiddleware.getPermission(
@@ -361,8 +362,7 @@ class CallsheetController implements IController {
         });
 
       if (
-        customerFIlter.length > 0 
-        ||
+        customerFIlter.length > 0 ||
         // req.query.search ||
         branchPermission.length > 0 ||
         groupPermission.length > 0
@@ -598,42 +598,42 @@ class CallsheetController implements IController {
       req.body.customer = cekCustomer._id;
       // End
 
-      // Mengecek contact jika terdapat kontak untuk customer
-      if (!req.body.contact) {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, contact wajib diisi!" });
-      }
-      const contact = await ContactModel.findOne(
-        {
-          $and: [
-            { _id: req.body.contact },
-            {
-              customer: req.body.customer,
-            },
-          ],
-        },
-        ["name", "phone", "status"]
-      );
+      // // Mengecek contact jika terdapat kontak untuk customer
+      // if (!req.body.contact) {
+      //   return res
+      //     .status(400)
+      //     .json({ status: 400, msg: "Error, contact wajib diisi!" });
+      // }
+      // const contact = await ContactModel.findOne(
+      //   {
+      //     $and: [
+      //       { _id: req.body.contact },
+      //       {
+      //         customer: req.body.customer,
+      //       },
+      //     ],
+      //   },
+      //   ["name", "phone", "status"]
+      // );
 
-      if (!contact) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, kontak tidak ditemukan!",
-        });
-      }
+      // if (!contact) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, kontak tidak ditemukan!",
+      //   });
+      // }
 
-      if (contact.status !== "1") {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, kontak tidak aktif!",
-        });
-      }
+      // if (contact.status !== "1") {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Error, kontak tidak aktif!",
+      //   });
+      // }
 
-      // set contact
-      req.body.contact = contact._id;
+      // // set contact
+      // req.body.contact = contact._id;
 
-      // End
+      // // End
 
       req.body.createdBy = req.userId;
 
@@ -1317,6 +1317,15 @@ class CallsheetController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
+
+                // Cek contact wajib diisi
+                if (!req.body.contact && !result.contact) {
+                  return res
+                    .status(400)
+                    .json({ status: 400, msg: "Gagal, contact wajib diisi!" });
+                }
+                // End
+
                 // Cek config callsheet
                 const config: any = await ConfigModel.findOne(
                   {},

@@ -286,7 +286,10 @@ class CallsheetController implements IController {
           },
         },
         {
-          $unwind: "$contact",
+          $unwind: {
+            path: "$contact",
+            preserveNullAndEmptyArrays: true,
+          },
         },
         {
           $lookup: {
@@ -764,7 +767,10 @@ class CallsheetController implements IController {
           },
         },
         {
-          $unwind: "$contact",
+          $unwind: {
+            path: "$contact",
+            preserveNullAndEmptyArrays: true,
+          },
         },
         {
           $lookup: {
@@ -1270,7 +1276,7 @@ class CallsheetController implements IController {
               $and: [
                 { _id: req.body.contact },
                 {
-                  "customer._id": req.body.customer
+                  "customer": req.body.customer
                     ? req.body.customer
                     : result.customer._id,
                 },
@@ -1278,6 +1284,8 @@ class CallsheetController implements IController {
             },
             ["name", "phone", "status"]
           );
+
+          console.log(result.customer._id);
 
           if (!contact) {
             return res.status(404).json({
@@ -1317,7 +1325,6 @@ class CallsheetController implements IController {
               JSON.stringify(prevData) !== JSON.stringify(checkedWorkflow.data)
             ) {
               if (result.status == "0" && checkedWorkflow.data.status == 1) {
-
                 // Cek contact wajib diisi
                 if (!req.body.contact && !result.contact) {
                   return res
@@ -1540,7 +1547,10 @@ class CallsheetController implements IController {
             },
           },
           {
-            $unwind: "$contact",
+            $unwind: {
+              path: "$contact",
+              preserveNullAndEmptyArrays: true,
+            },
           },
           {
             $lookup: {

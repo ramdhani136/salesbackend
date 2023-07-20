@@ -23,8 +23,9 @@ const ContactModel = new mongoose.Schema(
       required: true,
       index: -1,
     },
-    desc: {
+    position: {
       type: String,
+      required: true,
     },
     createdBy: {
       type: Schema.Types.ObjectId,

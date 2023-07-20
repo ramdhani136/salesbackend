@@ -25,6 +25,7 @@ import fs from "fs";
 import sharp from "sharp";
 import path from "path";
 const redisName = "customer";
+const csv = require("csvtojson");
 
 interface IGeoLOc {
   lat: number;
@@ -112,7 +113,7 @@ class CustomerController implements IController {
             "branch.name",
             "erpId",
             "distance",
-            "img"    
+            "img",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -179,7 +180,7 @@ class CustomerController implements IController {
           $count: "total_orders",
         },
       ];
-     
+
       let pipelineResult: any = [
         {
           $match: isFilter.data,
@@ -296,13 +297,12 @@ class CustomerController implements IController {
       // Menambahkan filter nearby gps
 
       if (nearby.length === 3) {
-        
         const targetLatitude = parseFloat(`${nearby[0]}`);
         const targetLongitude = parseFloat(`${nearby[1]}`);
         let maxDistance = parseInt(`${nearby[2]}`);
 
         // Cek Default jarak
-        if(parseInt(`${nearby[2]}`)<1){
+        if (parseInt(`${nearby[2]}`) < 1) {
           const config: any = await ConfigModel.findOne({}, { customer: 1 });
           if (config) {
             if (config?.customer.locationDistance !== 0) {
@@ -333,23 +333,20 @@ class CustomerController implements IController {
             maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
             spherical: true,
           },
-        },
-        
-        );
+        });
       }
 
       // End
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
-      
-          pipelineResult.splice(nearby.length===3?3:2, 0, { $limit: limit });
-        
+        pipelineResult.splice(nearby.length === 3 ? 3 : 2, 0, {
+          $limit: limit,
+        });
       }
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
-
 
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);
@@ -431,36 +428,36 @@ class CustomerController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save();
 
-            // Upload data ketika outsite
-            if (req.file) {
-              const compressedImage = path.join(
-                __dirname,
-                "../public/customers",
-                `${response._id}.jpg`
+      // Upload data ketika outsite
+      if (req.file) {
+        const compressedImage = path.join(
+          __dirname,
+          "../public/customers",
+          `${response._id}.jpg`
+        );
+        sharp(req.file.path)
+          .resize(640, 480, {
+            fit: sharp.fit.inside,
+            withoutEnlargement: true,
+          })
+          .jpeg({
+            quality: 100,
+            progressive: true,
+            chromaSubsampling: "4:4:4",
+          })
+          .withMetadata()
+          .toFile(compressedImage, async (err, info): Promise<any> => {
+            if (err) {
+              console.log(err);
+            } else {
+              await Db.updateOne(
+                { _id: response._id },
+                { img: `${response._id}.jpg` }
               );
-              sharp(req.file.path)
-                .resize(640, 480, {
-                  fit: sharp.fit.inside,
-                  withoutEnlargement: true,
-                })
-                .jpeg({
-                  quality: 100,
-                  progressive: true,
-                  chromaSubsampling: "4:4:4",
-                })
-                .withMetadata()
-                .toFile(compressedImage, async (err, info): Promise<any> => {
-                  if (err) {
-                    console.log(err);
-                  } else {
-                    await Db.updateOne(
-                      { _id: response._id },
-                      { img: `${response._id}.jpg` }
-                    );
-                  }
-                });
             }
-            // End
+          });
+      }
+      // End
 
       // push history
       await HistoryController.pushHistory({
@@ -676,34 +673,34 @@ class CustomerController implements IController {
         }
         // End
 
-          // Upload gambar
-          if (req.file) {
-            req.body.img= `${req.params.id}.jpg` 
-            const compressedImage = path.join(
-              __dirname,
-              "../public/customers",
-             `${req.params.id}.jpg`,
-            );
-            sharp(req.file.path)
-              .resize(640, 480, {
-                fit: sharp.fit.inside,
-                withoutEnlargement: true,
-              })
-              .jpeg({
-                quality: 100,
-                progressive: true,
-                chromaSubsampling: "4:4:4",
-              })
-              .withMetadata()
-              .toFile(compressedImage, async (err, info): Promise<any> => {
-                if (err) {
-                  console.log(err);
-                } else {
-                  console.log(info);
-                }
-              });
-          }
-          // End
+        // Upload gambar
+        if (req.file) {
+          req.body.img = `${req.params.id}.jpg`;
+          const compressedImage = path.join(
+            __dirname,
+            "../public/customers",
+            `${req.params.id}.jpg`
+          );
+          sharp(req.file.path)
+            .resize(640, 480, {
+              fit: sharp.fit.inside,
+              withoutEnlargement: true,
+            })
+            .jpeg({
+              quality: 100,
+              progressive: true,
+              chromaSubsampling: "4:4:4",
+            })
+            .withMetadata()
+            .toFile(compressedImage, async (err, info): Promise<any> => {
+              if (err) {
+                console.log(err);
+              } else {
+                console.log(info);
+              }
+            });
+        }
+        // End
 
         if (req.body.nextState) {
           const checkedWorkflow =
@@ -731,13 +728,9 @@ class CustomerController implements IController {
           );
         }
 
-        
-
         const getData: any = await Db.findOne({
           _id: req.params.id,
         });
-
-      
 
         // await Redis.client.set(
         //   `${redisName}-${req.params.id}`,
@@ -824,7 +817,9 @@ class CustomerController implements IController {
       // }
 
       if (
-        fs.existsSync(path.join(__dirname, "../public/customers/" + getData.img))
+        fs.existsSync(
+          path.join(__dirname, "../public/customers/" + getData.img)
+        )
       ) {
         fs.unlink(
           path.join(__dirname, "../public/customers/" + getData.img),
@@ -902,6 +897,38 @@ class CustomerController implements IController {
       return result;
     } catch (error) {
       return [];
+    }
+  };
+
+  importData = async (req: Request | any, res: Response): Promise<any> => {
+    try {
+      const data = await csv().fromFile(req.file.path);
+      if (data.length > 0) {
+        const validData = await Promise.all(
+          data.map(async (item: any) => {
+            let dup = await CustomerModel.findOne({ name: item.name }, [
+              "name",
+            ]);
+            if (dup) {
+              throw new Error(`Error duplicate for customer ${dup.name}`);
+            }
+          
+            return { ...item, createdBy: req.userId };
+          })
+        );
+        if (validData.length > 0) {
+          console.log(validData);
+          const result = await Db.insertMany(validData);
+
+          return res.status(200).json({ status: 400, data: result });
+        } else {
+          throw "No data";
+        }
+      } else {
+        throw "No data";
+      }
+    } catch (error: any) {
+      return res.status(400).json({ status: 400, msg: error.message });
     }
   };
 }

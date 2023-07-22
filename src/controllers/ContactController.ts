@@ -377,6 +377,12 @@ class ContactController implements IController {
         .json({ status: 400, msg: "Error, phone wajib diisi!" });
     }
 
+    if (!req.body.position) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Error, Position wajib diisi!" });
+    }
+
     if (!req.body.customer) {
       return res
         .status(400)

@@ -97,6 +97,7 @@ class ContactController implements IController {
         : [
             "name",
             "phone",
+            "position",
             "customer._id",
             "customer.name",
             "customer.customerGroup",

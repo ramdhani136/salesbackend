@@ -214,12 +214,7 @@ class UserController implements IController {
       const user = new User(req.body);
       const users: any = await user.save();
 
-      if (req.file != undefined) {
-        let istitik = req.file.originalname.indexOf(".");
-        let typeimage = req.file.originalname.slice(istitik, 200);
-        this.prosesUpload(req, `${users._id}${typeimage}`);
-        req.body.img = `${users._id}${typeimage}`;
-      }
+     
 
       const resultData: any = await User.findOne(
         { _id: new Object(users._id) },
@@ -392,6 +387,15 @@ class UserController implements IController {
           .json({ status: 404, data: "Error update, user tidak ditemukan" });
       }
 
+      
+      if (req.file != undefined) {
+        let istitik = req.file.originalname.indexOf(".");
+        let typeimage = req.file.originalname.slice(istitik, 200);
+        this.prosesUpload(req, `${req.params.id}${typeimage}`);
+        req.body.img = `${req.params.id}${typeimage}`;
+      }
+
+
       if (req.body.nextState) {
         const checkedWorkflow = await WorkflowController.permissionUpdateAction(
           "user",
@@ -416,13 +420,7 @@ class UserController implements IController {
         { password: 0 }
       );
 
-      if (req.file != undefined) {
-        let istitik = req.file.originalname.indexOf(".");
-        let typeimage = req.file.originalname.slice(istitik, 200);
-        this.prosesUpload(req, `${req.params.id}${typeimage}`);
-        req.body.img = `${req.params.id}${typeimage}`;
-      }
-
+ 
       // await Redis.client.set(
       //   `user-${req.params.id}`,
       //   JSON.stringify(resultData)

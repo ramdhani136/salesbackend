@@ -325,7 +325,10 @@ class workflowStateController implements IController {
       $and: [{ status: 1 }, { doc: doc }],
     });
 
+   
+
     if (workflow) {
+  
       const id_workflow = workflow._id;
       const transitions: any = await WorkflowTransition.find({
         workflow: id_workflow,
@@ -336,6 +339,8 @@ class workflowStateController implements IController {
         .populate("stateActive", "name")
         .populate("roleprofile", "name");
 
+    
+      
       let allData = [];
       for (const transition of transitions) {
         if (transition.selfApproval) {
@@ -355,7 +360,10 @@ class workflowStateController implements IController {
         }
       }
 
+
+
       data = allData.map((item: any) => {
+  
         if (item.stateActive.name == stateActive) {
           return {
             action: item.action.name,
@@ -366,10 +374,13 @@ class workflowStateController implements IController {
           };
         }
       });
+   
       const genData = data.filter((item) => item !== undefined);
 
       return genData;
     }
+
+
     return data;
   };
 

@@ -30,7 +30,6 @@ const RoleListModel = new mongoose.Schema(
         "tag",
         "memo",
         "erp",
-        "namingseries",
         "workflowstate",
         "workflowaction",
         "workflow",

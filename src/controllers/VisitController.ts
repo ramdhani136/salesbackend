@@ -163,6 +163,7 @@ class VistController implements IController {
             "contact._id",
             "contact.name",
             "contact.phone",
+            "contact.position",
             "updatedAt",
             "customer._id",
             "customerGroup._id",
@@ -979,6 +980,7 @@ class VistController implements IController {
         },
       ]);
 
+   
       if (getData.length === 0) {
         return res
           .status(404)
@@ -987,6 +989,7 @@ class VistController implements IController {
 
       const result = getData[0];
 
+   
       const cekPermission = await cekValidPermission(
         req.userId,
         {
@@ -1005,11 +1008,15 @@ class VistController implements IController {
         });
       }
 
+ 
+
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,
         result.workflowState
       );
+
+   
 
       const getHistory = await History.find(
         {

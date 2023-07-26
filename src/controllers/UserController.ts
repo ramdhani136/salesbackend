@@ -530,9 +530,9 @@ class UserController implements IController {
           status: result.status,
         },
         `${process.env.ACCESS_TOKEN_SECRET}`,
-        {
-          expiresIn: "1d",
-        }
+        // {
+        //   expiresIn: "1d",
+        // }
       );
       const refreshToken = jwt.sign(
         {
@@ -542,9 +542,9 @@ class UserController implements IController {
           status: result.status,
         },
         `${process.env.REFRESH_TOKEN_SECRET}`,
-        {
-          expiresIn: "1d",
-        }
+        // {
+        //   expiresIn: "1d",
+        // }
       );
 
       res.cookie("refreshToken", refreshToken, {

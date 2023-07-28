@@ -15,8 +15,6 @@ import {
   ScheduleModel as Db,
   History,
   ScheduleListModel,
-  // UserGroupListModel,
-  // UserGroupModel,
   namingSeriesModel,
   visitModel,
 } from "../models";
@@ -55,12 +53,7 @@ class ScheduleController implements IController {
         typeOf: TypeOfState.String,
         isSort: true,
       },
-      // {
-      //   alias: "UserGroup",
-      //   name: "userGroup",
-      //   operator: ["=", "!="],
-      //   typeOf: TypeOfState.String,
-      // },
+
       {
         alias: "CreatedBy",
         name: "createdBy",
@@ -162,33 +155,7 @@ class ScheduleController implements IController {
       let FinalFIlter: any = {};
       FinalFIlter[`$and`] = [isFilter.data];
 
-      // if (userPermission.length > 0) {
-      //   FinalFIlter[`$and`].push({
-      //     createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //   });
-      // }
-
-      // // Cek permission usergroup
-      // const userGroup = await UserGroupListModel.find(
-      //   {
-      //     user: new ObjectId(req.userId),
-      //   },
-      //   { userGroup: 1 }
-      // );
-
-      // const validPermission = userGroup.map((item) => {
-      //   return item.userGroup;
-      // });
-
-      let pipeline: any[] = [
-        // {
-        //   $or: [
-        //     { createdBy: new ObjectId(req.userId) },
-        //     { userGroup: { $in: validPermission } },
-        //   ],
-        // },
-        FinalFIlter,
-      ];
+      let pipeline: any[] = [FinalFIlter];
       // End
 
       // Cek permission user
@@ -210,7 +177,6 @@ class ScheduleController implements IController {
         .sort(order_by)
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0)
-        // .populate("userGroup", "name")
         .populate("createdBy", "name");
 
       if (result.length > 0) {
@@ -342,40 +308,6 @@ class ScheduleController implements IController {
           PaddyData(latest + 1, ambilIndex.length).toString()
         : olahKata.join("") + PaddyData(latest + 1, 4).toString();
       // End set name
-
-      // //Mengecek userGroup
-      // if (!req.body.userGroup) {
-      //   return res
-      //     .status(400)
-      //     .json({ status: 400, msg: "Error, userGroup wajib diisi!" });
-      // }
-      // if (typeof req.body.userGroup !== "string") {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: "Error, Cek kembali data userGroup, Data harus berupa string id userGroup!",
-      //   });
-      // }
-
-      // const cekUserGroup: any = await UserGroupModel.findOne({
-      //   $and: [{ _id: req.body.userGroup }],
-      // });
-
-      // if (!cekUserGroup) {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: "Error, userGroup tidak ditemukan!",
-      //   });
-      // }
-
-      // if (cekUserGroup.status != 1) {
-      //   return res.status(404).json({
-      //     status: 404,
-      //     msg: "Error, userGroup tidak aktif!",
-      //   });
-      // }
-      // // End
-
-      // End
 
       req.body.createdBy = req.userId;
       const result = new Db(req.body);

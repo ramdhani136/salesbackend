@@ -477,7 +477,7 @@ class workflowStateController implements IController {
     }
     return {
       status: false,
-      msg: "WorkState not found!",
+      msg: "Permission Denied",
     };
   };
 }

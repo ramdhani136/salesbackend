@@ -1225,7 +1225,10 @@ class ScheduleListController implements IController {
   protected DeletedRelateChild = async (data: any): Promise<any> => {
     try {
       // Update Visit
-      if (data.status === "1" && data.schedule.type === "visit") {
+      if (
+        data.status === "1" &&
+        (data.schedule.type === "visit" || data.schedule.type === "all")
+      ) {
         const visit: any = await visitModel.find(
           {
             schedulelist: { $in: [data._id] },
@@ -1257,7 +1260,10 @@ class ScheduleListController implements IController {
       // End
 
       // Update callsheet
-      if (data.status === "1" && data.schedule.type === "callsheet") {
+      if (
+        data.status === "1" &&
+        (data.schedule.type === "callsheet" || data.schedule.type === "all")
+      ) {
         const callsheet: any = await CallsheetModel.find(
           {
             schedulelist: { $in: [data._id] },

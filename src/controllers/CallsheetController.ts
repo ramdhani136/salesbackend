@@ -1451,7 +1451,11 @@ class CallsheetController implements IController {
                           closing: {
                             date: new Date(),
                             user: req.userId,
-                            doc: result.name,
+                            doc: {
+                              _id: req.params.id,
+                              name: result.name,
+                              type: "callsheet",
+                            },
                           },
                         }
                       );

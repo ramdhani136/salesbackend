@@ -41,6 +41,7 @@ const ScheduleListModel = new mongoose.Schema(
           index: 1,
         },
         name: { type: String, index: 1 },
+        type: { type: String, index: 1, enum: ["visit", "callsheet"] },
       },
     },
     createdBy: {

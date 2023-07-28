@@ -980,7 +980,6 @@ class VistController implements IController {
         },
       ]);
 
-   
       if (getData.length === 0) {
         return res
           .status(404)
@@ -989,7 +988,6 @@ class VistController implements IController {
 
       const result = getData[0];
 
-   
       const cekPermission = await cekValidPermission(
         req.userId,
         {
@@ -1008,15 +1006,11 @@ class VistController implements IController {
         });
       }
 
- 
-
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,
         result.workflowState
       );
-
-   
 
       const getHistory = await History.find(
         {
@@ -1164,7 +1158,6 @@ class VistController implements IController {
               if (err) {
                 console.log(err);
               } else {
-          
                 console.log("suksess");
 
                 // await Db.findByIdAndUpdate(req.params.id, {
@@ -1501,7 +1494,11 @@ class VistController implements IController {
                           closing: {
                             date: new Date(),
                             user: req.userId,
-                            doc: result.name,
+                            doc: {
+                              _id: req.params.id,
+                              name: result.name,
+                              type: "visit",
+                            },
                           },
                         }
                       );

@@ -260,7 +260,7 @@ class App {
       mkdirp(item)
         .then((made) => console.log(`Membuat folder ${item}`))
         .catch((err) => {
-          console.log(`Gagal Mebuat folder ${item} `);
+          console.log(`Gagal membuat folder ${item} `);
         });
     }
     this.app.use("/public", express.static(imagePath));

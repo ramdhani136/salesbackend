@@ -1090,34 +1090,74 @@ class CallsheetController implements IController {
 
     // Cek Schedulelist
     try {
-      let schedulelist: any[] = await ScheduleListModel.find(
+      let data = await ScheduleListModel.aggregate([
         {
-          $and: [{ status: "0" }, { customer: customerId }],
+          $match: {
+            $and: [{ status: "0" }, { customer: customerId }],
+          },
         },
-        { schedule: 1, notes: 1 }
-      ).populate("schedule", "name notes status type");
+        {
+          $lookup: {
+            from: "schedules",
+            localField: "schedule",
+            foreignField: "_id",
+            as: "schedule",
+            pipeline: [
+              {
+                $match: {
+                  $and: [
+                    { status: "1" },
+                    {
+                      $or: [
+                        {
+                          type: "all",
+                        },
+                        {
+                          type: !doc ? redisName : doc,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                  notes: 1,
+                  type: 1,
+                },
+              },
+            ],
+          },
+        },
+        {
+          $unwind: "$schedule",
+        },
 
-      let isDoc = !doc ? redisName : doc;
-      const data = schedulelist.filter((item) => item.schedule.type == isDoc);
-
-      // console.log(data);
+        {
+          $project: {
+            _id: 1,
+            schedule: 1,
+            notes: 1,
+          },
+        },
+      ]);
 
       if (data.length > 0) {
-        const finalNotesSchedule = data
-          .filter((item: any) => item.schedule.status === "1")
-          .map((i) => {
-            return {
-              _id: i._id,
-              from: "Schedule",
-              name: i.schedule.name,
-              title: `Task Schedule ${i.schedule.name} `,
-              notes: `${i.notes ? i.notes : ""}${
-                i.notes !== undefined && i.schedule.notes !== undefined
-                  ? " & "
-                  : ""
-              }${i.schedule.notes ? i.schedule.notes : ""}`,
-            };
-          });
+        const finalNotesSchedule = data.map((i) => {
+          return {
+            _id: i._id,
+            from: "Schedule",
+            name: i.schedule.name,
+            title: `Task Schedule ${i.schedule.name} `,
+            notes: `${i.notes ? i.notes : ""}${
+              i.notes !== undefined && i.schedule.notes !== undefined
+                ? " & "
+                : ""
+            }${i.schedule.notes ? i.schedule.notes : ""}`,
+          };
+        });
 
         if (finalNotesSchedule.length > 0) {
           taskNotes.push(...finalNotesSchedule);
@@ -1278,7 +1318,7 @@ class CallsheetController implements IController {
               $and: [
                 { _id: req.body.contact },
                 {
-                  "customer": req.body.customer
+                  customer: req.body.customer
                     ? req.body.customer
                     : result.customer._id,
                 },
@@ -1286,8 +1326,6 @@ class CallsheetController implements IController {
             },
             ["name", "phone", "status"]
           );
-
-          console.log(result.customer._id);
 
           if (!contact) {
             return res.status(404).json({

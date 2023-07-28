@@ -726,10 +726,10 @@ class ScheduleController implements IController {
       // Delete Child
       await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       //End;
-      // const result = await Db.deleteOne({ _id: req.params.id });
+      const result = await Db.deleteOne({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
 
-      return res.status(200).json({ status: 200, data: "result" });
+      return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }

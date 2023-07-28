@@ -726,10 +726,10 @@ class ScheduleController implements IController {
       // Delete Child
       await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       //End;
-      const result = await Db.deleteOne({ _id: req.params.id });
+      // const result = await Db.deleteOne({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
 
-      return res.status(200).json({ status: 200, data: result });
+      return res.status(200).json({ status: 200, data: "result" });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
     }
@@ -753,7 +753,10 @@ class ScheduleController implements IController {
           let schedule: any = item.schedule;
 
           // Update visit
-          if (item.status === "1" && schedule.type === "visit") {
+          if (
+            item.status === "1" &&
+            (schedule.type === "visit" || schedule.type === "all")
+          ) {
             const visit = await visitModel.find(
               {
                 schedulelist: { $in: [item._id] },
@@ -789,7 +792,10 @@ class ScheduleController implements IController {
           // End visit
 
           // Update callsheet
-          if (item.status === "1" && schedule.type === "callsheet") {
+          if (
+            item.status === "1" &&
+            (schedule.type === "callsheet" || schedule.type === "all")
+          ) {
             const callsheet = await CallsheetModel.find(
               {
                 schedulelist: { $in: [item._id] },

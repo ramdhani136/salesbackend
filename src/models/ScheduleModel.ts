@@ -5,51 +5,45 @@ const SchemaScheduleModel = {
     type: String,
     required: true,
     unique: true,
-    index:true
+    index: true,
   },
   type: {
     type: String,
     required: true,
-    enum: ["visit", "callsheet"],
-    index:true
+    enum: ["visit", "callsheet","all"],
+    index: true,
   },
   notes: {
     type: String,
     required: true,
   },
-  // userGroup: {
-  //   type: Schema.Types.ObjectId,
-  //   ref: "usergroup",
-  //   required: true,
-  //   index:true
-  // },
   activeDate: {
     type: Date,
     required: true,
-    index:true
+    index: true,
   },
   closingDate: {
     type: Date,
     require: true,
-    index:true
+    index: true,
   },
   status: {
     type: String,
     enum: ["0", "1", "2"],
     default: "0",
-    index:true
+    index: true,
   },
   workflowState: {
     type: String,
     required: true,
     default: "Draft",
-    index:true
+    index: true,
   },
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: "Users",
     required: true,
-    index:true
+    index: true,
   },
 };
 
@@ -63,6 +57,5 @@ ScheduleModel.index({
 ScheduleModel.index({
   updatedAt: -1,
 });
-
 
 export default mongoose.model("schedule", ScheduleModel);

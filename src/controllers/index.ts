@@ -29,6 +29,7 @@ import CallsheetNoteController from "./CallsheetNoteController";
 import MemoController from "./MemoController";
 import ConfigController from "./ConfigController";
 import TopicController from "./TopicController";
+import FileController from "./FileController";
 
 export {
   UserController,
@@ -61,5 +62,6 @@ export {
   MemoController,
   ErpDataController,
   ConfigController,
-  TopicController
+  TopicController,
+  FileController
 };

@@ -42,6 +42,7 @@ import {
   ErpDataRoutes,
   ConfigRoutes,
   TopicRoutes,
+  FileRoutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -411,6 +412,7 @@ class App {
       CustomerGroupRoutes
     );
     this.app.use("/visit", AuthMiddleware, RoleMiddleware, VisitRoutes);
+    this.app.use("/files", AuthMiddleware, FileRoutes);
     this.app.use("/callsheet", AuthMiddleware, RoleMiddleware, CallsheetRoutes);
     this.app.use("/contact", AuthMiddleware, RoleMiddleware, ContactRoutes);
     this.app.use(

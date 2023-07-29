@@ -7,6 +7,11 @@ const FileModel = new mongoose.Schema(
       required: true,
       index: true,
     },
+    type:{
+      type: String,
+      required: true,
+      index: true,
+    },
     doc: {
       type: {
         type: String,

@@ -267,7 +267,6 @@ class App {
     this.app.use("/public", express.static(path.join(memoPath)));
     this.app.use("/images/users", express.static(userPage));
     this.app.use("/public/customer", express.static(customerPath));
-    this.app.use("/public/ddd", express.static(customerPath));
   };
 
   protected plugins(): void {

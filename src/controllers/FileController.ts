@@ -226,59 +226,48 @@ class TopicController implements IController {
         });
       }
 
-      console.log(req.file);
+      req.body.name = req.file.filename;
+      req.body.type = req.file.mimetype;
+      req.body.createdBy = req.userId;
 
-      // cek format
-
-      const allowedMimeTypes = [
-        "image/jpeg",
-        "image/png",
-        "application/pdf",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/msword",
-      ];
-
-      const cekFormat = allowedMimeTypes.find(
-        (item) => item === req.file.mimetype
-      );
-      if (!cekFormat) {
-        res.status(400).json({
+   
+      if (!req.body.doc.type) {
+        return res.status(400).json({
           status: 400,
-          msg: "Error, Unexpected file type. Only  Jpeg, Png , PDF, Excel, and Word documents are allowed.!",
+          msg: "Error, doc.type wajib diisi!",
         });
       }
 
-      req.body.name = req.file.originalname;
-      req.body.type = req.file.mimetype;
+      if (!req.body.doc._id) {
+        return res.status(400).json({
+          status: 400,
+          msg: "Error, doc._id wajib diisi!",
+        });
+      }
+      if (!req.body.doc.name) {
+        return res.status(400).json({
+          status: 400,
+          msg: "Error, doc.name wajib diisi!",
+        });
+      }
 
-      req.body.createdBy = req.userId;
-   
-      // const result = new Db(req.body);
-      // const response = await result.save();
+      const result = new Db(req.body);
+      const response = await result.save();
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `Membuat ${redisName} ${req.body.name} `,
-      //   user: req.userId,
-      // });
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `Membuat ${redisName} ${req.body.name} `,
+        user: req.userId,
+      });
       // End
 
-      // await Redis.client.set(
-      //   `${redisName}-${response._id}`,
-      //   JSON.stringify(response),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
 
-      return res.status(200).json({ status: 200, data: "response" });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
     }

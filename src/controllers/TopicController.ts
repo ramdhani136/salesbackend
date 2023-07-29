@@ -534,7 +534,9 @@ class TopicController implements IController {
 
       const result: any = await Db.findOne({
         $and: pipeline,
-      });
+      })
+        .populate("tags.mandatory", "name")
+        .populate("tags.restrict", "name");
 
       if (result) {
         // Cek Duplicate name
@@ -553,8 +555,6 @@ class TopicController implements IController {
           });
         }
         // End
-
-       
 
         if (req.body.tags.restrict) {
           if (typeof req.body.tags.restrict !== "object") {
@@ -623,7 +623,6 @@ class TopicController implements IController {
           }
         }
 
-
         // End
 
         if (req.body.nextState) {
@@ -636,10 +635,7 @@ class TopicController implements IController {
             );
 
           if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            );
+            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
           } else {
             return res
               .status(403)
@@ -651,7 +647,9 @@ class TopicController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        });
+        })
+          .populate("tags.mandatory", "name")
+          .populate("tags.restrict", "name");
         // await Redis.client.set(
         //   `${redisName}-${req.params.id}`,
         //   JSON.stringify(getData),

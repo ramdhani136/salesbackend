@@ -1,7 +1,13 @@
 import { NextFunction, Request, Response } from "express";
-import { CallSheetNoteModel, ConfigModel, VisitNoteModel } from "../../models";
+import {
+  CallSheetNoteModel,
+  ConfigModel,
+  TopicModel,
+  VisitNoteModel,
+} from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
+import NotesModel from "../../models/NotesModel";
 
 interface IData {
   model: any;
@@ -29,6 +35,16 @@ export const EventDeleteTag = async (
       doc: "CallsheetNote",
       filters: ["tags"],
       model: CallSheetNoteModel,
+    },
+    {
+      doc: "Topic",
+      filters: ["tags.mandatory", "tags.restrict"],
+      model: TopicModel,
+    },
+    {
+      doc: "Notes",
+      filters: ["tags"],
+      model: NotesModel,
     },
   ];
 

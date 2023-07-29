@@ -351,12 +351,10 @@ class MemoController implements IController {
 
     // Jika display terdapat dashboard maka gambar wajib diupload
     if (req.body.display.includes("dashboard") && !req.file) {
-      return res
-        .status(400)
-        .json({
-          status: 400,
-          msg: "Wajib melampirkan gambar ketika memilih display dashboard",
-        });
+      return res.status(400).json({
+        status: 400,
+        msg: "Wajib melampirkan gambar ketika memilih display dashboard",
+      });
     }
 
     // End
@@ -880,6 +878,31 @@ class MemoController implements IController {
           status: req.body.status,
           workflowState: req.body.workflowState,
         };
+
+        // Jika display terdapat dashboard maka gambar wajib diupload
+
+        if (req.body.display) {
+          if (
+            req.body.display.includes("dashboard") &&
+            (req.file ? false : result.image ? false : true)
+          ) {
+            return res.status(400).json({
+              status: 400,
+              msg: "Wajib melampirkan gambar ketika memilih display dashboard",
+            });
+          }
+        } else {
+          if (
+            result.display.includes("dashboard") &&
+            (req.file ? false : result.image ? false : true)
+          ) {
+            return res.status(400).json({
+              status: 400,
+              msg: "Wajib melampirkan gambar ketika memilih display dashboard",
+            });
+          }
+        }
+        // End
 
         if (req.body.notes) {
           update.notes = req.body.notes;

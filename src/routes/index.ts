@@ -28,6 +28,7 @@ import CallsheetNoteRoutes from "./CallsheetNoteRoutes";
 import MemoRoutes from "./MemoRoutes";
 import ErpDataRoutes from "./ErpDataRoutes";
 import ConfigRoutes from "./ConfigRoutes";
+import TopicRoutes from "./TopicRoutes";
 
 export {
   ConfigRoutes,
@@ -49,6 +50,7 @@ export {
   CustomerGroupRoutes,
   CustomerRoutes,
   VisitRoutes,
+  TopicRoutes,
   ContactRoutes,
   NamingSeriesRoutes,
   UserGroupRoutes,

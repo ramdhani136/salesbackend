@@ -28,6 +28,7 @@ import CallsheetController from "./CallsheetController";
 import CallsheetNoteController from "./CallsheetNoteController";
 import MemoController from "./MemoController";
 import ConfigController from "./ConfigController";
+import TopicController from "./TopicController";
 
 export {
   UserController,
@@ -59,5 +60,6 @@ export {
   CallsheetNoteController,
   MemoController,
   ErpDataController,
-  ConfigController
+  ConfigController,
+  TopicController
 };

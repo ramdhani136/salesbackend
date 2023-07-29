@@ -315,6 +315,7 @@ class HistoryController implements IController {
       "tag",
       "memo",
       "workflow",
+      "topic"
     ];
 
     const cekDocType = doctype.find((item) => item == data.document.type);

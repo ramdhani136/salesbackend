@@ -41,6 +41,7 @@ import {
   MemoRoutes,
   ErpDataRoutes,
   ConfigRoutes,
+  TopicRoutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -393,6 +394,7 @@ class App {
       PermissionRoutes
     );
     this.app.use("/customer", AuthMiddleware, RoleMiddleware, CustomerRoutes);
+    this.app.use("/topic", AuthMiddleware, TopicRoutes);
     this.app.use(
       "/customergroup",
       AuthMiddleware,

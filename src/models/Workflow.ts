@@ -25,6 +25,7 @@ const Workflow = new mongoose.Schema(
         "permission",
         "usergroup",
         "memo",
+        "topic",
       ],
       index: true,
     },

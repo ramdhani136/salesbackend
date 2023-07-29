@@ -53,7 +53,7 @@ const VisitModel = new mongoose.Schema(
     },
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: "customer",
+      ref: "users",
       required: true,
       index: true,
     },

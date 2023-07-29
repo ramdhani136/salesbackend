@@ -27,6 +27,8 @@ import CallSheetNoteModel from "./CallSheetNoteModel";
 import CallsheetModel from "./CallsheetModel";
 import MemoModel from "./MemoModel";
 import ConfigModel from "./ConfigModel";
+import TopicModel from "./TopicModel";
+import FileModel from "./FileModel";
 
 export {
   ConfigModel,
@@ -58,4 +60,6 @@ export {
   CallSheetNoteModel,
   CallsheetModel,
   MemoModel,
+  TopicModel,
+  FileModel,
 };

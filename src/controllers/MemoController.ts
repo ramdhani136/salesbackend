@@ -349,6 +349,18 @@ class MemoController implements IController {
         .json({ error: "Display harus array dengan data yang ditentukan!." });
     }
 
+    // Jika display terdapat dashboard maka gambar wajib diupload
+    if (req.body.display.includes("dashboard") && !req.file) {
+      return res
+        .status(400)
+        .json({
+          status: 400,
+          msg: "Wajib melampirkan gambar ketika memilih display dashboard",
+        });
+    }
+
+    // End
+
     if (!req.body.title) {
       return res
         .status(400)
@@ -460,7 +472,7 @@ class MemoController implements IController {
 
       const response: any = await result.save({});
 
-      // Upload data ketika outsite
+      // Upload image ketik dashboard
       if (req.file) {
         const compressedImage = path.join(
           __dirname,

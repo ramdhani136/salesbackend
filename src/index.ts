@@ -254,8 +254,16 @@ class App {
     const userPage = path.join(__dirname, "public/users");
     const assetPath = path.join(__dirname, "assets/images");
     const customerPath = path.join(__dirname, "public/customers");
+    const fileAsset = path.join(__dirname, "assets/files");
 
-    const dir = [imagePath, memoPath, userPage, assetPath, customerPath];
+    const dir = [
+      imagePath,
+      memoPath,
+      userPage,
+      assetPath,
+      customerPath,
+      fileAsset,
+    ];
 
     for (const item of dir) {
       mkdirp(item)
@@ -268,6 +276,7 @@ class App {
     this.app.use("/public", express.static(path.join(memoPath)));
     this.app.use("/images/users", express.static(userPage));
     this.app.use("/public/customer", express.static(customerPath));
+    this.app.use("/public/files", express.static(fileAsset));
   };
 
   protected plugins(): void {
@@ -394,7 +403,7 @@ class App {
       PermissionRoutes
     );
     this.app.use("/customer", AuthMiddleware, RoleMiddleware, CustomerRoutes);
-    this.app.use("/topic", AuthMiddleware, RoleMiddleware,TopicRoutes);
+    this.app.use("/topic", AuthMiddleware, RoleMiddleware, TopicRoutes);
     this.app.use(
       "/customergroup",
       AuthMiddleware,

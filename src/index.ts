@@ -394,7 +394,7 @@ class App {
       PermissionRoutes
     );
     this.app.use("/customer", AuthMiddleware, RoleMiddleware, CustomerRoutes);
-    this.app.use("/topic", AuthMiddleware, TopicRoutes);
+    this.app.use("/topic", AuthMiddleware, RoleMiddleware,TopicRoutes);
     this.app.use(
       "/customergroup",
       AuthMiddleware,

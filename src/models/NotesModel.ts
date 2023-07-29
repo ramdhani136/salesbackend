@@ -25,6 +25,12 @@ const NotesModel = new mongoose.Schema(
       required: true,
       index: true,
     },
+    topic: {
+      type: Schema.Types.ObjectId,
+      ref: "topic",
+      required: true,
+      index: true,
+    },
     tags: {
       type: [
         {

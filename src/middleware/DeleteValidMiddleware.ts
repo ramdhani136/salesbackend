@@ -6,9 +6,9 @@ import {
   EventDeleteCustomer,
   EventDeleteRoleProfile,
   EventDeleteTag,
+  EventDeleteTopic,
   EventDeleteUser,
   EventDeleteUserGroup,
-  EventDeleteWorkflow,
   EventDeleteWorkflowAction,
   EventDeleteWorkflowState,
 } from "./EventDeletedMIddleware";
@@ -89,6 +89,9 @@ const DeletedValidMiddleware = async (
         break;
       case "workflowaction":
         EventDeleteWorkflowAction(req, res, next);
+        break;
+      case "topic":
+        EventDeleteTopic(req, res, next);
         break;
 
       default:

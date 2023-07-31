@@ -4,12 +4,14 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import {
+  CallsheetModel,
   CustomerModel,
   History,
   NotesModel,
   PermissionModel,
   TagModel,
   TopicModel,
+  visitModel,
 } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
@@ -310,13 +312,6 @@ class NotesController implements IController {
         throw "Topic tidak aktif!";
       }
 
-      if (topic.tags) {
-        if (topic.tags.restrict.length > 0) {
-        }
-
-        if (topic.tags.mandatory.length > 0) {
-        }
-      }
       // End
 
       if (!req.body.tags) {
@@ -332,13 +327,24 @@ class NotesController implements IController {
       }
 
       for (const item of req.body.tags) {
-        let getTag: any = await TagModel.findById(new ObjectId(item));
+        let getTag: any = await TagModel.findById(new ObjectId(item), ["name"]);
         if (!getTag) {
           return res.status(400).json({
             status: 400,
             msg: `Error, tag ${item} tidak ditemukan!`,
           });
         }
+
+        // Cek restrict tags
+        if (topic.tags) {
+          if (topic.tags.restrict.length > 0) {
+            let validTags = topic.tags.restrict.includes(item);
+            if (!validTags) {
+              throw `Tidak dapat menambahkan tag ${getTag.name}`;
+            }
+          }
+        }
+        // End
       }
 
       if (!req.body.doc) {
@@ -357,10 +363,23 @@ class NotesController implements IController {
       if (!req.body.doc._id) {
         throw "Error, Doc._id wajib diisi!";
       }
-      if (!req.body.doc.name) {
-        throw "Error, Doc.name wajib diisi!";
+
+      let DBDoc: any;
+
+      if (req.body.doc.type === "visit") {
+        DBDoc = visitModel;
+      } else {
+        DBDoc = CallsheetModel;
       }
 
+      // Cek doc terdapat di database
+      const validDoc = await DBDoc.findById(req.body.doc._id, ["name"]);
+      if (!validDoc) {
+        throw `Doc tidak ditemukan! `;
+      }
+      // End
+
+      req.body.doc.name = validDoc.name;
       req.body.createdBy = req.userId;
 
       const result = new Db(req.body);

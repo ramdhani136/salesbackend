@@ -105,14 +105,14 @@ class NotesController implements IController {
       },
       {
         alias: "CustomerGroup",
-        name: "customerGroup",
+        name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
       },
       {
         alias: "Branch",
-        name: "branch",
+        name: "customer.branch",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
@@ -153,7 +153,7 @@ class NotesController implements IController {
       },
     ];
     try {
-      const filterOther = ["customerGroup", "branch"];
+      const filterOther = ["customer.customerGroup", "customer.branch"];
 
       // const filteredData = this.getDataByAlias(filterOther, stateFilter, true);
 
@@ -206,8 +206,8 @@ class NotesController implements IController {
       );
       // Mengambil hasil filter
       let isFilter2 = FilterQuery.getFilter(filters2, stateFilter, undefined, [
-        "customerGroup",
-        "branch",
+        "customer.customerGroup",
+        "customer.branch",
       ]);
       // End
 
@@ -218,6 +218,8 @@ class NotesController implements IController {
           .status(400)
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
+
+      console.log(JSON.stringify(isFilter2.data));
 
       // End
 
@@ -249,9 +251,33 @@ class NotesController implements IController {
         {
           $unwind: "$customer",
         },
+        {
+          $lookup: {
+            from: "topics",
+            localField: "topic",
+            foreignField: "_id",
+            as: "topic",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$topic",
+        },
+        {
+          $lookup: {
+            from: "tags",
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
         // {
         //   $project: setField,
         // },
+        {
+          $match: isFilter2.data,
+        },
 
         {
           $count: "total_orders",
@@ -319,6 +345,9 @@ class NotesController implements IController {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
 
+        {
+          $match: isFilter2.data,
+        },
         // {
         //   $project: setField,
         // },

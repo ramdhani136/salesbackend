@@ -9,6 +9,7 @@ const NotesModel = new mongoose.Schema(
       type: {
         type: String,
         required: true,
+        enum: ["visit", "callsheet"],
       },
       _id: {
         type: Schema.Types.ObjectId,
@@ -64,6 +65,5 @@ NotesModel.index({
 NotesModel.index({
   updatedAt: -1,
 });
-
 
 export default mongoose.model("notes", NotesModel);

@@ -85,6 +85,20 @@ class NotesController implements IController {
         isSort: true,
       },
       {
+        alias: "Customer Group",
+        name: "customerGroup",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Branch",
+        name: "branch",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
         alias: "Created By",
         name: "createdBy._id",
         operator: ["=", "!="],
@@ -124,18 +138,18 @@ class NotesController implements IController {
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
-      const fields: any = req.query.fields
-        ? JSON.parse(`${req.query.fields}`)
-        : [
-            "name",
-            "lat",
-            "lng",
-            "desc",
-            "workflowState",
-            "createdBy.name",
-            "status",
-            "updatedAt",
-          ];
+      // const fields: any = req.query.fields
+      //   ? JSON.parse(`${req.query.fields}`)
+      //   : [
+      //       "name",
+      //       "lat",
+      //       "lng",
+      //       "desc",
+      //       "workflowState",
+      //       "createdBy.name",
+      //       "status",
+      //       "updatedAt",
+      //     ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -146,9 +160,9 @@ class NotesController implements IController {
         value: req.query.search || "",
       };
 
-      // Mengambil hasil fields
-      let setField = FilterQuery.getField(fields);
-      // End
+      // // Mengambil hasil fields
+      // let setField = FilterQuery.getField(fields);
+      // // End
 
       // Mengambil hasil filter
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [

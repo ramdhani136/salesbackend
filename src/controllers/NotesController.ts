@@ -155,24 +155,11 @@ class NotesController implements IController {
     try {
       const filterOther = ["customerGroup", "branch"];
 
-      // const filteredData = this.getDataByAlias(filterOther, stateFilter, true);
 
       // Mengambil query
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
-      // const fields: any = req.query.fields
-      //   ? JSON.parse(`${req.query.fields}`)
-      //   : [
-      //       "name",
-      //       "lat",
-      //       "lng",
-      //       "desc",
-      //       "workflowState",
-      //       "createdBy.name",
-      //       "status",
-      //       "updatedAt",
-      //     ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -183,9 +170,7 @@ class NotesController implements IController {
         value: req.query.search || "",
       };
 
-      // // Mengambil hasil fields
-      // let setField = FilterQuery.getField(fields);
-      // // End
+
 
       const filtersOne = filters.filter(
         (item: string[]) => !filterOther.includes(item[0])

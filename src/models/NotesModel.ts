@@ -14,6 +14,7 @@ const NotesModel = new mongoose.Schema(
       _id: {
         type: Schema.Types.ObjectId,
         required: true,
+        index: true,
       },
       name: {
         type: String,
@@ -24,13 +25,11 @@ const NotesModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "customer",
       required: true,
-      index: true,
     },
     topic: {
       type: Schema.Types.ObjectId,
       ref: "topic",
       required: true,
-      index: true,
     },
     tags: {
       type: [
@@ -38,7 +37,7 @@ const NotesModel = new mongoose.Schema(
           type: Schema.Types.ObjectId,
           ref: "tag",
           required: true,
-          index: true,
+          index: 1,
         },
       ],
       required: true,
@@ -57,7 +56,6 @@ const NotesModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "users",
       required: true,
-      index: true,
     },
   },
   {
@@ -65,7 +63,15 @@ const NotesModel = new mongoose.Schema(
   }
 );
 
-
+NotesModel.index({ customer: 1 });
+NotesModel.index({ createdBy: 1 });
+NotesModel.index({ topic: 1 });
+NotesModel.index({ topic: 1, tags: 1, customerGroup: 1 });
+NotesModel.index({ topic: 1, tags: 1 });
+NotesModel.index({ topic: 1, customerGroup: 1 });
+NotesModel.index({ customer: 1, topic: 1, tags: 1 });
+NotesModel.index({ customer: 1, tags: 1 });
+NotesModel.index({ customer: 1, topic: 1 });
 
 NotesModel.index({
   createdAt: -1,

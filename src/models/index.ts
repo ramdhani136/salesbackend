@@ -29,6 +29,7 @@ import MemoModel from "./MemoModel";
 import ConfigModel from "./ConfigModel";
 import TopicModel from "./TopicModel";
 import FileModel from "./FileModel";
+import NotesModel from "./NotesModel";
 
 export {
   ConfigModel,
@@ -62,4 +63,5 @@ export {
   MemoModel,
   TopicModel,
   FileModel,
+  NotesModel
 };

@@ -30,6 +30,7 @@ import MemoController from "./MemoController";
 import ConfigController from "./ConfigController";
 import TopicController from "./TopicController";
 import FileController from "./FileController";
+import NotesController from "./NotesController";
 
 export {
   UserController,
@@ -63,5 +64,6 @@ export {
   ErpDataController,
   ConfigController,
   TopicController,
-  FileController
+  FileController,
+  NotesController
 };

@@ -242,6 +242,12 @@ class TopicController {
         throw "Error, doc.type wajib diisi!";
       }
 
+      // Cek type
+      if (req.body.doc.type !== "visit" || req.body.doc.type == "callsheet") {
+        throw "Error, Type wajib diisi visit, callsheet!";
+      }
+      // End
+
       if (!req.body.doc._id) {
         throw "Error, doc._id wajib diisi!";
       }

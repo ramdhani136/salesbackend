@@ -30,6 +30,7 @@ import ErpDataRoutes from "./ErpDataRoutes";
 import ConfigRoutes from "./ConfigRoutes";
 import TopicRoutes from "./TopicRoutes";
 import FileRoutes from "./FileRoutes";
+import NotesRoutes from "./NotesRoutes";
 
 export {
   ConfigRoutes,
@@ -63,5 +64,6 @@ export {
   CallsheetNoteRoutes,
   MemoRoutes,
   ErpDataRoutes,
-  FileRoutes
+  FileRoutes,
+  NotesRoutes,
 };

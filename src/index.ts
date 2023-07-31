@@ -43,6 +43,7 @@ import {
   ConfigRoutes,
   TopicRoutes,
   FileRoutes,
+  NotesRoutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -434,6 +435,7 @@ class App {
     this.app.use("/rolelist", AuthMiddleware, RoleMiddleware, RoleListRoutes);
     this.app.use("/roleuser", AuthMiddleware, RoleMiddleware, RoleUserRoutes);
     this.app.use("/tag", AuthMiddleware, RoleMiddleware, TagRoutes);
+    this.app.use("/notes", AuthMiddleware, NotesRoutes);
     this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
     this.app.use("/callsheetnote", AuthMiddleware, CallsheetNoteRoutes);
     this.app.use("/memo", AuthMiddleware, RoleMiddleware, MemoRoutes);

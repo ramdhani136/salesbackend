@@ -36,24 +36,60 @@ class NotesController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        alias: "Name",
-        name: "name",
+        alias: "Task",
+        name: "task",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },
       {
-        alias: "CreatedBy",
+        alias: "Customer",
+        name: "customer",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Topic",
+        name: "topic",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Tag",
+        name: "tags",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Doc Type",
+        name: "doc.type",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Doc Id",
+        name: "doc._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Doc Name",
+        name: "doc.name",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Created By",
         name: "createdBy._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-      // {
-      //   alias:"CreatedByName",
-      //   name: "createdBy.name",
-      //   operator: ["=", "!=", "like", "notlike"],
-      //   typeOf: TypeOfState.String,
-      // },
       {
         alias: "Status",
         name: "status",
@@ -106,25 +142,25 @@ class NotesController implements IController {
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let search: ISearch = {
-        filter: ["name", "workflowState"],
+        filter: ["doc.name", "workflowState"],
         value: req.query.search || "",
       };
 
-      // Mengecek permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.BRANCH
-      );
-      // End
+      // // Mengecek permission user
+      // const userPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.USER,
+      //   selPermissionType.BRANCH
+      // );
+      // // End
 
-      // Mengecek permission user
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.BRANCH
-      );
-      // End
+      // // Mengecek permission user
+      // const branchPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.BRANCH,
+      //   selPermissionType.BRANCH
+      // );
+      // // End
 
       // Mengambil hasil fields
       let setField = FilterQuery.getField(fields);
@@ -134,6 +170,10 @@ class NotesController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "createdBy",
         "_id",
+        "doc._id",
+        "customer",
+        "topic",
+        "tags",
       ]);
       // End
 
@@ -149,44 +189,58 @@ class NotesController implements IController {
 
       let pipelineTotal: any = [
         {
+          $match: isFilter.data,
+        },
+        {
           $lookup: {
             from: "users",
             localField: "createdBy",
             foreignField: "_id",
             as: "createdBy",
+            pipeline: [{ $project: { name: 1 } }],
           },
         },
         {
           $unwind: "$createdBy",
         },
         {
-          $project: setField,
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+            pipeline: [{ $project: { name: 1, customerGroup: 1, branch: 1 } }],
+          },
         },
         {
-          $match: isFilter.data,
+          $unwind: "$customer",
         },
+        // {
+        //   $project: setField,
+        // },
+
         {
           $count: "total_orders",
         },
       ];
 
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineTotal.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
-      // Menambahkan filter berdasarkan permission branch
-      if (branchPermission.length > 0) {
-        pipelineTotal.unshift({
-          $match: {
-            _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
+      // // Menambahkan filter berdasarkan permission user
+      // if (userPermission.length > 0) {
+      //   pipelineTotal.unshift({
+      //     $match: {
+      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+      //     },
+      //   });
+      // }
+      // // End
+      // // Menambahkan filter berdasarkan permission branch
+      // if (branchPermission.length > 0) {
+      //   pipelineTotal.unshift({
+      //     $match: {
+      //       _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
+      //     },
+      //   });
+      // }
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
@@ -194,6 +248,9 @@ class NotesController implements IController {
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [
+        {
+          $match: isFilter.data,
+        },
         {
           $sort: order_by,
         },
@@ -203,41 +260,73 @@ class NotesController implements IController {
             localField: "createdBy",
             foreignField: "_id",
             as: "createdBy",
+            pipeline: [{ $project: { name: 1 } }],
           },
         },
         {
           $unwind: "$createdBy",
         },
         {
-          $match: isFilter.data,
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+            pipeline: [{ $project: { name: 1, customerGroup: 1, branch: 1 } }],
+          },
         },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "topics",
+            localField: "topic",
+            foreignField: "_id",
+            as: "topic",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$topic",
+        },
+        {
+          $lookup: {
+            from: "tags",
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+
         {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
 
-        {
-          $project: setField,
-        },
+        // {
+        //   $project: setField,
+        // },
       ];
 
-      // Menambahkan filter berdasarkan permission user
-      if (userPermission.length > 0) {
-        pipelineResult.unshift({
-          $match: {
-            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
-      // Menambahkan filter berdasarkan permission branch
-      if (branchPermission.length > 0) {
-        pipelineResult.unshift({
-          $match: {
-            _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
-          },
-        });
-      }
-      // End
+      // // Menambahkan filter berdasarkan permission user
+      // if (userPermission.length > 0) {
+      //   pipelineResult.unshift({
+      //     $match: {
+      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+      //     },
+      //   });
+      // }
+      // // End
+      // // Menambahkan filter berdasarkan permission branch
+      // if (branchPermission.length > 0) {
+      //   pipelineResult.unshift({
+      //     $match: {
+      //       _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
+      //     },
+      //   });
+      // }
+      // // End
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {

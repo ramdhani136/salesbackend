@@ -53,6 +53,12 @@ const NotesModel = new mongoose.Schema(
       type: String,
       required: true,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "users",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

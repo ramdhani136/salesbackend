@@ -7,13 +7,15 @@ import { FileModel, History, TagModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
+import path from "path";
+import fs from "fs";
 
 import { ObjectId } from "mongodb";
 
 const Db = FileModel;
 const redisName = "files";
 
-class TopicController implements IController {
+class TopicController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -213,42 +215,26 @@ class TopicController implements IController {
   create = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       if (!req.file) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Error, Tidak ada file yang dilampirkan!",
-        });
+        throw "Error, Tidak ada file yang dilampirkan!";
       }
 
       if (req.file.fieldname != "file") {
-        res.status(400).json({
-          status: 400,
-          msg: "Error, field data file tidak ditemukan!",
-        });
+        throw "Error, field data file tidak ditemukan!";
       }
 
       req.body.name = req.file.filename;
       req.body.type = req.file.mimetype;
       req.body.createdBy = req.userId;
 
-   
       if (!req.body.doc.type) {
-        return res.status(400).json({
-          status: 400,
-          msg: "Error, doc.type wajib diisi!",
-        });
+        throw "Error, doc.type wajib diisi!";
       }
 
       if (!req.body.doc._id) {
-        return res.status(400).json({
-          status: 400,
-          msg: "Error, doc._id wajib diisi!",
-        });
+        throw "Error, doc._id wajib diisi!";
       }
       if (!req.body.doc.name) {
-        return res.status(400).json({
-          status: 400,
-          msg: "Error, doc.name wajib diisi!",
-        });
+        throw "Error, doc.name wajib diisi!";
       }
 
       const result = new Db(req.body);
@@ -266,317 +252,21 @@ class TopicController implements IController {
       });
       // End
 
-
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
-      return res.status(400).json({ status: 400, data: error });
-    }
-  };
-
-  show = async (req: Request | any, res: Response): Promise<any> => {
-    try {
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-
-      //   if (userPermission.length > 0) {
-      //     const validPermission = userPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   if (branchPermission.length > 0) {
-      //     const validBranchPermission = branchPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validBranchPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
-
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
-
-      let pipelineResult: any = [
-        { $match: { _id: new ObjectId(req.params.id) } },
-        {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-            pipeline: [{ $project: { _id: 1, name: 1 } }],
-          },
-        },
-        {
-          $unwind: "$createdBy",
-        },
-        {
-          $lookup: {
-            from: "tags",
-            localField: "tags.mandatory",
-            foreignField: "_id",
-            as: "tags.mandatory",
-            pipeline: [
-              {
-                $project: {
-                  _id: 1,
-                  name: 1,
-                },
-              },
-            ],
-          },
-        },
-        {
-          $lookup: {
-            from: "tags",
-            localField: "tags.restrict",
-            foreignField: "_id",
-            as: "tags.restrict",
-            pipeline: [
-              {
-                $project: {
-                  _id: 1,
-                  name: 1,
-                },
-              },
-            ],
-          },
-        },
-      ];
-
-      const response = await Db.aggregate(pipelineResult);
-
-      if (response.length === 0) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Data tidak ditemukan!" });
-      }
-
-      const result = response[0];
-
-      const buttonActions = await WorkflowController.getButtonAction(
-        redisName,
-        req.userId,
-        result.workflowState
-      );
-
-      // return res.send(buttonActions)
-      const getHistory = await History.find(
-        {
-          $and: [
-            { "document._id": result._id },
-            { "document.type": redisName },
-          ],
-        },
-        ["_id", "message", "createdAt", "updatedAt"]
-      )
-        .populate("user", "name")
-        .sort({ createdAt: -1 });
-
-      // await Redis.client.set(
-      //   `${redisName}-${req.params.id}`,
-      //   JSON.stringify(result),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
-
-      return res.status(200).json({
-        status: 200,
-        data: result,
-        history: getHistory,
-        workflow: buttonActions,
-      });
-    } catch (error) {
-      return res.status(404).json({ status: 404, msg: error });
-    }
-  };
-
-  update = async (req: Request | any, res: Response): Promise<any> => {
-    try {
-      let pipeline: any[] = [
-        {
-          _id: req.params.id,
-        },
-      ];
-
-      const result: any = await Db.findOne({
-        $and: pipeline,
-      })
-        .populate("tags.mandatory", "name")
-        .populate("tags.restrict", "name");
-
-      if (result) {
-        // Cek Duplicate name
-        const duplc = await Db.findOne({
-          $and: [
-            { name: req.body.name ?? result.name },
-            {
-              _id: { $ne: req.params.id },
-            },
-          ],
-        });
-        if (duplc) {
-          return res.status(400).json({
-            status: 400,
-            msg: `${req.body.name} is already in the topic data!`,
-          });
-        }
-        // End
-
-        if (req.body.tags.restrict) {
-          if (typeof req.body.tags.restrict !== "object") {
-            return res
-              .status(400)
-              .json({ status: 400, msg: "Error, tags harus berupa object!" });
-          }
-
-          for (const item of req.body.tags.restrict) {
-            try {
-              let getTag: any = await TagModel.findById(new ObjectId(item));
-              if (!getTag) {
-                return res.status(400).json({
-                  status: 400,
-                  msg: `Error, tag ${item} tidak ditemukan!`,
-                });
-              }
-            } catch (error) {
-              return res.status(400).json({
-                status: 400,
-                msg: "Invalid Tags Id",
-              });
-            }
-          }
-        }
-
-        if (req.body.tags.mandatory) {
-          if (typeof req.body.tags.mandatory !== "object") {
-            return res
-              .status(400)
-              .json({ status: 400, msg: "Error, tags harus berupa object!" });
-          }
-
-          for (const item of req.body.tags.mandatory) {
-            try {
-              let getTag: any = await TagModel.findById(new ObjectId(item));
-              if (!getTag) {
-                return res.status(400).json({
-                  status: 400,
-                  msg: `Error, tag ${item} tidak ditemukan!`,
-                });
-              }
-
-              // Cek apakah mandatory tags ada di restrcit
-
-              if (req.body.tags.restrict.length > 0) {
-                let cekRestrict = req.body.tags.restrict.find((tag: any) => {
-                  return tag === item;
-                });
-
-                if (!cekRestrict) {
-                  return res.status(400).json({
-                    status: 400,
-                    msg: `Error, ${item} mandatory tags item must also set be filled in restrict tags!`,
-                  });
-                }
-              }
-
-              // End
-            } catch (error) {
-              return res.status(400).json({
-                status: 400,
-                msg: "Invalid Tags Id",
-              });
-            }
-          }
-        }
-
-        // End
-
-        if (req.body.nextState) {
-          const checkedWorkflow =
-            await WorkflowController.permissionUpdateAction(
-              redisName,
-              req.userId,
-              req.body.nextState,
-              result.createdBy._id
-            );
-
-          if (checkedWorkflow.status) {
-            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
-          } else {
-            return res
-              .status(403)
-              .json({ status: 403, msg: checkedWorkflow.msg });
-          }
-        } else {
-          await Db.updateOne({ _id: req.params.id }, req.body);
-        }
-
-        const getData: any = await Db.findOne({
-          _id: req.params.id,
-        })
-          .populate("tags.mandatory", "name")
-          .populate("tags.restrict", "name");
-        // await Redis.client.set(
-        //   `${redisName}-${req.params.id}`,
-        //   JSON.stringify(getData),
-        //   {
-        //     EX: 30,
-        //   }
-        // );
-
-        // push history semua field yang di update
-        await HistoryController.pushUpdateMany(
-          result,
-          getData,
-          req.user,
-          req.userId,
-          redisName
+      // Jika pembuatan gagal menyimpan, hapus foto yang telah di-upload
+      if (
+        fs.existsSync(
+          path.join(__dirname, `../../build/public/files/${req.body.name}`)
+        )
+      ) {
+        fs.unlinkSync(
+          path.join(__dirname, `../../build/public/files/${req.body.name}`)
         );
-
-        return res.status(200).json({ status: 200, data: getData });
-        // End
-      } else {
-        return res
-          .status(400)
-          .json({ status: 404, msg: "Error update, data not found" });
       }
-    } catch (error: any) {
-      return res.status(404).json({ status: 404, data: error });
+      // End
+
+      return res.status(400).json({ status: 400, msg: error });
     }
   };
 

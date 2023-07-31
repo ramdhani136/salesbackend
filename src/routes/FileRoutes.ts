@@ -6,7 +6,7 @@ import RouteBase from "./RouteBase";
 import multer from "multer";
 import path from "path";
 
-function getUniqueFileName(filePath:any) {
+function getUniqueFileName(filePath: any) {
   if (!fs.existsSync(filePath)) {
     return filePath; // Jika file belum ada, kembalikan nama file yang sama
   }
@@ -24,7 +24,7 @@ function getUniqueFileName(filePath:any) {
   return newFilePath;
 }
 
-const uploadPath = path.join(__dirname, "../assets/files");
+const uploadPath = path.join(__dirname, "../public/files");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadPath);
@@ -36,8 +36,6 @@ const storage = multer.diskStorage({
     cb(null, path.basename(uniqueFileName));
   },
 });
-
-
 
 const upload = multer({
   storage: storage,
@@ -89,9 +87,8 @@ class FileRoutes extends RouteBase {
       handleUploadError,
       Controller.create
     );
-    this.router.get("/:id", Controller.show);
+
     this.router.delete("/:id", Controller.delete);
-    this.router.put("/:id", upload.single("file"), Controller.update);
   }
 }
 

@@ -252,15 +252,15 @@ class App {
   protected SetPath = (): void => {
     const imagePath = path.join(__dirname, "public/images");
     const memoPath = path.join(__dirname, "public/memo");
-    const userPage = path.join(__dirname, "public/users");
+    const userPath = path.join(__dirname, "public/users");
     const assetPath = path.join(__dirname, "assets/images");
     const customerPath = path.join(__dirname, "public/customers");
-    const fileAsset = path.join(__dirname, "assets/files");
+    const fileAsset = path.join(__dirname, "public/files");
 
     const dir = [
       imagePath,
       memoPath,
-      userPage,
+      userPath,
       assetPath,
       customerPath,
       fileAsset,
@@ -275,9 +275,9 @@ class App {
     }
     this.app.use("/public", express.static(imagePath));
     this.app.use("/public", express.static(path.join(memoPath)));
-    this.app.use("/images/users", express.static(userPage));
+    this.app.use("/images/users", express.static(userPath));
     this.app.use("/public/customer", express.static(customerPath));
-    this.app.use("/public/files", express.static(fileAsset));
+    this.app.use(`/public/files`, express.static(fileAsset));
   };
 
   protected plugins(): void {

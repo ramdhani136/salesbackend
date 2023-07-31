@@ -27,6 +27,25 @@ const Db = NotesModel;
 const redisName = "notes";
 
 class NotesController implements IController {
+  getDataByAlias(
+    aliasList: String[],
+    stateFilter: IStateFilter[],
+    not: Boolean = false
+  ) {
+    const filteredData = [];
+    let Data: String[];
+    for (const filter of stateFilter) {
+      if (
+        not
+          ? !aliasList.includes(filter.alias)
+          : aliasList.includes(filter.alias)
+      ) {
+        filteredData.push(filter);
+      }
+    }
+    return filteredData;
+  }
+
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
@@ -85,7 +104,7 @@ class NotesController implements IController {
         isSort: true,
       },
       {
-        alias: "Customer Group",
+        alias: "CustomerGroup",
         name: "customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
@@ -134,6 +153,10 @@ class NotesController implements IController {
       },
     ];
     try {
+      const filterOther = ["customerGroup", "branch"];
+
+      // const filteredData = this.getDataByAlias(filterOther, stateFilter, true);
+
       // Mengambil query
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
@@ -164,14 +187,27 @@ class NotesController implements IController {
       // let setField = FilterQuery.getField(fields);
       // // End
 
+      const filtersOne = filters.filter(
+        (item: string[]) => !filterOther.includes(item[0])
+      );
       // Mengambil hasil filter
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
+      let isFilter = FilterQuery.getFilter(filtersOne, stateFilter, search, [
         "createdBy",
         "_id",
         "doc._id",
         "customer",
         "topic",
         "tags",
+      ]);
+      // End
+
+      const filters2 = filters.filter((item: string[]) =>
+        filterOther.includes(item[0])
+      );
+      // Mengambil hasil filter
+      let isFilter2 = FilterQuery.getFilter(filters2, stateFilter, undefined, [
+        "customerGroup",
+        "branch",
       ]);
       // End
 

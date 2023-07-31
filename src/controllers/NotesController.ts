@@ -105,14 +105,14 @@ class NotesController implements IController {
       },
       {
         alias: "CustomerGroup",
-        name: "customer.customerGroup",
+        name: "customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
       },
       {
         alias: "Branch",
-        name: "customer.branch",
+        name: "branch",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
@@ -153,7 +153,7 @@ class NotesController implements IController {
       },
     ];
     try {
-      const filterOther = ["customer.customerGroup", "customer.branch"];
+      const filterOther = ["customerGroup", "branch"];
 
       // const filteredData = this.getDataByAlias(filterOther, stateFilter, true);
 
@@ -204,10 +204,11 @@ class NotesController implements IController {
       const filters2 = filters.filter((item: string[]) =>
         filterOther.includes(item[0])
       );
+      console.log(filters2);
       // Mengambil hasil filter
       let isFilter2 = FilterQuery.getFilter(filters2, stateFilter, undefined, [
-        "customer.customerGroup",
-        "customer.branch",
+        "customerGroup",
+        "branch",
       ]);
       // End
 

@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 // import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
-import IController from "./ControllerInterface";
 import { FileModel, History, TagModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
@@ -285,12 +284,13 @@ class TopicController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      const result = await Db.findOne({ _id: new ObjectId(req.params.id) });
+      const result = await Db.findOne({ _id: new ObjectId(req.params.id) }, [
+        "name",
+      ]);
 
       if (!result) {
         throw "Error, Data tidak ditemukan!";
       }
-
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       // push history
@@ -304,6 +304,16 @@ class TopicController {
         user: req.userId,
       });
       // End
+
+      if (
+        fs.existsSync(
+          path.join(__dirname, `../../build/public/files/${result.name}`)
+        )
+      ) {
+        fs.unlinkSync(
+          path.join(__dirname, `../../build/public/files/${result.name}`)
+        );
+      }
       return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

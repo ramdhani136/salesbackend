@@ -15,6 +15,7 @@ import {
   ContactModel,
   CustomerModel,
   visitModel as Db,
+  FileModel,
   History,
   ScheduleListModel,
   VisitNoteModel,
@@ -28,9 +29,9 @@ import {
 import { ObjectId } from "mongodb";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
-import fs from "fs";
 import sharp from "sharp";
 import path from "path";
+import fs from "fs";
 import { ISearch } from "../utils/FilterQuery";
 import CustomerController from "./CustomerController";
 import { GetNameLocation } from "../utils/GetNameLocation";
@@ -1819,6 +1820,35 @@ class VistController implements IController {
           }
         );
       }
+
+      // Hapus file note
+      try {
+        const files = await FileModel.find(
+          {
+            $and: [
+              { "doc.type": "visit" },
+              { "doc._id": new ObjectId(req.params.id) },
+            ],
+          },
+          ["name"]
+        );
+        if (files.length > 0) {
+          for (const item of files) {
+            if (
+              fs.existsSync(
+                path.join(__dirname, `../../build/public/files/${item.name}`)
+              )
+            ) {
+              fs.unlinkSync(
+                path.join(__dirname, `../../build/public/files/${item.name}`)
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+      // End
 
       // await Redis.client.del(`${redisName}-${req.params.id}`);
 

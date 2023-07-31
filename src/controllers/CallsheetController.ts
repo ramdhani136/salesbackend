@@ -18,6 +18,7 @@ import {
   CustomerGroupModel,
   CustomerModel,
   CallsheetModel as Db,
+  FileModel,
   History,
   MemoModel,
   ScheduleListModel,
@@ -25,6 +26,8 @@ import {
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
+import path from "path";
+import fs from "fs";
 import {
   selPermissionAllow,
   selPermissionType,
@@ -1762,6 +1765,35 @@ class CallsheetController implements IController {
       await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       // End
       const result: any = await Db.deleteOne({ _id: req.params.id });
+
+      // Hapus file note
+      try {
+        const files = await FileModel.find(
+          {
+            $and: [
+              { "doc.type": "callsheet" },
+              { "doc._id": new ObjectId(req.params.id) },
+            ],
+          },
+          ["name"]
+        );
+        if (files.length > 0) {
+          for (const item of files) {
+            if (
+              fs.existsSync(
+                path.join(__dirname, `../../build/public/files/${item.name}`)
+              )
+            ) {
+              fs.unlinkSync(
+                path.join(__dirname, `../../build/public/files/${item.name}`)
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+      // End
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {

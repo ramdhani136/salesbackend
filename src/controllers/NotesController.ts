@@ -219,6 +219,8 @@ class NotesController implements IController {
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
 
+      console.log(JSON.stringify(isFilter2.data));
+
       // End
 
       let pipelineTotal: any = [

@@ -65,6 +65,8 @@ const NotesModel = new mongoose.Schema(
   }
 );
 
+
+
 NotesModel.index({
   createdAt: -1,
 });

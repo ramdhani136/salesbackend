@@ -201,17 +201,6 @@ class NotesController implements IController {
       ]);
       // End
 
-      const filters2 = filters.filter((item: string[]) =>
-        filterOther.includes(item[0])
-      );
-      console.log(filters2);
-      // Mengambil hasil filter
-      let isFilter2 = FilterQuery.getFilter(filters2, stateFilter, undefined, [
-        "customerGroup",
-        "branch",
-      ]);
-      // End
-
       // Validasi apakah filter valid
 
       if (!isFilter.status) {
@@ -220,74 +209,9 @@ class NotesController implements IController {
           .json({ status: 400, msg: "Error, Filter Invalid " });
       }
 
-      console.log(JSON.stringify(isFilter2.data));
-
       // End
 
-      let pipelineTotal: any = [
-        {
-          $match: isFilter.data,
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-            pipeline: [{ $project: { name: 1 } }],
-          },
-        },
-        {
-          $unwind: "$createdBy",
-        },
-        {
-          $lookup: {
-            from: "customers",
-            localField: "customer",
-            foreignField: "_id",
-            as: "customer",
-            pipeline: [{ $project: { name: 1, customerGroup: 1, branch: 1 } }],
-          },
-        },
-        {
-          $unwind: "$customer",
-        },
-        {
-          $lookup: {
-            from: "topics",
-            localField: "topic",
-            foreignField: "_id",
-            as: "topic",
-            pipeline: [{ $project: { name: 1 } }],
-          },
-        },
-        {
-          $unwind: "$topic",
-        },
-        {
-          $lookup: {
-            from: "tags",
-            localField: "tags",
-            foreignField: "_id",
-            as: "tags",
-            pipeline: [{ $project: { name: 1 } }],
-          },
-        },
-        // {
-        //   $project: setField,
-        // },
-        {
-          $match: isFilter2.data,
-        },
-
-        {
-          $count: "total_orders",
-        },
-      ];
-
-      const totalData = await Db.aggregate(pipelineTotal);
-
-      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
+      let pipelineTotal: any = [isFilter.data];
 
       let pipelineResult: any = [
         {
@@ -297,6 +221,9 @@ class NotesController implements IController {
           $sort: order_by,
         },
         {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
           $lookup: {
             from: "users",
             localField: "createdBy",
@@ -341,18 +268,54 @@ class NotesController implements IController {
             pipeline: [{ $project: { name: 1 } }],
           },
         },
-
-        {
-          $skip: limit > 0 ? page * limit - limit : 0,
-        },
-
-        {
-          $match: isFilter2.data,
-        },
-        // {
-        //   $project: setField,
-        // },
       ];
+
+      //  Cek Customer group dan branch
+      // Mengambil hasil filter
+      const filterBranchCustomer = filters.filter((item: string[]) =>
+        filterOther.includes(item[0])
+      );
+
+      if (filterBranchCustomer.length > 0) {
+        let isFilterCustomerBranch = FilterQuery.getFilter(
+          filterBranchCustomer,
+          stateFilter,
+          undefined,
+          ["customerGroup", "branch"]
+        );
+
+        const getCustomer = await CustomerModel.find(
+          isFilterCustomerBranch.data,
+          ["_id"]
+        );
+
+        if (getCustomer.length === 0) {
+          return res.status(400).json({
+            status: 404,
+            msg: "Data Not found!",
+          });
+        }
+
+        const finalFilterCustomer = getCustomer.map((item) => {
+          return item._id;
+        });
+
+        pipelineResult.unshift({
+          $match: {
+            customer: { $in: finalFilterCustomer },
+          },
+        });
+        pipelineTotal.unshift({
+          customer: { $in: finalFilterCustomer },
+        });
+      }
+
+      // End
+
+      // End
+
+      const totalData = await Db.countDocuments({ $and: pipelineTotal });
+      const getAll = totalData > 0 ? totalData : 0;
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
@@ -361,7 +324,7 @@ class NotesController implements IController {
       // End
 
       const result = await Db.aggregate(pipelineResult);
-
+       
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
@@ -375,7 +338,7 @@ class NotesController implements IController {
       }
       return res.status(400).json({
         status: 404,
-        msg: "Data Not found!",
+        msg: "No data",
       });
     } catch (error: any) {
       return res.status(400).json({
@@ -497,8 +460,10 @@ class NotesController implements IController {
       req.body.doc.name = validDoc.name;
       req.body.createdBy = req.userId;
 
-      const result = new Db(req.body);
-      const response = await result.save();
+      for (let i = 0; i < 1000000; i++) {
+        const result = new Db(req.body);
+        const response = await result.save();
+      }
 
       // // push history
       // await HistoryController.pushHistory({
@@ -520,7 +485,7 @@ class NotesController implements IController {
       //   }
       // );
 
-      return res.status(200).json({ status: 200, data: response });
+      return res.status(200).json({ status: 200, data: "response" });
     } catch (error: any) {
       return res.status(400).json({ status: 400, msg: error.errors ?? error });
     }

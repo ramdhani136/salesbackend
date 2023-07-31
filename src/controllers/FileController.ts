@@ -32,6 +32,13 @@ class TopicController {
         isSort: true,
       },
       {
+        alias: "Note",
+        name: "note",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
         alias: "Type",
         name: "type",
         operator: ["=", "!=", "like", "notlike"],
@@ -95,6 +102,7 @@ class TopicController {
             "createdBy._id",
             "createdBy.name",
             "updatedAt",
+            "note",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -115,6 +123,7 @@ class TopicController {
         "createdBy",
         "_id",
         "doc._id",
+        "note",
       ]);
       // End
 
@@ -226,6 +235,10 @@ class TopicController {
       req.body.type = req.file.mimetype;
       req.body.createdBy = req.userId;
 
+      if (!req.body.note) {
+        throw "Error, note wajib diisi!";
+      }
+
       if (!req.body.doc.type) {
         throw "Error, doc.type wajib diisi!";
       }
@@ -253,7 +266,7 @@ class TopicController {
       // End
 
       return res.status(200).json({ status: 200, data: response });
-    } catch (error) {
+    } catch (error: any) {
       // Jika pembuatan gagal menyimpan, hapus foto yang telah di-upload
       if (
         fs.existsSync(
@@ -266,31 +279,17 @@ class TopicController {
       }
       // End
 
-      return res.status(400).json({ status: 400, msg: error });
+      return res.status(400).json({ status: 400, msg: error.errors ?? error });
     }
   };
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      let pipeline: any[] = [
-        {
-          _id: req.params.id,
-        },
-      ];
-
-      const result = await Db.findOne({ $and: pipeline });
+      const result = await Db.findOne({ _id: new ObjectId(req.params.id) });
 
       if (!result) {
-        return res
-          .status(404)
-          .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
+        throw "Error, Data tidak ditemukan!";
       }
-
-      // if (result.status === "1") {
-      //   return res
-      //     .status(404)
-      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      // }
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);

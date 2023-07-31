@@ -16,6 +16,7 @@ const FileModel = new mongoose.Schema(
       type: {
         type: String,
         required: true,
+        enum : ["visit","callsheet"],
       },
       _id: {
         type: Schema.Types.ObjectId,
@@ -25,6 +26,12 @@ const FileModel = new mongoose.Schema(
         type: String,
         required: true,
       },
+    },
+    note: {
+      type: Schema.Types.ObjectId,
+      ref: "notes",
+      required: true,
+      index: true,
     },
     createdBy: {
       type: Schema.Types.ObjectId,

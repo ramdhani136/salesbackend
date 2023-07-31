@@ -146,22 +146,6 @@ class NotesController implements IController {
         value: req.query.search || "",
       };
 
-      // // Mengecek permission user
-      // const userPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.USER,
-      //   selPermissionType.BRANCH
-      // );
-      // // End
-
-      // // Mengecek permission user
-      // const branchPermission = await PermissionMiddleware.getPermission(
-      //   req.userId,
-      //   selPermissionAllow.BRANCH,
-      //   selPermissionType.BRANCH
-      // );
-      // // End
-
       // Mengambil hasil fields
       let setField = FilterQuery.getField(fields);
       // End
@@ -223,25 +207,6 @@ class NotesController implements IController {
           $count: "total_orders",
         },
       ];
-
-      // // Menambahkan filter berdasarkan permission user
-      // if (userPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
-      // // Menambahkan filter berdasarkan permission branch
-      // if (branchPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // End
 
       const totalData = await Db.aggregate(pipelineTotal);
 
@@ -308,25 +273,6 @@ class NotesController implements IController {
         //   $project: setField,
         // },
       ];
-
-      // // Menambahkan filter berdasarkan permission user
-      // if (userPermission.length > 0) {
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
-      // // Menambahkan filter berdasarkan permission branch
-      // if (branchPermission.length > 0) {
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       _id: { $in: branchPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {

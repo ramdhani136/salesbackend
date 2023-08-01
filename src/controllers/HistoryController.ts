@@ -366,11 +366,14 @@ class HistoryController implements IController {
         i !== "__v" &&
         validCondition
       ) {
-        if (`${prevData[i]}` !== `${nextData[i]}`) {
+        if (
+          `${JSON.stringify(prevData[i])}` !== `${JSON.stringify(nextData[i])}`
+        ) {
           differentProps.push(i);
         }
       }
     }
+
     if (differentProps.length > 0) {
       for (const item of differentProps) {
         await this.pushHistory({

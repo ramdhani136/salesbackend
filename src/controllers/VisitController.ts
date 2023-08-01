@@ -19,7 +19,6 @@ import {
   History,
   NotesModel,
   ScheduleListModel,
-  VisitNoteModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -1093,15 +1092,59 @@ class VistController implements IController {
         msg: "Error,  CheckIn tidak dapat dirubah",
       });
     }
+
     // End
 
     try {
-      const result: any = await Db.findOne({
-        _id: req.params.id,
-      })
-        .populate("customer", "name")
-        .populate("contact", "name")
-        .populate("createdBy", "name");
+      const current = await Db.aggregate([
+        {
+          $match: {
+            _id: new ObjectId(req.params.id),
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+
+        {
+          $lookup: {
+            from: "contacts",
+            localField: "contact",
+            foreignField: "_id",
+            as: "contact",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: {
+            path: "$contact",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ]);
+
+      const result = current[0];
 
       if (result) {
         if (result.status !== "0") {
@@ -1168,29 +1211,6 @@ class VistController implements IController {
               }
             });
         }
-        //  else {
-        //   if (
-        //     fs.existsSync(
-        //       path.join(__dirname, "../public/images/" + result.img)
-        //     )
-        //   ) {
-        //     fs.unlink(
-        //       path.join(__dirname, "../public/images/" + result.img),
-        //       function (err) {
-        //         if (err && err.code == "ENOENT") {
-        //           // file doens't exist
-        //           console.log(err);
-        //         } else if (err) {
-        //           // other errors, e.g. maybe we don't have enough permission
-        //           console.log("Error occurred while trying to remove file");
-        //         } else {
-        //           console.log(`removed`);
-        //         }
-        //       }
-        //     );
-        //   }
-        //   // End
-        // }
 
         const getDataPermit: any = await Db.findOne(
           {
@@ -1305,7 +1325,7 @@ class VistController implements IController {
           }
 
           // set contact
-          req.body.contact = contact._id;
+          // req.body.contact = contact._id;
         }
         // End
 
@@ -1417,6 +1437,7 @@ class VistController implements IController {
                     msg: "Gagal, Belum melakukan checkout kunjungan ini!",
                   });
                 }
+
                 // End
                 // Cek config visit
                 const config: any = await ConfigModel.findOne(
@@ -1426,8 +1447,13 @@ class VistController implements IController {
 
                 if (config) {
                   // Cek minimal catatan
-                  const notes: any = await VisitNoteModel.find(
-                    { visit: new ObjectId(req.params.id) },
+                  const notes: any = await NotesModel.find(
+                    {
+                      $and: [
+                        { "doc._id": new ObjectId(req.params.id) },
+                        { "doc.type": "visit" },
+                      ],
+                    },
                     { _id: 1 }
                   );
 
@@ -1444,10 +1470,11 @@ class VistController implements IController {
                   if (tagMandatory.length > 0) {
                     let notValidMandatory: any[] = [];
                     for (const item of tagMandatory) {
-                      let cekData = await VisitNoteModel.findOne(
+                      let cekData = await NotesModel.findOne(
                         {
                           $and: [
-                            { visit: new ObjectId(req.params.id) },
+                            { "doc._id": new ObjectId(req.params.id) },
+                            { "doc.type": "visit" },
                             { tags: item._id },
                           ],
                         },
@@ -1567,16 +1594,58 @@ class VistController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          console.log(req.body.img);
-          await Db.updateOne({ _id: req.params.id }, req.body);
+          await Db.updateOne({ _id: new ObjectId(req.params.id) }, req.body);
         }
 
-        const getData: any = await Db.findOne({
-          _id: req.params.id,
-        })
-          .populate("customer", "name")
-          .populate("contact", "name")
-          .populate("createdBy", "name");
+        const updateData = await Db.aggregate([
+          {
+            $match: {
+              _id: new ObjectId(req.params.id),
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "createdBy",
+              foreignField: "_id",
+              as: "createdBy",
+              pipeline: [{ $project: { name: 1 } }],
+            },
+          },
+          {
+            $unwind: "$createdBy",
+          },
+          {
+            $lookup: {
+              from: "customers",
+              localField: "customer",
+              foreignField: "_id",
+              as: "customer",
+              pipeline: [{ $project: { name: 1 } }],
+            },
+          },
+          {
+            $unwind: "$customer",
+          },
+
+          {
+            $lookup: {
+              from: "contacts",
+              localField: "contact",
+              foreignField: "_id",
+              as: "contact",
+              pipeline: [{ $project: { name: 1 } }],
+            },
+          },
+          {
+            $unwind: {
+              path: "$contact",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ]);
+
+        const getData = updateData[0];
 
         const resultUpdate: any = await Db.aggregate([
           {
@@ -1712,14 +1781,16 @@ class VistController implements IController {
         // );
 
         // push history semua field yang di update
+
         await HistoryController.pushUpdateMany(
-          result,
+          { _doc: result },
           getData,
           req.user,
           req.userId,
           redisName,
           ["taskNotes", "schedulelist"]
         );
+
         // End
 
         return res.status(200).json({ status: 200, data: resultUpdate[0] });
@@ -1822,47 +1893,6 @@ class VistController implements IController {
         );
       }
 
-      // Hapus file note
-      try {
-        const files = await FileModel.find(
-          {
-            $and: [
-              { "doc.type": "visit" },
-              { "doc._id": new ObjectId(req.params.id) },
-            ],
-          },
-          ["name"]
-        );
-        if (files.length > 0) {
-          await FileModel.deleteMany({ _id: files.map((item) => item._id) });
-          for (const item of files) {
-            if (
-              fs.existsSync(
-                path.join(__dirname, `../../build/public/files/${item.name}`)
-              )
-            ) {
-              fs.unlinkSync(
-                path.join(__dirname, `../../build/public/files/${item.name}`)
-              );
-            }
-          }
-        }
-      } catch (error) {
-        console.log(error);
-      }
-
-      try {
-        await NotesModel.deleteMany({
-          $and: [
-            { "doc.type": "visit" },
-            { "doc._id": new ObjectId(req.params.id) },
-          ],
-        });
-      } catch (error) {
-        console.log(error);
-      }
-      // End
-
       // await Redis.client.del(`${redisName}-${req.params.id}`);
 
       return res.status(200).json({ status: 200, data: result });
@@ -1875,13 +1905,38 @@ class VistController implements IController {
     id: ObjectId,
     data: any
   ): Promise<any> => {
-    // Hapus relasi visitnotes
+    // Hapus file note
     try {
-      await VisitNoteModel.deleteMany({
-        visit: id,
+      const files = await FileModel.find(
+        {
+          $and: [{ "doc.type": "visit" }, { "doc._id": id }],
+        },
+        ["name"]
+      );
+      if (files.length > 0) {
+        await FileModel.deleteMany({ _id: files.map((item) => item._id) });
+        for (const item of files) {
+          if (
+            fs.existsSync(
+              path.join(__dirname, `../../build/public/files/${item.name}`)
+            )
+          ) {
+            fs.unlinkSync(
+              path.join(__dirname, `../../build/public/files/${item.name}`)
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    try {
+      await NotesModel.deleteMany({
+        $and: [{ "doc.type": "visit" }, { "doc._id": id }],
       });
     } catch (error) {
-      throw error;
+      console.log(error);
     }
     // End
 

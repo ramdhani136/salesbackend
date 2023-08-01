@@ -17,6 +17,7 @@ import {
   visitModel as Db,
   FileModel,
   History,
+  NotesModel,
   ScheduleListModel,
   VisitNoteModel,
   namingSeriesModel,
@@ -1846,6 +1847,17 @@ class VistController implements IController {
             }
           }
         }
+      } catch (error) {
+        console.log(error);
+      }
+
+      try {
+        await NotesModel.deleteMany({
+          $and: [
+            { "doc.type": "visit" },
+            { "doc._id": new ObjectId(req.params.id) },
+          ],
+        });
       } catch (error) {
         console.log(error);
       }

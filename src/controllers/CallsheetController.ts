@@ -21,6 +21,7 @@ import {
   FileModel,
   History,
   MemoModel,
+  NotesModel,
   ScheduleListModel,
   UserGroupListModel,
   namingSeriesModel,
@@ -1791,6 +1792,17 @@ class CallsheetController implements IController {
             }
           }
         }
+      } catch (error) {
+        console.log(error);
+      }
+
+      try {
+        await NotesModel.updateMany({
+          $and: [
+            { "doc.type": "callsheet" },
+            { "doc._id": new ObjectId(req.params.id) },
+          ],
+        });
       } catch (error) {
         console.log(error);
       }

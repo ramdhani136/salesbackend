@@ -33,7 +33,7 @@ class NotesController implements IController {
     not: Boolean = false
   ) {
     const filteredData = [];
-    let Data: String[];
+
     for (const filter of stateFilter) {
       if (
         not
@@ -155,7 +155,6 @@ class NotesController implements IController {
     try {
       const filterOther = ["customerGroup", "branch"];
 
-
       // Mengambil query
       const filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
@@ -169,8 +168,6 @@ class NotesController implements IController {
         filter: ["doc.name", "workflowState"],
         value: req.query.search || "",
       };
-
-
 
       const filtersOne = filters.filter(
         (item: string[]) => !filterOther.includes(item[0])
@@ -309,7 +306,7 @@ class NotesController implements IController {
       // End
 
       const result = await Db.aggregate(pipelineResult);
-       
+
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
@@ -678,14 +675,14 @@ class NotesController implements IController {
         //   }
         // );
 
-        // push history semua field yang di update
-        await HistoryController.pushUpdateMany(
-          result,
-          getData,
-          req.user,
-          req.userId,
-          redisName
-        );
+        // // push history semua field yang di update
+        // await HistoryController.pushUpdateMany(
+        //   result,
+        //   getData,
+        //   req.user,
+        //   req.userId,
+        //   redisName
+        // );
 
         return res.status(200).json({ status: 200, data: getData });
         // End

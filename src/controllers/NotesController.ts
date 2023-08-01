@@ -685,7 +685,6 @@ class NotesController implements IController {
       return res.status(200).json({
         status: 200,
         data: result,
-        workflow: buttonActions,
       });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
@@ -694,6 +693,14 @@ class NotesController implements IController {
 
   update = async (req: Request | any, res: Response): Promise<any> => {
     try {
+      if (req.body.doc) {
+        throw "Tidak dapat merubah data doc";
+      }
+
+      if (req.body.customer) {
+        throw "Tidak dapat merubah data customer";
+      }
+
       let pipeline: any[] = [
         {
           _id: req.params.id,
@@ -746,15 +753,12 @@ class NotesController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          await Db.updateOne({ _id: req.params.id }, req.body).populate(
-            "createdBy",
-            "name"
-          );
+          await Db.updateOne({ _id: req.params.id }, req.body);
         }
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        }).populate("createdBy", "name");
+        });
 
         return res.status(200).json({ status: 200, data: getData });
         // End
@@ -764,7 +768,7 @@ class NotesController implements IController {
           .json({ status: 404, msg: "Error update, data not found" });
       }
     } catch (error: any) {
-      return res.status(404).json({ status: 404, data: error });
+      return res.status(400).json({ status: 400, data: error });
     }
   };
 

@@ -660,12 +660,6 @@ class NotesController implements IController {
           .json({ status: 404, msg: "Data tidak ditemukan!" });
       }
 
-      const buttonActions = await WorkflowController.getButtonAction(
-        redisName,
-        req.userId,
-        result.workflowState
-      );
-
       const cekPermission = await cekValidPermission(
         req.userId,
         {
@@ -784,7 +778,7 @@ class NotesController implements IController {
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
 
-      return res.status(200).json({ status: 200, data: actionDel});
+      return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {
       return res.status(400).json({ status: 404, msg: error });
     }

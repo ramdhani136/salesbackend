@@ -700,17 +700,20 @@ class NotesController implements IController {
         },
       ];
 
-      const result: any = await Db.findOne({
-        $and: pipeline,
-      }).populate("createdBy", "name");
+      const result: any = await Db.findOne(
+        {
+          $and: pipeline,
+        },
+        ["createdBy", "customer"]
+      ).populate("customer", ["customerGroup", "branch"]);
 
       if (result) {
         const cekPermission = await cekValidPermission(
           req.userId,
           {
-            user: result.createdBy._id,
-            branch: result.branch._id,
-            group: result.customerGroup._id,
+            user: result.createdBy,
+            branch: result.customer.branch,
+            group: result.customer.customerGroup,
             customer: result.customer._id,
           },
           selPermissionType.NOTES

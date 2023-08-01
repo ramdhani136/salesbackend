@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
-// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
-import { FilterQuery } from "../utils";
+import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import {
   CallsheetModel,
   CustomerModel,
-  History,
   NotesModel,
   PermissionModel,
   TagModel,
@@ -14,7 +12,7 @@ import {
   visitModel,
 } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { HistoryController, WorkflowController } from ".";
+import { WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -169,6 +167,14 @@ class NotesController implements IController {
       );
       // End
 
+      // Mengambil rincian permission user
+      const userPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.USER,
+        selPermissionType.VISIT
+      );
+      // End
+
       // Mengambil rincian permission branch
       const branchPermission = await PermissionMiddleware.getPermission(
         req.userId,
@@ -221,13 +227,13 @@ class NotesController implements IController {
 
       let pipelineResult: any = [
         {
-          $match: isFilter.data,
-        },
-        {
           $sort: order_by,
         },
         {
           $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $match: isFilter.data,
         },
         {
           $lookup: {
@@ -307,6 +313,12 @@ class NotesController implements IController {
           },
         },
       ];
+
+      //Menambahkan limit ketika terdapat limit
+
+      if (limit > 0) {
+        pipelineResult.splice(2, 0, { $limit: limit });
+      }
 
       //  Cek Customer group dan branch
       // Mengambil hasil filter
@@ -400,14 +412,22 @@ class NotesController implements IController {
 
       // End
 
-      const totalData = await Db.countDocuments({ $and: pipelineTotal });
-      const getAll = totalData > 0 ? totalData : 0;
-
-      // Menambahkan limit ketika terdapat limit
-      if (limit > 0) {
-        pipelineResult.push({ $limit: limit > 0 ? limit : getAll });
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        console.log(userPermission);
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+        pipelineTotal.unshift({
+          createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+        });
       }
       // End
+
+      const totalData = await Db.countDocuments({ $and: pipelineTotal });
+      const getAll = totalData > 0 ? totalData : 0;
 
       const result = await Db.aggregate(pipelineResult);
 
@@ -532,30 +552,8 @@ class NotesController implements IController {
       req.body.customer = validDoc.customer;
       req.body.createdBy = req.userId;
 
-      // for (let i = 0; i < 1000000; i++) {
       const result = new Db(req.body);
       const response = await result.save();
-      // }
-
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `Membuat ${redisName} baru`,
-      //   user: req.userId,
-      // });
-      // // End
-
-      // await Redis.client.set(
-      //   `${redisName}-${response._id}`,
-      //   JSON.stringify(response),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error: any) {
@@ -565,89 +563,94 @@ class NotesController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      // Mengecek permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.BRANCH
-      );
-      // End
+      let pipeline: any = [{ _id: new ObjectId(req.params.id) }];
 
-      // Mengecek permission branch
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.BRANCH
-      );
-      // End
+      const data = await Db.aggregate([
+        {
+          $match: {
+            $and: pipeline,
+          },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customer",
+            foreignField: "_id",
+            as: "customer",
+            pipeline: [{ $project: { name: 1, customerGroup: 1, branch: 1 } }],
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
 
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customer.customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$branch",
+        },
+        {
+          $lookup: {
+            from: "topics",
+            localField: "topic",
+            foreignField: "_id",
+            as: "topic",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$topic",
+        },
+        {
+          $lookup: {
+            from: "tags",
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $project: {
+            "customer.customerGroup": 0,
+            "customer.branch": 0,
+            __v: 0,
+          },
+        },
+      ]);
 
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-
-      //   if (userPermission.length > 0) {
-      //     const validPermission = userPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   if (branchPermission.length > 0) {
-      //     const validBranchPermission = branchPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validBranchPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
-
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
-
-      let pipeline: any = [{ _id: req.params.id }];
-
-      if (userPermission.length > 0) {
-        pipeline.push({ createdBy: { $in: userPermission } });
-      }
-
-      if (branchPermission.length > 0) {
-        pipeline.push({ _id: { $in: branchPermission } });
-      }
-
-      const result: any = await Db.findOne({
-        $and: pipeline,
-      }).populate("createdBy", "name");
+      const result = data[0];
 
       if (!result) {
         return res
@@ -661,31 +664,29 @@ class NotesController implements IController {
         result.workflowState
       );
 
-      // return res.send(buttonActions)
-      const getHistory = await History.find(
+      const cekPermission = await cekValidPermission(
+        req.userId,
         {
-          $and: [
-            { "document._id": result._id },
-            { "document.type": redisName },
-          ],
+          user: result.createdBy._id,
+          branch: result.branch._id,
+          group: result.customerGroup._id,
+          customer: result.customer._id,
         },
-        ["_id", "message", "createdAt", "updatedAt"]
-      )
-        .populate("user", "name")
-        .sort({ createdAt: -1 });
+        result.doc.type === "visit"
+          ? selPermissionType.VISIT
+          : selPermissionType.CALLSHEET
+      );
 
-      // await Redis.client.set(
-      //   `${redisName}-${req.params.id}`,
-      //   JSON.stringify(result),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
+        });
+      }
 
       return res.status(200).json({
         status: 200,
         data: result,
-        history: getHistory,
         workflow: buttonActions,
       });
     } catch (error) {
@@ -757,22 +758,6 @@ class NotesController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         }).populate("createdBy", "name");
-        // await Redis.client.set(
-        //   `${redisName}-${req.params.id}`,
-        //   JSON.stringify(getData),
-        //   {
-        //     EX: 30,
-        //   }
-        // );
-
-        // // push history semua field yang di update
-        // await HistoryController.pushUpdateMany(
-        //   result,
-        //   getData,
-        //   req.user,
-        //   req.userId,
-        //   redisName
-        // );
 
         return res.status(200).json({ status: 200, data: getData });
         // End
@@ -844,27 +829,9 @@ class NotesController implements IController {
           msg: "Branch ini sudah digunakan oleh data permission!",
         });
       }
-      // End
-
-      // if (result.status === "1") {
-      //   return res
-      //     .status(404)
-      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      // }
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
-      // await Redis.client.del(`${redisName}-${req.params.id}`);
-      // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: result._id,
-      //     name: result.name,
-      //     type: redisName,
-      //   },
-      //   message: `Menghapus ${redisName} nomor ${result.name}`,
-      //   user: req.userId,
-      // });
-      // // End
+
       return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

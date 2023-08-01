@@ -153,6 +153,30 @@ class NotesController implements IController {
       },
     ];
     try {
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.VISIT
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.VISIT
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.VISIT
+      );
+      // End
+
       const filterOther = ["customerGroup", "branch"];
 
       // Mengambil query
@@ -229,6 +253,31 @@ class NotesController implements IController {
         {
           $unwind: "$customer",
         },
+
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customer.customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "customer.branch",
+            foreignField: "_id",
+            as: "branch",
+            pipeline: [{ $project: { name: 1 } }],
+          },
+        },
+        {
+          $unwind: "$branch",
+        },
         {
           $lookup: {
             from: "topics",
@@ -250,31 +299,14 @@ class NotesController implements IController {
             pipeline: [{ $project: { name: 1 } }],
           },
         },
+        {
+          $project: {
+            "customer.customerGroup": 0,
+            "customer.branch": 0,
+            __v: 0,
+          },
+        },
       ];
-
-      // Mengambil rincian permission customer
-      const customerPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.CUSTOMER,
-        selPermissionType.VISIT
-      );
-      // End
-
-      // Mengambil rincian permission group
-      const groupPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.CUSTOMERGROUP,
-        selPermissionType.VISIT
-      );
-      // End
-
-      // Mengambil rincian permission branch
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.VISIT
-      );
-      // End
 
       //  Cek Customer group dan branch
       // Mengambil hasil filter
@@ -282,26 +314,50 @@ class NotesController implements IController {
         filterOther.includes(item[0])
       );
 
-      if (filterBranchCustomer.length > 0) {
-        let isFilterCustomerBranch = FilterQuery.getFilter(
-          filterBranchCustomer,
-          stateFilter,
-          undefined,
-          ["customerGroup", "branch"]
+      if (
+        filterBranchCustomer.length > 0 ||
+        branchPermission.length > 0 ||
+        groupPermission.length > 0
+      ) {
+        const filterBranch = filterBranchCustomer.filter((item: string[]) =>
+          ["branch"].includes(item[0])
         );
 
-        let isFilterCustomer: any = [isFilterCustomerBranch.data];
+        const filterGroup = filterBranchCustomer.filter((item: string[]) =>
+          ["customerGroup"].includes(item[0])
+        );
+
+        let isFilterBranch = FilterQuery.getFilter(
+          filterBranch,
+          stateFilter,
+          undefined,
+          ["branch"]
+        );
+
+        let pipelineCustomer: any = [isFilterBranch.data];
+
+        const isGroup = filterGroup.map((item: any) => new ObjectId(item[2]));
+
+        if (isGroup.length > 0) {
+          const childGroup = await PermissionMiddleware.getCustomerChild(
+            isGroup
+          );
+
+          if (childGroup.length > 0) {
+            pipelineCustomer.unshift({ customerGroup: { $in: childGroup } });
+          }
+        }
 
         if (branchPermission.length > 0) {
-          isFilterCustomer.unshift({ branch: { $in: branchPermission } });
+          pipelineCustomer.unshift({ branch: { $in: branchPermission } });
         }
 
         if (groupPermission.length > 0) {
-          isFilterCustomer.unshift({ customerGroup: { $in: groupPermission } });
+          pipelineCustomer.unshift({ customerGroup: { $in: groupPermission } });
         }
 
         const getCustomer = await CustomerModel.find(
-          { $and: isFilterCustomer },
+          { $and: pipelineCustomer },
           ["_id"]
         );
 
@@ -380,24 +436,6 @@ class NotesController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      if (!req.body.customer) {
-        throw "Customer wajib diisi!";
-      }
-
-      // Cek customer
-      const customer = await CustomerModel.findById(req.body.customer, [
-        "_id",
-        "status",
-      ]);
-
-      if (!customer) {
-        throw "Customer tidak ditemukan!";
-      }
-      if (customer.status === "0") {
-        throw "Customer tidak aktif!";
-      }
-      // End
-
       if (!req.body.result) {
         throw "Result wajib diisi!";
       }
@@ -481,19 +519,23 @@ class NotesController implements IController {
       }
 
       // Cek doc terdapat di database
-      const validDoc = await DBDoc.findById(req.body.doc._id, ["name"]);
+      const validDoc = await DBDoc.findById(req.body.doc._id, [
+        "name",
+        "customer",
+      ]);
       if (!validDoc) {
         throw `Doc tidak ditemukan! `;
       }
       // End
 
       req.body.doc.name = validDoc.name;
+      req.body.customer = validDoc.customer;
       req.body.createdBy = req.userId;
 
-      for (let i = 0; i < 1000000; i++) {
-        const result = new Db(req.body);
-        const response = await result.save();
-      }
+      // for (let i = 0; i < 1000000; i++) {
+      const result = new Db(req.body);
+      const response = await result.save();
+      // }
 
       // // push history
       // await HistoryController.pushHistory({
@@ -515,7 +557,7 @@ class NotesController implements IController {
       //   }
       // );
 
-      return res.status(200).json({ status: 200, data: "response" });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error: any) {
       return res.status(400).json({ status: 400, msg: error.errors ?? error });
     }

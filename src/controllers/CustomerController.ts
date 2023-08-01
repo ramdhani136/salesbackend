@@ -125,12 +125,17 @@ class CustomerController implements IController {
         filter: ["name"],
         value: req.query.search || "",
       };
-      let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
-        "customerGroup",
-        "createdBy",
-        "branch",
-        "_id",
-      ]);
+
+      const notFilterGroup = filters.filter(
+        (item: string[]) => !["customerGroup"].includes(item[0])
+      );
+
+      let isFilter = FilterQuery.getFilter(
+        notFilterGroup,
+        stateFilter,
+        search,
+        ["customerGroup", "createdBy", "branch", "_id"]
+      );
 
       if (!isFilter.status) {
         return res
@@ -337,6 +342,22 @@ class CustomerController implements IController {
       }
 
       // End
+
+      const filterGroup = filters.filter((item: string[]) =>
+        ["customerGroup"].includes(item[0])
+      );
+
+      const isGroup = filterGroup.map((item: any) => new ObjectId(item[2]));
+      if (isGroup.length > 0) {
+        const childGroup = await PermissionMiddleware.getCustomerChild(isGroup);
+
+        pipelineResult.unshift({
+          $match: { customerGroup: { $in: childGroup } },
+        });
+        pipelineTotal.unshift({
+          $match: { customerGroup: { $in: childGroup } },
+        });
+      }
 
       // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
@@ -912,12 +933,11 @@ class CustomerController implements IController {
             if (dup) {
               throw new Error(`Error duplicate for customer ${dup.name}`);
             }
-          
+
             return { ...item, createdBy: req.userId };
           })
         );
         if (validData.length > 0) {
-          console.log(validData);
           const result = await Db.insertMany(validData);
 
           return res.status(200).json({ status: 400, data: result });

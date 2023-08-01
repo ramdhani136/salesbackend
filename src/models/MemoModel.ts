@@ -6,7 +6,6 @@ const MemoModel = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    index: 1,
     },
     display: {
       type: [
@@ -22,7 +21,6 @@ const MemoModel = new mongoose.Schema(
         },
         message: "Array harus diisi setidaknya dengan satu display.",
       },
-      index: 1,
     },
     title: {
       type: String,
@@ -39,23 +37,19 @@ const MemoModel = new mongoose.Schema(
       type: String,
       enum: ["0", "1", "2", "3"],
       default: "0",
-      index: 1,
     },
     workflowState: {
       type: String,
       required: true,
       default: "Draft",
-      index: 1,
     },
     activeDate: {
       type: Date,
       required: true,
-      index: 1,
     },
     closingDate: {
       type: Date,
       require: true,
-      index: 1,
     },
 
     branch: {
@@ -92,7 +86,6 @@ const MemoModel = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Users",
       required: true,
-      index: 1,
     },
   },
   {
@@ -100,6 +93,28 @@ const MemoModel = new mongoose.Schema(
   }
 );
 
+MemoModel.index({
+  name: -1,
+});
+MemoModel.index({
+  display: 1,
+});
+MemoModel.index({
+  status: 1,
+});
+MemoModel.index({
+  workflowState: -1,
+});
+MemoModel.index({
+  activeDate: 1,
+});
+MemoModel.index({
+  closingDate: 1,
+});
+MemoModel.index({
+  activeDate: 1,
+  closingDate: -1,
+});
 MemoModel.index({
   createdAt: -1,
 });

@@ -1429,9 +1429,10 @@ class VistController implements IController {
                     msg: `Gagal, wajib mengisi contact !`,
                   });
                 }
+
                 // End
                 // Cek apakah sudah checkout
-                if (!result.checkOut.createdAt) {
+                if (!result.checkOut) {
                   return res.status(400).json({
                     status: 400,
                     msg: "Gagal, Belum melakukan checkout kunjungan ini!",
@@ -1781,6 +1782,8 @@ class VistController implements IController {
         // );
 
         // push history semua field yang di update
+
+   
 
         await HistoryController.pushUpdateMany(
           { _doc: result },

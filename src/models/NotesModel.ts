@@ -66,9 +66,9 @@ const NotesModel = new mongoose.Schema(
 NotesModel.index({ customer: 1 });
 NotesModel.index({ createdBy: 1 });
 NotesModel.index({ topic: 1 });
-NotesModel.index({ topic: 1, tags: 1, customerGroup: 1 });
+NotesModel.index({ topic: 1, tags: 1, customer: 1 });
 NotesModel.index({ topic: 1, tags: 1 });
-NotesModel.index({ topic: 1, customerGroup: 1 });
+NotesModel.index({ topic: 1, customer: 1 });
 NotesModel.index({ customer: 1, topic: 1, tags: 1 });
 NotesModel.index({ customer: 1, tags: 1 });
 NotesModel.index({ customer: 1, topic: 1 });

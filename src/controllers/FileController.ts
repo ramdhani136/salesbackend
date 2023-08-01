@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 // import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
-import { FileModel, History, TagModel } from "../models";
+import { FileModel, History, NotesModel, TagModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -238,22 +238,19 @@ class TopicController {
         throw "Error, note wajib diisi!";
       }
 
-      if (!req.body.doc.type) {
-        throw "Error, doc.type wajib diisi!";
+      // Cek notes
+
+      const notes = await NotesModel.findById(req.body.note, ["doc"]);
+
+      if (!notes) {
+        throw "Note tidak ditemukan!";
       }
 
-      // Cek type
-      if (req.body.doc.type !== "visit" || req.body.doc.type == "callsheet") {
-        throw "Error, Type wajib diisi visit, callsheet!";
-      }
+      req.body.doc = notes.doc;
+
+      console.log(req.body);
+
       // End
-
-      if (!req.body.doc._id) {
-        throw "Error, doc._id wajib diisi!";
-      }
-      if (!req.body.doc.name) {
-        throw "Error, doc.name wajib diisi!";
-      }
 
       const result = new Db(req.body);
       const response = await result.save();

@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
+import path from "path";
+import fs from "fs";
 import {
   CallsheetModel,
   CustomerModel,
+  FileModel,
   NotesModel,
-  PermissionModel,
   TagModel,
   TopicModel,
   visitModel,
@@ -733,34 +735,9 @@ class NotesController implements IController {
           });
         }
 
-        if (req.body.nextState) {
-          const checkedWorkflow =
-            await WorkflowController.permissionUpdateAction(
-              redisName,
-              req.userId,
-              req.body.nextState,
-              result.createdBy._id
-            );
+        const update = await Db.updateOne({ _id: req.params.id }, req.body);
 
-          if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
-          } else {
-            return res
-              .status(403)
-              .json({ status: 403, msg: checkedWorkflow.msg });
-          }
-        } else {
-          await Db.updateOne({ _id: req.params.id }, req.body);
-        }
-
-        const getData: any = await Db.findOne({
-          _id: req.params.id,
-        });
-
-        return res.status(200).json({ status: 200, data: getData });
+        return res.status(200).json({ status: 200, data: update });
         // End
       } else {
         return res
@@ -774,36 +751,10 @@ class NotesController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // Mengecek permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.BRANCH
-      );
-      // End
-      // Mengecek permission user
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.BRANCH
-      );
-      // End
-
-      let pipeline: any[] = [
-        {
-          _id: req.params.id,
-        },
-      ];
-
-      if (userPermission.length > 0) {
-        pipeline.push({ createdBy: { $in: userPermission } });
-      }
-
-      if (branchPermission.length > 0) {
-        pipeline.push({ _id: { $in: branchPermission } });
-      }
-
-      const result = await Db.findOne({ $and: pipeline });
+      const result: any = await Db.findOne(
+        { _id: new ObjectId(req.params.id) },
+        ["createdBy", "customer"]
+      ).populate("customer", ["customerGroup", "branch"]);
 
       if (!result) {
         return res
@@ -811,31 +762,53 @@ class NotesController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      // Cek apakah digunakan di permission data
-      const permission = await PermissionModel.findOne(
+      const cekPermission = await cekValidPermission(
+        req.userId,
         {
-          $and: [
-            { allow: "branch" },
-            {
-              value: new ObjectId(req.params.id),
-            },
-          ],
+          user: result.createdBy,
+          branch: result.customer.branch,
+          group: result.customer.customerGroup,
+          customer: result.customer._id,
         },
-        { _id: 1 }
+        selPermissionType.NOTES
       );
 
-      if (permission) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Branch ini sudah digunakan oleh data permission!",
+      if (!cekPermission) {
+        return res.status(403).json({
+          status: 403,
+          msg: "Anda tidak mempunyai akses untuk dok ini!",
         });
       }
+
+      this.deleteFileRelate(req.params.id);
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
 
       return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {
-      return res.status(404).json({ status: 404, msg: error });
+      return res.status(400).json({ status: 404, msg: error });
+    }
+  };
+
+  deleteFileRelate = async (id: String): Promise<any> => {
+    try {
+      const files = await FileModel.find({ note: id }, ["name"]);
+
+      if (files.length > 0) {
+        for (const item of files) {
+          if (
+            fs.existsSync(
+              path.join(__dirname, `../../build/public/files/${item.name}`)
+            )
+          ) {
+            fs.unlinkSync(
+              path.join(__dirname, `../../build/public/files/${item.name}`)
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 }

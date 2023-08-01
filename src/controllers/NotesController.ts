@@ -155,7 +155,7 @@ class NotesController implements IController {
       const customerPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.CUSTOMER,
-        selPermissionType.VISIT
+        selPermissionType.NOTES
       );
       // End
 
@@ -163,7 +163,7 @@ class NotesController implements IController {
       const groupPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.CUSTOMERGROUP,
-        selPermissionType.VISIT
+        selPermissionType.NOTES
       );
       // End
 
@@ -171,7 +171,7 @@ class NotesController implements IController {
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.USER,
-        selPermissionType.VISIT
+        selPermissionType.NOTES
       );
       // End
 
@@ -179,7 +179,7 @@ class NotesController implements IController {
       const branchPermission = await PermissionMiddleware.getPermission(
         req.userId,
         selPermissionAllow.BRANCH,
-        selPermissionType.VISIT
+        selPermissionType.NOTES
       );
       // End
 
@@ -672,9 +672,7 @@ class NotesController implements IController {
           group: result.customerGroup._id,
           customer: result.customer._id,
         },
-        result.doc.type === "visit"
-          ? selPermissionType.VISIT
-          : selPermissionType.CALLSHEET
+        selPermissionType.NOTES
       );
 
       if (!cekPermission) {

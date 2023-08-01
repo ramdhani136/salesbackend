@@ -25,6 +25,7 @@ export enum selPermissionType {
   VISIT = "visit",
   USERGROUP = "usergroup",
   USER = "user",
+  NOTES = "notes",
 }
 
 class PermissionMiddleware {

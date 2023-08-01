@@ -784,7 +784,7 @@ class NotesController implements IController {
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
 
-      return res.status(200).json({ status: 200, data: actionDel });
+      return res.status(200).json({ status: 200, data: actionDel});
     } catch (error) {
       return res.status(400).json({ status: 404, msg: error });
     }
@@ -795,6 +795,7 @@ class NotesController implements IController {
       const files = await FileModel.find({ note: id }, ["name"]);
 
       if (files.length > 0) {
+        await FileModel.deleteMany({ _id: files.map((item) => item._id) });
         for (const item of files) {
           if (
             fs.existsSync(

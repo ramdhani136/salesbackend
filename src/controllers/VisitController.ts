@@ -1833,6 +1833,7 @@ class VistController implements IController {
           ["name"]
         );
         if (files.length > 0) {
+          await FileModel.deleteMany({ _id: files.map((item) => item._id) });
           for (const item of files) {
             if (
               fs.existsSync(

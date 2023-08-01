@@ -694,39 +694,35 @@ class NotesController implements IController {
 
   update = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      // Mengecek permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.BRANCH
-      );
-      // End
-      // Mengecek permission user
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.BRANCH
-      );
-      // End
       let pipeline: any[] = [
         {
           _id: req.params.id,
         },
       ];
 
-      if (userPermission.length > 0) {
-        pipeline.push({ createdBy: { $in: userPermission } });
-      }
-
-      if (branchPermission.length > 0) {
-        pipeline.push({ _id: { $in: branchPermission } });
-      }
-
       const result: any = await Db.findOne({
         $and: pipeline,
       }).populate("createdBy", "name");
 
       if (result) {
+        const cekPermission = await cekValidPermission(
+          req.userId,
+          {
+            user: result.createdBy._id,
+            branch: result.branch._id,
+            group: result.customerGroup._id,
+            customer: result.customer._id,
+          },
+          selPermissionType.NOTES
+        );
+
+        if (!cekPermission) {
+          return res.status(403).json({
+            status: 403,
+            msg: "Anda tidak mempunyai akses untuk dok ini!",
+          });
+        }
+
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(

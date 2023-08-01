@@ -252,6 +252,30 @@ class NotesController implements IController {
         },
       ];
 
+      // Mengambil rincian permission customer
+      const customerPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMER,
+        selPermissionType.VISIT
+      );
+      // End
+
+      // Mengambil rincian permission group
+      const groupPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.CUSTOMERGROUP,
+        selPermissionType.VISIT
+      );
+      // End
+
+      // Mengambil rincian permission branch
+      const branchPermission = await PermissionMiddleware.getPermission(
+        req.userId,
+        selPermissionAllow.BRANCH,
+        selPermissionType.VISIT
+      );
+      // End
+
       //  Cek Customer group dan branch
       // Mengambil hasil filter
       const filterBranchCustomer = filters.filter((item: string[]) =>
@@ -266,8 +290,18 @@ class NotesController implements IController {
           ["customerGroup", "branch"]
         );
 
+        let isFilterCustomer: any = [isFilterCustomerBranch.data];
+
+        if (branchPermission.length > 0) {
+          isFilterCustomer.unshift({ branch: { $in: branchPermission } });
+        }
+
+        if (groupPermission.length > 0) {
+          isFilterCustomer.unshift({ customerGroup: { $in: groupPermission } });
+        }
+
         const getCustomer = await CustomerModel.find(
-          isFilterCustomerBranch.data,
+          { $and: isFilterCustomer },
           ["_id"]
         );
 
@@ -293,6 +327,20 @@ class NotesController implements IController {
       }
 
       // End
+
+      // End
+
+      // Cek permission customer
+      if (customerPermission.length > 0) {
+        pipelineResult.unshift({
+          $match: {
+            customer: { $in: customerPermission },
+          },
+        });
+        pipelineTotal.unshift({
+          customer: { $in: customerPermission },
+        });
+      }
 
       // End
 

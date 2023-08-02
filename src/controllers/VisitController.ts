@@ -1498,7 +1498,7 @@ class VistController implements IController {
                     if (notValidMandatory.length > 0) {
                       return res.status(400).json({
                         status: 400,
-                        msg: `Gagal, Topic ${notValidMandatory} wajib digunakan!`,
+                        msg: `Gagal, Wajib membuat catatan dengan topic ${notValidMandatory} !`,
                       });
                     }
                   }

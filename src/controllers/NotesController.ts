@@ -458,10 +458,6 @@ class NotesController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      if (!req.body.result) {
-        throw "Result wajib diisi!";
-      }
-
       // Cek topic
       if (!req.body.topic) {
         throw "Topic wajib diisi!";
@@ -481,6 +477,10 @@ class NotesController implements IController {
       }
 
       // End
+
+      if (!req.body.result) {
+        throw "Result wajib diisi!";
+      }
 
       if (!req.body.tags) {
         throw "Error, tags wajib diisi!";

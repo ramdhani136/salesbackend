@@ -7,7 +7,9 @@ class ConfigController {
     try {
       const data = await ConfigModel.findOne({})
         .populate("visit.tagsMandatory", "name")
-        .populate("callsheet.tagsMandatory", "name");
+        .populate("callsheet.tagsMandatory", "name")
+        .populate("visit.topicMandatory", "name")
+        .populate("callsheet.topicMandatory", "name");
       res.status(200).json({ status: true, data: data });
     } catch (error) {
       res.status(400).json({ status: true, msg: error });

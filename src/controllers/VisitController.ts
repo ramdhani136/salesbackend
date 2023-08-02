@@ -19,6 +19,7 @@ import {
   History,
   NotesModel,
   ScheduleListModel,
+  TopicModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -1428,12 +1429,81 @@ class VistController implements IController {
 
                 // End
                 // Cek config visit
-                const config: any = await ConfigModel.findOne(
-                  {},
-                  { visit: 1 }
-                ).populate("visit.tagsMandatory", "name");
+                const config: any = await ConfigModel.findOne({}, { visit: 1 })
+                  .populate("visit.tagsMandatory", "name")
+                  .populate("visit.topicMandatory", "name");
 
                 if (config) {
+                  //  Cek tag per topic
+                  const notes2: any = await NotesModel.find(
+                    {
+                      $and: [
+                        { "doc._id": new ObjectId(req.params.id) },
+                        { "doc.type": "visit" },
+                      ],
+                    },
+                    { _id: 1, topic: 1, tags: 1 }
+                  );
+
+
+                  console.log(notes2.length);
+                  if (notes2.length > 0) {
+                    for (const note of notes2) {
+                      let topic: any = await TopicModel.findById(note.topic, [
+                        "tags.mandatory",
+                        "name",
+                      ]).populate("tags.mandatory", "name");
+
+                      if (topic.tags.mandatory.length > 0) {
+                        note.tags.length > 0;
+                        {
+                          const cekNotValid = topic.tags.mandatory
+                            .filter((item: any) =>
+                              note.tags.some(
+                                (checkId: any) => !checkId.equals(item._id)
+                              )
+                            )
+                            .map((nv: any) => nv.name);
+
+                          if (cekNotValid.length > 0) {
+                            throw `Tags ${cekNotValid} wajib diisi di dalam topic ${topic.name}!`;
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  // End
+
+                  // Topic yang wajib diisi
+                  const topicMandatory: any[] = config.visit.topicMandatory;
+                  if (topicMandatory.length > 0) {
+                    let notValidMandatory: any[] = [];
+                    for (const item of topicMandatory) {
+                      let cekData = await NotesModel.findOne(
+                        {
+                          $and: [
+                            { "doc._id": new ObjectId(req.params.id) },
+                            { "doc.type": "visit" },
+                            { topic: item._id },
+                          ],
+                        },
+                        { _id: 1 }
+                      );
+
+                      if (!cekData) {
+                        notValidMandatory.push(item.name);
+                      }
+                    }
+                    if (notValidMandatory.length > 0) {
+                      return res.status(400).json({
+                        status: 400,
+                        msg: `Gagal, Topic ${notValidMandatory} wajib digunakan!`,
+                      });
+                    }
+                  }
+                  // End
+
                   // Cek minimal catatan
                   const notes: any = await NotesModel.find(
                     {
@@ -1442,7 +1512,7 @@ class VistController implements IController {
                         { "doc.type": "visit" },
                       ],
                     },
-                    { _id: 1 }
+                    { _id: 1, topic: 1 }
                   );
 
                   if (notes.length < config.visit.notesLength) {
@@ -1482,9 +1552,6 @@ class VistController implements IController {
                   }
 
                   // End
-
-                  // Tambahkan lainnya
-
 
                   // End
                 }

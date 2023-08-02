@@ -25,6 +25,16 @@ const ConfigModel = new mongoose.Schema(
           },
         ],
       },
+      topicMandatory: {
+        type: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: "topic",
+            required: true,
+            index: true,
+          },
+        ],
+      },
     },
     callsheet: {
       notesLength: {
@@ -36,6 +46,16 @@ const ConfigModel = new mongoose.Schema(
           {
             type: Schema.Types.ObjectId,
             ref: "tag",
+            required: true,
+            index: true,
+          },
+        ],
+      },
+      topicMandatory: {
+        type: [
+          {
+            type: Schema.Types.ObjectId,
+            ref: "topic",
             required: true,
             index: true,
           },

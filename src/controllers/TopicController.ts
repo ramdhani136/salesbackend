@@ -274,73 +274,73 @@ class TopicController implements IController {
       req.body.createdBy = req.userId;
       // Cek tag
 
-      if (req.body.tags.restrict) {
-        if (typeof req.body.tags.restrict !== "object") {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, tags harus berupa object!" });
-        }
-
-        for (const item of req.body.tags.restrict) {
-          try {
-            let getTag: any = await TagModel.findById(new ObjectId(item));
-            if (!getTag) {
-              return res.status(400).json({
-                status: 400,
-                msg: `Error, tag ${item} tidak ditemukan!`,
-              });
-            }
-          } catch (error) {
-            return res.status(400).json({
-              status: 400,
-              msg: "Invalid Tags Id",
-            });
+      if (req.body.tags) {
+        if (req.body.tags.restrict) {
+          if (typeof req.body.tags.restrict !== "object") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, tags harus berupa object!" });
           }
-        }
-      }
 
-      if (req.body.tags.mandatory) {
-        if (typeof req.body.tags.mandatory !== "object") {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, tags harus berupa object!" });
-        }
-
-        for (const item of req.body.tags.mandatory) {
-          try {
-            let getTag: any = await TagModel.findById(new ObjectId(item));
-            if (!getTag) {
-              return res.status(400).json({
-                status: 400,
-                msg: `Error, tag ${item} tidak ditemukan!`,
-              });
-            }
-
-            // Cek apakah mandatory tags ada di restrcit
-
-            if (req.body.tags.restrict.length > 0) {
-              let cekRestrict = req.body.tags.restrict.find((tag: any) => {
-                return tag === item;
-              });
-
-              if (!cekRestrict) {
+          for (const item of req.body.tags.restrict) {
+            try {
+              let getTag: any = await TagModel.findById(new ObjectId(item));
+              if (!getTag) {
                 return res.status(400).json({
                   status: 400,
-                  msg: `Error, ${item} mandatory tags item must also set be filled in restrict tags!`,
+                  msg: `Error, tag ${item} tidak ditemukan!`,
                 });
               }
+            } catch (error) {
+              return res.status(400).json({
+                status: 400,
+                msg: "Invalid Tags Id",
+              });
             }
+          }
+        }
+        if (req.body.tags.mandatory) {
+          if (typeof req.body.tags.mandatory !== "object") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, tags harus berupa object!" });
+          }
 
-            // End
-          } catch (error) {
-            return res.status(400).json({
-              status: 400,
-              msg: "Invalid Tags Id",
-            });
+          for (const item of req.body.tags.mandatory) {
+            try {
+              let getTag: any = await TagModel.findById(new ObjectId(item));
+              if (!getTag) {
+                return res.status(400).json({
+                  status: 400,
+                  msg: `Error, tag ${item} tidak ditemukan!`,
+                });
+              }
+
+              // Cek apakah mandatory tags ada di restrcit
+
+              if (req.body.tags.restrict.length > 0) {
+                let cekRestrict = req.body.tags.restrict.find((tag: any) => {
+                  return tag === item;
+                });
+
+                if (!cekRestrict) {
+                  return res.status(400).json({
+                    status: 400,
+                    msg: `Error, ${item} mandatory tags item must also set be filled in restrict tags!`,
+                  });
+                }
+              }
+
+              // End
+            } catch (error) {
+              return res.status(400).json({
+                status: 400,
+                msg: "Invalid Tags Id",
+              });
+            }
           }
         }
       }
-
       // End
 
       const result = new Db(req.body);

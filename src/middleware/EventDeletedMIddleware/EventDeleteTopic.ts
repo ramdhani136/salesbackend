@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import {
   CallSheetNoteModel,
   CallsheetModel,
+  ConfigModel,
   ContactModel,
   CustomerGroupModel,
   CustomerModel,
@@ -31,6 +32,11 @@ export const EventDeleteTopic = async (
       doc: "Notes",
       filters: ["topic"],
       model: NotesModel,
+    },
+    {
+      doc: "Config",
+      filters: ["visit.topicsMandatory", "callsheet.topicsMandatory"],
+      model: ConfigModel,
     },
   ];
 

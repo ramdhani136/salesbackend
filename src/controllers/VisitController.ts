@@ -1323,21 +1323,8 @@ class VistController implements IController {
               msg: "Error, kontak tidak aktif!",
             });
           }
-
-          // set contact
-          // req.body.contact = contact._id;
         }
         // End
-
-        if (
-          req.body.checkOut &&
-          (!req.body.checkOutLat || !req.body.checkOutLng)
-        ) {
-          return res.status(404).json({
-            status: 404,
-            msg: "Error, silahkan isi parameter checkOutLat,checkOutLng untuk melakukan checkout!",
-          });
-        }
 
         // Jika Checkout
         if (req.body.checkOutLat && req.body.checkOutLng) {
@@ -1493,6 +1480,11 @@ class VistController implements IController {
                       });
                     }
                   }
+
+                  // End
+
+                  // Tambahkan lainnya
+
 
                   // End
                 }
@@ -1782,8 +1774,6 @@ class VistController implements IController {
         // );
 
         // push history semua field yang di update
-
-   
 
         await HistoryController.pushUpdateMany(
           { _doc: result },

@@ -367,7 +367,8 @@ class HistoryController implements IController {
         validCondition
       ) {
         if (
-          `${JSON.stringify(prevData[i])}` !== `${JSON.stringify(nextData[i])}`
+          `${JSON.stringify(prevData._doc[i])}` !==
+          `${JSON.stringify(nextData[i])}`
         ) {
           differentProps.push(i);
         }
@@ -378,11 +379,15 @@ class HistoryController implements IController {
       for (const item of differentProps) {
         await this.pushHistory({
           document: {
-            _id: prevData._id,
-            name: prevData.name ?? "Other",
+            _id: prevData._doc._id,
+            name: prevData._doc.name ?? "Other",
             type: `${doc}`,
           },
-          message: `Merubah ${item} dari ${prevData[item]} menjadi ${nextData[item]}`,
+          message: `Merubah ${item} dari ${JSON.stringify(
+            prevData._doc[item]
+          ).replace(/\"/g,"")} menjadi ${JSON.stringify(
+            nextData[item]
+          ).replace(/\"/g,"")}`,
           user: userId,
         });
       }

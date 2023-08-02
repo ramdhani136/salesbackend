@@ -1434,47 +1434,6 @@ class VistController implements IController {
                   .populate("visit.topicMandatory", "name");
 
                 if (config) {
-                  //  Cek tag per topic
-                  const notes2: any = await NotesModel.find(
-                    {
-                      $and: [
-                        { "doc._id": new ObjectId(req.params.id) },
-                        { "doc.type": "visit" },
-                      ],
-                    },
-                    { _id: 1, topic: 1, tags: 1 }
-                  );
-
-
-                  console.log(notes2.length);
-                  if (notes2.length > 0) {
-                    for (const note of notes2) {
-                      let topic: any = await TopicModel.findById(note.topic, [
-                        "tags.mandatory",
-                        "name",
-                      ]).populate("tags.mandatory", "name");
-
-                      if (topic.tags.mandatory.length > 0) {
-                        note.tags.length > 0;
-                        {
-                          const cekNotValid = topic.tags.mandatory
-                            .filter((item: any) =>
-                              note.tags.some(
-                                (checkId: any) => !checkId.equals(item._id)
-                              )
-                            )
-                            .map((nv: any) => nv.name);
-
-                          if (cekNotValid.length > 0) {
-                            throw `Tags ${cekNotValid} wajib diisi di dalam topic ${topic.name}!`;
-                          }
-                        }
-                      }
-                    }
-                  }
-
-                  // End
-
                   // Topic yang wajib diisi
                   const topicMandatory: any[] = config.visit.topicMandatory;
                   if (topicMandatory.length > 0) {
@@ -1504,7 +1463,6 @@ class VistController implements IController {
                   }
                   // End
 
-                  // Cek minimal catatan
                   const notes: any = await NotesModel.find(
                     {
                       $and: [
@@ -1512,8 +1470,10 @@ class VistController implements IController {
                         { "doc.type": "visit" },
                       ],
                     },
-                    { _id: 1, topic: 1 }
+                    { _id: 1, topic: 1, tags: 1 }
                   );
+
+                  // Cek minimal catatan
 
                   if (notes.length < config.visit.notesLength) {
                     return res.status(400).json({
@@ -1521,6 +1481,55 @@ class VistController implements IController {
                       msg: `Gagal, Catatan wajib diisi minimal ${config.visit.notesLength} catatan!`,
                     });
                   }
+                  // End
+
+                  //  Cek tag per topic
+                  if (notes.length > 0) {
+                    const mergedData: any = {};
+                    notes.forEach((item: any) => {
+                      const topicId = item.topic.toString(); // Mengonversi ObjectId menjadi string
+                      if (!mergedData[topicId]) {
+                        mergedData[topicId] = {
+                          _id: item.topic, // Menggunakan _id dari topic sebagai referensi
+                          topic: item.topic,
+                          tags: [],
+                        };
+                      }
+                      mergedData[topicId].tags.push(...item.tags); // Menggabungkan nilai tags
+                    });
+                    const allNotes: any = Object.values(mergedData);
+
+                    for (const note of allNotes) {
+                      let topic: any = await TopicModel.findById(note.topic, [
+                        "tags.mandatory",
+                        "name",
+                      ]).populate("tags.mandatory", "name");
+
+                      if (topic.tags.mandatory.length > 0) {
+                        {
+                          const noteTags: String[] = note.tags.map(
+                            (item: String) => item.toString()
+                          );
+
+                          const cekNotValid = topic.tags.mandatory
+                            .filter((item: any) => {
+                              return (
+                                noteTags.indexOf(item._id.toString()) === -1
+                              );
+                            })
+                            .map((nv: any) => nv.name);
+
+                          if (cekNotValid.length > 0) {
+                            return res.status(400).json({
+                              status: 400,
+                              msg: `Tags ${cekNotValid} wajib diisi di dalam topic ${topic.name}!`,
+                            });
+                          }
+                        }
+                      }
+                    }
+                  }
+
                   // End
 
                   // Cek mandatory tag

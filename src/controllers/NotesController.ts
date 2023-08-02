@@ -516,7 +516,7 @@ class NotesController implements IController {
       }
 
       if (!req.body.doc) {
-        throw "Error, Doc wajib diisi!";
+        throw "Error, Doc: type, _id wajib diisi!";
       }
       if (!req.body.doc.type) {
         throw "Error, Doc.type wajib diisi!";

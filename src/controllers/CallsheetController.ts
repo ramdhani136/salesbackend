@@ -23,6 +23,7 @@ import {
   MemoModel,
   NotesModel,
   ScheduleListModel,
+  TopicModel,
   UserGroupListModel,
   namingSeriesModel,
 } from "../models";
@@ -1381,21 +1382,106 @@ class CallsheetController implements IController {
                 const config: any = await ConfigModel.findOne(
                   {},
                   { callsheet: 1 }
-                ).populate("callsheet.tagsMandatory", "name");
+                )
+                  .populate("callsheet.tagsMandatory", "name")
+                  .populate("callsheet.topicMandatory", "name");
 
                 if (config) {
-                  // Cek minimal catatan
-                  const notes: any = await CallSheetNoteModel.find(
-                    { callsheet: new ObjectId(req.params.id) },
-                    { _id: 1 }
+                  // Topic yang wajib diisi
+                  const topicMandatory: any[] = config.callsheet.topicMandatory;
+                  if (topicMandatory.length > 0) {
+                    let notValidMandatory: any[] = [];
+                    for (const item of topicMandatory) {
+                      let cekData = await NotesModel.findOne(
+                        {
+                          $and: [
+                            { "doc._id": new ObjectId(req.params.id) },
+                            { "doc.type": "callsheet" },
+                            { topic: item._id },
+                          ],
+                        },
+                        { _id: 1 }
+                      );
+
+                      if (!cekData) {
+                        notValidMandatory.push(item.name);
+                      }
+                    }
+                    if (notValidMandatory.length > 0) {
+                      return res.status(400).json({
+                        status: 400,
+                        msg: `Gagal, Wajib membuat catatan dengan topic ${notValidMandatory} !`,
+                      });
+                    }
+                  }
+                  // End
+
+                  const notes: any = await NotesModel.find(
+                    {
+                      $and: [
+                        { "doc._id": new ObjectId(req.params.id) },
+                        { "doc.type": "callsheet" },
+                      ],
+                    },
+                    { _id: 1, topic: 1, tags: 1 }
                   );
 
+                  // Cek minimal catatan
                   if (notes.length < config.callsheet.notesLength) {
                     return res.status(400).json({
                       status: 400,
                       msg: `Gagal, Catatan wajib diisi minimal ${config.callsheet.notesLength} catatan!`,
                     });
                   }
+                  // End
+
+                  //  Cek tag per topic
+                  if (notes.length > 0) {
+                    const mergedData: any = {};
+                    notes.forEach((item: any) => {
+                      const topicId = item.topic.toString(); // Mengonversi ObjectId menjadi string
+                      if (!mergedData[topicId]) {
+                        mergedData[topicId] = {
+                          _id: item.topic, // Menggunakan _id dari topic sebagai referensi
+                          topic: item.topic,
+                          tags: [],
+                        };
+                      }
+                      mergedData[topicId].tags.push(...item.tags); // Menggabungkan nilai tags
+                    });
+                    const allNotes: any = Object.values(mergedData);
+
+                    for (const note of allNotes) {
+                      let topic: any = await TopicModel.findById(note.topic, [
+                        "tags.mandatory",
+                        "name",
+                      ]).populate("tags.mandatory", "name");
+
+                      if (topic.tags.mandatory.length > 0) {
+                        {
+                          const noteTags: String[] = note.tags.map(
+                            (item: String) => item.toString()
+                          );
+
+                          const cekNotValid = topic.tags.mandatory
+                            .filter((item: any) => {
+                              return (
+                                noteTags.indexOf(item._id.toString()) === -1
+                              );
+                            })
+                            .map((nv: any) => nv.name);
+
+                          if (cekNotValid.length > 0) {
+                            return res.status(400).json({
+                              status: 400,
+                              msg: `Tag ${cekNotValid} wajib diisi di dalam topic ${topic.name}!`,
+                            });
+                          }
+                        }
+                      }
+                    }
+                  }
+
                   // End
 
                   // Cek mandatory tag
@@ -1767,46 +1853,6 @@ class CallsheetController implements IController {
       // End
       const result: any = await Db.deleteOne({ _id: req.params.id });
 
-      // Hapus file note
-      try {
-        const files = await FileModel.find(
-          {
-            $and: [
-              { "doc.type": "callsheet" },
-              { "doc._id": new ObjectId(req.params.id) },
-            ],
-          },
-          ["name"]
-        );
-        if (files.length > 0) {
-          await FileModel.deleteMany({ _id: files.map((item) => item._id) });
-          for (const item of files) {
-            if (
-              fs.existsSync(
-                path.join(__dirname, `../../build/public/files/${item.name}`)
-              )
-            ) {
-              fs.unlinkSync(
-                path.join(__dirname, `../../build/public/files/${item.name}`)
-              );
-            }
-          }
-        }
-      } catch (error) {
-        console.log(error);
-      }
-
-      try {
-        await NotesModel.updateMany({
-          $and: [
-            { "doc.type": "callsheet" },
-            { "doc._id": new ObjectId(req.params.id) },
-          ],
-        });
-      } catch (error) {
-        console.log(error);
-      }
-      // End
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {
@@ -1818,6 +1864,41 @@ class CallsheetController implements IController {
     id: ObjectId,
     data: any
   ): Promise<any> => {
+    // Hapus file note
+    try {
+      const files = await FileModel.find(
+        {
+          $and: [{ "doc.type": "callsheet" }, { "doc._id": id }],
+        },
+        ["name"]
+      );
+      if (files.length > 0) {
+        await FileModel.deleteMany({ _id: files.map((item) => item._id) });
+        for (const item of files) {
+          if (
+            fs.existsSync(
+              path.join(__dirname, `../../build/public/files/${item.name}`)
+            )
+          ) {
+            fs.unlinkSync(
+              path.join(__dirname, `../../build/public/files/${item.name}`)
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    try {
+      await NotesModel.deleteMany({
+        $and: [{ "doc.type": "callsheet" }, { "doc._id": id }],
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    // End
+
     // Hapus relasi callsheetnotes
     try {
       await CallSheetNoteModel.deleteMany({

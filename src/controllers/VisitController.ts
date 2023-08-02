@@ -1522,7 +1522,7 @@ class VistController implements IController {
                           if (cekNotValid.length > 0) {
                             return res.status(400).json({
                               status: 400,
-                              msg: `Tags ${cekNotValid} wajib diisi di dalam topic ${topic.name}!`,
+                              msg: `Tag ${cekNotValid} wajib diisi di dalam topic ${topic.name}!`,
                             });
                           }
                         }

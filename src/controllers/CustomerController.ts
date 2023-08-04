@@ -359,15 +359,20 @@ class CustomerController implements IController {
         });
       }
 
-      // Menambahkan limit ketika terdapat limit
+      // // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
-        pipelineResult.splice(nearby.length === 3 ? 3 : 2, 0, {
-          $limit: limit,
-        });
+        pipelineResult.splice(
+          nearby.length === 3 ? 3 : isGroup.length > 0 ? 3 : 2,
+          0,
+          {
+            $limit: limit,
+          }
+        );
       }
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
+
 
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);

@@ -151,6 +151,7 @@ class ScheduleListController implements IController {
             // "userGroup.name",
             "createdAt",
             "updatedAt",
+            "closing"
           ];
 
       const order_by: any = req.query.order_by

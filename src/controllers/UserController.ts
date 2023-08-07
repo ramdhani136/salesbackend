@@ -196,14 +196,18 @@ class UserController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.password) {
-      return res.status(400).json({ status: 400, msg: "Password Wajib diisi!" });
-    }
     if (!req.body.name) {
       return res.status(400).json({ status: 400, msg: "Name wajib diisi!" });
     }
     if (!req.body.username) {
-      return res.status(400).json({ status: 400, msg: "Username wajib diisi!" });
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Username wajib diisi!" });
+    }
+    if (!req.body.password) {
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Password Wajib diisi!" });
     }
 
     const salt = await bcrypt.genSalt();
@@ -213,8 +217,6 @@ class UserController implements IController {
     try {
       const user = new User(req.body);
       const users: any = await user.save();
-
-     
 
       const resultData: any = await User.findOne(
         { _id: new Object(users._id) },
@@ -387,14 +389,12 @@ class UserController implements IController {
           .json({ status: 404, msg: "Error update, user tidak ditemukan" });
       }
 
-      
       if (req.file != undefined) {
         let istitik = req.file.originalname.indexOf(".");
         let typeimage = req.file.originalname.slice(istitik, 200);
         this.prosesUpload(req, `${req.params.id}${typeimage}`);
         req.body.img = `${req.params.id}${typeimage}`;
       }
-
 
       if (req.body.nextState) {
         const checkedWorkflow = await WorkflowController.permissionUpdateAction(
@@ -420,7 +420,6 @@ class UserController implements IController {
         { password: 0 }
       );
 
- 
       // await Redis.client.set(
       //   `user-${req.params.id}`,
       //   JSON.stringify(resultData)
@@ -460,26 +459,26 @@ class UserController implements IController {
         }
       }
 
-        // Cek apakah digunakan di permission data
-        const permission = await PermissionModel.findOne(
-          {
-            $and: [
-              { allow: "user" },
-              {
-                value: new ObjectId(req.params.id),
-              },
-            ],
-          },
-          { _id: 1 }
-        );
-  
-        if (permission) {
-          return res.status(404).json({
-            status: 404,
-            msg: "User ini sudah digunakan oleh data permission!",
-          });
-        }
-        // End
+      // Cek apakah digunakan di permission data
+      const permission = await PermissionModel.findOne(
+        {
+          $and: [
+            { allow: "user" },
+            {
+              value: new ObjectId(req.params.id),
+            },
+          ],
+        },
+        { _id: 1 }
+      );
+
+      if (permission) {
+        return res.status(404).json({
+          status: 404,
+          msg: "User ini sudah digunakan oleh data permission!",
+        });
+      }
+      // End
 
       const users = await User.findOneAndDelete({ _id: req.params.id });
       if (users) {
@@ -506,10 +505,14 @@ class UserController implements IController {
 
   login = async (req: Request, res: Response): Promise<Response> => {
     if (!req.body.username) {
-      return res.status(400).json({ status: 400, msg: "Username wajib diisi!" });
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Username wajib diisi!" });
     }
     if (!req.body.password) {
-      return res.status(400).json({ status: 400, msg: "Password wajib diiis!" });
+      return res
+        .status(400)
+        .json({ status: 400, msg: "Password wajib diiis!" });
     }
     try {
       const result: any = await User.findOne({
@@ -529,7 +532,7 @@ class UserController implements IController {
           username: result.username,
           status: result.status,
         },
-        `${process.env.ACCESS_TOKEN_SECRET}`,
+        `${process.env.ACCESS_TOKEN_SECRET}`
         // {
         //   expiresIn: "1d",
         // }
@@ -541,7 +544,7 @@ class UserController implements IController {
           username: result.username,
           status: result.status,
         },
-        `${process.env.REFRESH_TOKEN_SECRET}`,
+        `${process.env.REFRESH_TOKEN_SECRET}`
         // {
         //   expiresIn: "1d",
         // }

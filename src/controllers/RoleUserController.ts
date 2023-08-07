@@ -300,12 +300,12 @@ class RoleUserController implements IController {
 
       // Cek user terdaftar
       const cekUser = await User.findOne({
-        $and: [{ _id: req.body.user }, { status: "1" }],
+        $and: [{ _id: req.body.user }],
       });
       if (!cekUser) {
         return res
           .status(404)
-          .json({ status: 404, msg: "Error, tidak aktif / ditemukan!" });
+          .json({ status: 404, msg: "Error, User tidak ditemukan!" });
       }
       // End
 
@@ -588,7 +588,7 @@ class RoleUserController implements IController {
           .json({ status: 404, msg: "Error update, data not found" });
       }
     } catch (error: any) {
-      return res.status(404).json({ status: 404, data: error });
+      return res.status(404).json({ status: 404, msg: error });
     }
   };
 

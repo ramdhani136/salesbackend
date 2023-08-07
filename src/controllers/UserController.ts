@@ -363,7 +363,7 @@ class UserController implements IController {
     if (req.body.img) {
       return res.status(400).json({
         status: 404,
-        data: "Error update, nama img tidka dapat dirubah",
+        msg: "Error update, nama img tidak dapat dirubah",
       });
     }
 
@@ -384,7 +384,7 @@ class UserController implements IController {
       if (!user) {
         return res
           .status(400)
-          .json({ status: 404, data: "Error update, user tidak ditemukan" });
+          .json({ status: 404, msg: "Error update, user tidak ditemukan" });
       }
 
       
@@ -437,7 +437,7 @@ class UserController implements IController {
 
       return res.status(200).json({ status: 200, data: resultData });
     } catch (error: any) {
-      return res.status(404).json({ status: 404, data: error });
+      return res.status(404).json({ status: 404, msg: error });
     }
   };
 

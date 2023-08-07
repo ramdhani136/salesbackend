@@ -23,7 +23,7 @@ class UserRoutes extends RouteBase {
     this.router.get("/", AuthMiddleware, UserController.index);
     this.router.post(
       "/",
-      upload.single("img"),
+      upload.single("imgfile"),
       AuthMiddleware,
       RoleMiddleware,
       UserController.create
@@ -48,7 +48,7 @@ class UserRoutes extends RouteBase {
       "/:id",
       AuthMiddleware,
       RoleMiddleware,
-      upload.single("img"),
+      upload.single("imgfile"),
       UserController.update
     );
   }

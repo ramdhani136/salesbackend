@@ -63,7 +63,12 @@ import {
 const cookieParser = require("cookie-parser");
 
 const corsOptions = {
-  origin: ["*", "http://localhost:5173", "http://localhost"],
+  origin: [
+    "*",
+    "http://localhost:5173",
+    "http://192.168.100.247:5173",
+    "http://localhost",
+  ],
   credentials: true,
   optionSuccessStatus: 200,
 };
@@ -287,7 +292,23 @@ class App {
     this.app.use(bodyParser.json());
     this.app.use(compression());
     this.app.use(morgan("dev"));
-    this.app.use(helmet());
+
+    this.app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            scriptSrc: ["'self'",  'www.google.com www.gstatic.com',"https://*.statcounter.com", "'unsafe-inline'"], 
+            frameSrc: ["'self'", "www.google.com", "https://*.statcounter.com"], 
+            connectSrc: ["'self'", 'https://*.statcounter.com'],
+          },
+          
+    
+        },
+          
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+        crossOriginEmbedderPolicy: false,
+      })
+    );
     this.app.use(cors(corsOptions));
     // Redis.getConnect();
     this.getSocket();

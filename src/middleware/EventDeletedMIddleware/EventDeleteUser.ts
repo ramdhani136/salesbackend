@@ -39,7 +39,7 @@ interface IData {
 export const EventDeleteUser = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<any> => {
   const data: IData[] = [
     { doc: "Branch", filters: ["createdBy"], model: BranchModel },
@@ -94,13 +94,8 @@ export const EventDeleteUser = async (
       model: RoleProfileModel,
     },
     {
-      doc: "RoleUser",
-      filters: ["user", "createdBy"],
-      model: RoleUserModel,
-    },
-    {
       doc: "ScheduleList",
-      filters: [ "createdBy"],
+      filters: ["createdBy"],
       model: ScheduleListModel,
     },
     {

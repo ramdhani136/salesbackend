@@ -7,7 +7,7 @@ import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { History, PermissionModel } from "../models";
+import { History, PermissionModel, RoleUserModel } from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
@@ -483,6 +483,7 @@ class UserController implements IController {
       const users = await User.findOneAndDelete({ _id: req.params.id });
       if (users) {
         // await Redis.client.del(`user-${req.params.id}`);
+        this.DeleteRelatedUser(req.params.id);
         // push history
         await HistoryController.pushHistory({
           document: {
@@ -642,27 +643,27 @@ class UserController implements IController {
     }
   };
 
-  // protected DeleteRelatedUser = async (id: string): Promise<any> => {
-  //   // roleuser
-  //   try {
-  //     await RoleUserModel.deleteMany({
-  //       user: new ObjectId(id),
-  //     });
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  //   // End
+  protected DeleteRelatedUser = async (id: string): Promise<any> => {
+    // roleuser
+    try {
+      await RoleUserModel.deleteMany({
+        user: new ObjectId(id),
+      });
+    } catch (error) {
+      throw error;
+    }
+    // End
 
-  //   // Permission
-  //   try {
-  //     await PermissionModel.deleteMany({
-  //       user: new ObjectId(id),
-  //     });
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  //   // End
-  // };
+    // Permission
+    try {
+      await PermissionModel.deleteMany({
+        user: new ObjectId(id),
+      });
+    } catch (error) {
+      throw error;
+    }
+    // End
+  };
 }
 
 export default new UserController();

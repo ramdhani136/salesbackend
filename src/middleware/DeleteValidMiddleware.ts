@@ -33,14 +33,14 @@ const CheckData = async (
     if (data) {
       res.status(400).json({
         status: 404,
-        data: `Error , Data terelasi dengan data ${doc}`,
+        msg: `Error , Data terelasi dengan data ${doc}`,
       });
       return true;
     }
   } else {
     res.status(400).json({
       status: 404,
-      data: `filters harus diisi!`,
+      msg: `filters harus diisi!`,
     });
     return true;
   }
@@ -99,7 +99,7 @@ const DeletedValidMiddleware = async (
         break;
     }
   } catch (error) {
-    return res.status(404).json({ status: 404, data: error });
+    return res.status(404).json({ status: 404, msg: error });
   }
 };
 

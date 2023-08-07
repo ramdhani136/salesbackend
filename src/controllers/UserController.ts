@@ -229,11 +229,11 @@ class UserController implements IController {
       // push history
       await HistoryController.pushHistory({
         document: {
-          _id: req.userId,
+          _id: users._id,
           name: req.user,
           type: "user",
         },
-        message: `${req.user} membuat user baru ${users.name}`,
+        message: `membuat user baru ${users.name}`,
         user: req.userId,
       });
       // End

@@ -42,7 +42,7 @@ const User = new mongoose.Schema(
     workflowState: {
       type: String,
       required: true,
-      default: "Draft",
+      default: "Disabled",
       index: 1,
     },
   },

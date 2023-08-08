@@ -19,6 +19,7 @@ const RoleListModel = new mongoose.Schema(
         "visit",
         "callsheet",
         "contact",
+        "config",
         "namingseries",
         "usergroup",
         "usergrouplist",

@@ -34,7 +34,7 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs";
 import { ISearch } from "../utils/FilterQuery";
-import CustomerController from "./CustomerController";
+
 import { GetNameLocation } from "../utils/GetNameLocation";
 import CallsheetController from "./CallsheetController";
 import { getDistance } from "geolib";

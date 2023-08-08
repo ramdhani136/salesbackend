@@ -504,6 +504,7 @@ class CustomerGroupController implements IController {
               name: 1,
               branch: 1,
             },
+            desc:1
           },
         },
       ];

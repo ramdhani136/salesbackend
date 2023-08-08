@@ -79,6 +79,8 @@ class CustomerGroupController implements IController {
             "branch._id",
             "createdBy.name",
             "createdBy._id",
+            "status",
+            "workflowState",
             "updatedAt",
           ];
       const order_by: any = req.query.order_by

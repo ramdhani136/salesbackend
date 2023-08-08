@@ -579,6 +579,8 @@ class CustomerGroupController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
+    
+
     // tidak boleh di edit
     if (req.body.createdBy) {
       return res.status(404).json({
@@ -658,6 +660,8 @@ class CustomerGroupController implements IController {
           _id: new ObjectId(req.body.parent),
           name: cekParent.name,
         };
+
+        
       }
       // End
 

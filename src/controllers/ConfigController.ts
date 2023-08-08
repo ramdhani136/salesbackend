@@ -18,7 +18,10 @@ class ConfigController {
 
   update = async (req: Request | any, res: Response): Promise<any> => {
     try {
-      const update = await ConfigModel.updateOne({}, req.body);
+      const update = await ConfigModel.findByIdAndUpdate(
+        req.params.id,
+        req.body
+      );
       res.status(200).json({ status: true, data: update });
     } catch (error) {
       res.status(400).json({ status: true, msg: error });

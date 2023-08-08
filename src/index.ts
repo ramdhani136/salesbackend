@@ -416,7 +416,7 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
-    this.app.use("/config", ConfigRoutes);
+    this.app.use("/config",AuthMiddleware, RoleMiddleware, ConfigRoutes);
     this.app.use("/erp", AuthMiddleware, RoleMiddleware, ErpDataRoutes);
     this.app.use("/branch", AuthMiddleware, RoleMiddleware, BranchRoutes);
     this.app.use(

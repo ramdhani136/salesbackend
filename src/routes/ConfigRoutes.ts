@@ -5,7 +5,7 @@ import RouteBase from "./RouteBase";
 class ConfigRoutes extends RouteBase {
   routes(): void {
     this.router.get("/", Controller.show);
-    this.router.put("/", Controller.update);
+    this.router.put("/:id", Controller.update);
   }
 }
 

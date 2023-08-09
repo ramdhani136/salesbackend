@@ -4,7 +4,12 @@ import { IStateFilter } from "../Interfaces";
 import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { BranchModel, CustomerGroupModel as Db, History, PermissionModel } from "../models";
+import {
+  BranchModel,
+  CustomerGroupModel as Db,
+  History,
+  PermissionModel,
+} from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -82,7 +87,7 @@ class CustomerGroupController implements IController {
             "status",
             "workflowState",
             "updatedAt",
-            "desc"
+            "desc",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -327,27 +332,34 @@ class CustomerGroupController implements IController {
       // End
 
       // Cek Parent
-      if (req.body.parent) {
-        const cekParent: any = await Db.findOne({
-          _id: new ObjectId(req.body.parent),
-        });
+      if (req.body.parent !== undefined) {
+        if (req.body.parent === "" || req.body.parent === null) {
+          req.body.parent = {
+            _id: null,
+            name: null,
+          };
+        } else {
+          const cekParent: any = await Db.findOne({
+            _id: new ObjectId(req.body.parent),
+          });
 
-        if (!cekParent) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
+          if (!cekParent) {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
+          }
+
+          if (cekParent.status != 1) {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, parent tidak aktif!" });
+          }
+
+          req.body.parent = {
+            _id: new ObjectId(req.body.parent),
+            name: cekParent.name,
+          };
         }
-
-        if (cekParent.status != 1) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak aktif!" });
-        }
-
-        req.body.parent = {
-          _id: new ObjectId(req.body.parent),
-          name: cekParent.name,
-        };
       }
       // End
 
@@ -504,7 +516,7 @@ class CustomerGroupController implements IController {
               name: 1,
               branch: 1,
             },
-            desc:1
+            desc: 1,
           },
         },
       ];
@@ -579,8 +591,6 @@ class CustomerGroupController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<Response> => {
-    
-
     // tidak boleh di edit
     if (req.body.createdBy) {
       return res.status(404).json({
@@ -639,29 +649,35 @@ class CustomerGroupController implements IController {
       }
 
       // Cek Parent
-      if (req.body.parent) {
-        const cekParent: any = await Db.findOne({
-          _id: new ObjectId(req.body.parent),
-        });
+      if (req.body.parent !== undefined) {
+        console.log(req.body.parent);
+        if (req.body.parent === "" || req.body.parent === null) {
+          req.body.parent = {
+            _id: null,
+            name: null,
+          };
+        } else {
+          const cekParent: any = await Db.findOne({
+            _id: new ObjectId(req.body.parent),
+          });
 
-        if (!cekParent) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
+          if (!cekParent) {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, parent tidak ditemukan!" });
+          }
+
+          if (cekParent.status != 1) {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, parent tidak aktif!" });
+          }
+
+          req.body.parent = {
+            _id: new ObjectId(req.body.parent),
+            name: cekParent.name,
+          };
         }
-
-        if (cekParent.status != 1) {
-          return res
-            .status(400)
-            .json({ status: 400, msg: "Error, parent tidak aktif!" });
-        }
-
-        req.body.parent = {
-          _id: new ObjectId(req.body.parent),
-          name: cekParent.name,
-        };
-
-        
       }
       // End
 
@@ -772,26 +788,26 @@ class CustomerGroupController implements IController {
         });
       }
 
-        // Cek apakah digunakan di permission data
-        const permission = await PermissionModel.findOne(
-          {
-            $and: [
-              { allow: "customergroup" },
-              {
-                value: new ObjectId(req.params.id),
-              },
-            ],
-          },
-          { _id: 1 }
-        );
-  
-        if (permission) {
-          return res.status(404).json({
-            status: 404,
-            msg: "Customer Group ini sudah digunakan oleh data permission!",
-          });
-        }
-        // End
+      // Cek apakah digunakan di permission data
+      const permission = await PermissionModel.findOne(
+        {
+          $and: [
+            { allow: "customergroup" },
+            {
+              value: new ObjectId(req.params.id),
+            },
+          ],
+        },
+        { _id: 1 }
+      );
+
+      if (permission) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Customer Group ini sudah digunakan oleh data permission!",
+        });
+      }
+      // End
 
       // if (getData.status === "1") {
       //   return res

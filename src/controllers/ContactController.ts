@@ -468,7 +468,7 @@ class ContactController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan kontak ${response.name} pada customer ${response.customer.name} `,
+        message: `menambahkan kontak ${response.name} pada customer ${response.customer.name} `,
         user: req.userId,
       });
       // End

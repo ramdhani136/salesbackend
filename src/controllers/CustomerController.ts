@@ -5,6 +5,7 @@ import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  BranchModel,
   ConfigModel,
   ContactModel,
   CustomerGroupModel,
@@ -629,13 +630,7 @@ class CustomerController implements IController {
         msg: "Error, createdby tidak dapat dirubah",
       });
     }
-    // End
-    if (req.body.branch) {
-      return res.status(404).json({
-        status: 404,
-        msg: "Error, tidak dapat merubah branch!",
-      });
-    }
+    // // End
 
     if (req.body.lat && req.body.lng) {
       req.body.location = {
@@ -668,6 +663,25 @@ class CustomerController implements IController {
           });
         }
 
+        if (req.body.branch) {
+          const cekBranch = await BranchModel.findById(req.body.branch, [
+            "_id",
+            "status",
+          ]);
+          if (!cekBranch) {
+            return res.status(404).json({
+              status: 404,
+              msg: "Branch tidak ditemukan!",
+            });
+          }
+          if (cekBranch.status !== "1") {
+            return res.status(400).json({
+              status: 400,
+              msg: "Branch tidak aktif!",
+            });
+          }
+        }
+
         //Mengecek jika Customer Group dirubah
         if (req.body.customerGroup) {
           if (typeof req.body.customerGroup !== "string") {
@@ -677,9 +691,21 @@ class CustomerController implements IController {
             });
           }
 
-          const CekCG: any = await CustomerGroupModel.findOne({
-            $and: [{ _id: req.body.customerGroup }],
-          }).populate("branch", "name");
+          const CekCG: any = await CustomerGroupModel.findOne(
+            {
+              $and: [
+                { _id: req.body.customerGroup },
+                {
+                  branch: {
+                    $in: req.body.branch
+                      ? [new ObjectId(req.body.branch)]
+                      : [new ObjectId(result.branch)],
+                  },
+                },
+              ],
+            },
+            ["_id","status"]
+          );
 
           if (!CekCG) {
             return res.status(404).json({
@@ -687,15 +713,13 @@ class CustomerController implements IController {
               msg: "Error, customerGroup tidak ditemukan!",
             });
           }
-
+         
           if (CekCG.status != 1) {
             return res.status(404).json({
               status: 404,
               msg: "Error, customerGroup tidak aktif!",
             });
           }
-
-          req.body.branch = CekCG.branch._id;
 
           // End
         }

@@ -6,6 +6,7 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   ConfigModel,
+  ContactModel,
   CustomerGroupModel,
   CustomerModel,
   CustomerModel as Db,
@@ -115,7 +116,7 @@ class CustomerController implements IController {
             "distance",
             "img",
             "status",
-            "workflowState"
+            "workflowState",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -374,7 +375,6 @@ class CustomerController implements IController {
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
-
 
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);
@@ -865,6 +865,10 @@ class CustomerController implements IController {
         );
       }
       const result = await Db.deleteOne({ _id: req.params.id });
+
+      await ContactModel.deleteMany({
+        customer: new ObjectId(req.params.id),
+      });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
     } catch (error) {

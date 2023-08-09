@@ -792,6 +792,11 @@ class CustomerController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
+          if (req.body.unsetLocation === "true") {
+            req.body["$unset"] = {
+              location: "",
+            };
+          }
           await Db.updateOne({ _id: req.params.id }, req.body).populate(
             "createdBy",
             "name"

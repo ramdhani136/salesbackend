@@ -45,6 +45,12 @@ class CustomerGroupController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Status",
+        name: "status",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         alias: "CreatedBy",
         name: "createdBy._id",
         operator: ["=", "!="],

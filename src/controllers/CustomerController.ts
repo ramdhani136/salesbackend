@@ -410,17 +410,6 @@ class CustomerController implements IController {
         .json({ status: 400, msg: "Error, name wajib diisi!" });
     }
 
-    if (!req.body.customerGroup) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, customerGroup wajib diisi!" });
-    }
-    if (!req.body.branch) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, branch wajib diisi!" });
-    }
-
     if (req.body.lat && req.body.lng) {
       req.body.location = {
         type: "Point",
@@ -429,6 +418,35 @@ class CustomerController implements IController {
     }
 
     try {
+      if (!req.body.branch) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, branch wajib diisi!" });
+      }
+
+      const cekBranch = await BranchModel.findById(req.body.branch, [
+        "_id",
+        "status",
+      ]);
+      if (!cekBranch) {
+        return res.status(404).json({
+          status: 404,
+          msg: "Branch tidak ditemukan!",
+        });
+      }
+      if (cekBranch.status !== "1") {
+        return res.status(400).json({
+          status: 400,
+          msg: "Branch tidak aktif!",
+        });
+      }
+
+      if (!req.body.customerGroup) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, customerGroup wajib diisi!" });
+      }
+
       //Mengecek Customer Group
       const CekCG: any = await CustomerGroupModel.findOne({
         $and: [
@@ -704,7 +722,7 @@ class CustomerController implements IController {
                 },
               ],
             },
-            ["_id","status"]
+            ["_id", "status"]
           );
 
           if (!CekCG) {
@@ -713,7 +731,7 @@ class CustomerController implements IController {
               msg: "Error, customerGroup tidak ditemukan!",
             });
           }
-         
+
           if (CekCG.status != 1) {
             return res.status(404).json({
               status: 404,

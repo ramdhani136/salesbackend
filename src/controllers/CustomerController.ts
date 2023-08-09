@@ -114,6 +114,8 @@ class CustomerController implements IController {
             "erpId",
             "distance",
             "img",
+            "status",
+            "workflowState"
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)

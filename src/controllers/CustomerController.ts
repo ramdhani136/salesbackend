@@ -47,6 +47,12 @@ class CustomerController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Status",
+        name: "status",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],

@@ -418,7 +418,11 @@ class CustomerController implements IController {
     }
 
     try {
-      if (!req.body.branch) {
+      if (
+        !req.body.branch ||
+        req.body.branch == "" ||
+        req.body.branch == "null"
+      ) {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, branch wajib diisi!" });
@@ -441,7 +445,11 @@ class CustomerController implements IController {
         });
       }
 
-      if (!req.body.customerGroup) {
+      if (
+        !req.body.customerGroup ||
+        req.body.customerGroup == "" ||
+        req.body.customerGroup == "null"
+      ) {
         return res
           .status(400)
           .json({ status: 400, msg: "Error, customerGroup wajib diisi!" });
@@ -682,6 +690,14 @@ class CustomerController implements IController {
         }
 
         if (req.body.branch) {
+          console.log(req.body.branch);
+          if (req.body.branch == "" || req.body.branch == "null") {
+            console.log("Ddddd");
+            return res.status(400).json({
+              status: 400,
+              msg: "Branch Wajib diisi!",
+            });
+          }
           const cekBranch = await BranchModel.findById(req.body.branch, [
             "_id",
             "status",
@@ -702,6 +718,16 @@ class CustomerController implements IController {
 
         //Mengecek jika Customer Group dirubah
         if (req.body.customerGroup) {
+          if (
+            req.body.customerGroup == "" ||
+            req.body.customerGroup == "null"
+          ) {
+            return res.status(400).json({
+              status: 400,
+              msg: "CustomerGroup Wajib diisi!",
+            });
+          }
+
           if (typeof req.body.customerGroup !== "string") {
             return res.status(404).json({
               status: 404,

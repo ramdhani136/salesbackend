@@ -36,6 +36,18 @@ class TagController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Status",
+        name: "status",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
+        alias: "Workflow State",
+        name: "workflowState",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+      },
+      {
         alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
@@ -56,7 +68,7 @@ class TagController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "updatedAt"];
+        : ["name", "updatedAt","status","workflowState"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -85,7 +97,7 @@ class TagController implements IController {
         .sort(order_by)
         .limit(limit)
         .skip(limit > 0 ? page * limit - limit : 0)
-        .populate("createdBy", "name");
+        .populate("createdBy", "name",);
 
       if (result.length > 0) {
         return res.status(200).json({

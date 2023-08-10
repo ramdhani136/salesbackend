@@ -145,7 +145,8 @@ class workflowStateController implements IController {
         "permission",
         "usergroup",
         "memo",
-        "tag"
+        "tag",
+        "topic"
       ];
 
       const cekDocType = doctype.find((item) => item == req.body.doc);

@@ -5,11 +5,6 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { TagModel as Db, History } from "../models";
-import { PermissionMiddleware } from "../middleware";
-import {
-  selPermissionAllow,
-  selPermissionType,
-} from "../middleware/PermissionMiddleware";
 
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";

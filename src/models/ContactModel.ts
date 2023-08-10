@@ -36,13 +36,13 @@ const ContactModel = new mongoose.Schema(
     status: {
       type: String,
       enum: ["0", "1", "2"],
-      default: "1",
+      default: "0",
       index: 1,
     },
     workflowState: {
       type: String,
       required: true,
-      default: "Submitted",
+      default: "Draft",
       index: 1,
     },
   },

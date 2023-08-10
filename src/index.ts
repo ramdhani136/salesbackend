@@ -457,8 +457,8 @@ class App {
     this.app.use("/roleuser", AuthMiddleware, RoleMiddleware, RoleUserRoutes);
     this.app.use("/tag", AuthMiddleware, RoleMiddleware, TagRoutes);
     this.app.use("/notes", AuthMiddleware, NotesRoutes);
-    this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
-    this.app.use("/callsheetnote", AuthMiddleware, CallsheetNoteRoutes);
+    // this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
+    // this.app.use("/callsheetnote", AuthMiddleware, CallsheetNoteRoutes);
     this.app.use("/memo", AuthMiddleware, RoleMiddleware, MemoRoutes);
 
     this.app.use(

@@ -1724,7 +1724,7 @@ class VistController implements IController {
             await NotesModel.updateMany(
               {
                 $and: [
-                  { "doc.type": "callsheet" },
+                  { "doc.type": "visit" },
                   { "doc._id": new ObjectId(req.params.id) },
                 ],
               },

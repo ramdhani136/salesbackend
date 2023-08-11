@@ -1718,6 +1718,24 @@ class VistController implements IController {
           },
         ]);
 
+        // Update note jika customer diganti
+        if (req.body.customer) {
+          if (req.body.customer !== `${result.customer._id}`) {
+            await NotesModel.updateMany(
+              {
+                $and: [
+                  { "doc.type": "callsheet" },
+                  { "doc._id": new ObjectId(req.params.id) },
+                ],
+              },
+              {
+                customer: new ObjectId(req.body.customer),
+              }
+            );
+          }
+        }
+        // End
+
         const getData = updateData[0];
 
         const resultUpdate: any = await Db.aggregate([

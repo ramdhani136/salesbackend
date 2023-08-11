@@ -1262,71 +1262,75 @@ class VistController implements IController {
 
         //Mengecek Customer
         if (req.body.customer) {
-          const cekCustomer: any = await CustomerModel.findOne(
-            {
-              $and: [{ _id: req.body.customer }],
-            },
-            ["name", "status", "customerGroup"]
-          );
+          if (req.body.customer !== `${result.customer._id}`) {
+            const cekCustomer: any = await CustomerModel.findOne(
+              {
+                $and: [{ _id: req.body.customer }],
+              },
+              ["name", "status", "customerGroup"]
+            );
 
-          if (!cekCustomer) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customer tidak ditemukan!",
-            });
-          }
+            if (!cekCustomer) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, customer tidak ditemukan!",
+              });
+            }
 
-          if (cekCustomer.status != 1) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customer tidak aktif!",
-            });
-          }
+            if (cekCustomer.status != 1) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, customer tidak aktif!",
+              });
+            }
 
-          req.body.customer = cekCustomer._id;
-          req.body.customerName = cekCustomer.name;
-
-          if (!req.body.contact) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, data kontak sebelumnya tidak tersedia untuk konsumen ini, Silahkan ubah data kontak!",
-            });
+            req.body.customer = cekCustomer._id;
+            if (!req.body.contact) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, data kontak sebelumnya tidak tersedia untuk konsumen ini, Silahkan ubah data kontak!",
+              });
+            }
           }
         }
         // End
 
         // Mengecek contact jika terdapat kontak untuk customer
         if (req.body.contact) {
-          const contact = await ContactModel.findOne(
-            {
-              $and: [
-                { _id: req.body.contact },
-                {
-                  customer: req.body.customer
-                    ? req.body.customer
-                    : result.customer._id,
-                },
-              ],
-            },
-            ["name", "phone", "status"]
-          );
+          if (req.body.contact !== `${result.contact._id}`) {
+            const contact = await ContactModel.findOne(
+              {
+                $and: [
+                  { _id: req.body.contact },
+                  {
+                    customer: req.body.customer
+                      ? req.body.customer
+                      : result.customer._id,
+                  },
+                ],
+              },
+              ["name", "phone", "status"]
+            );
 
-          if (!contact) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, kontak tidak ditemukan!",
-            });
-          }
+            if (!contact) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, kontak tidak ditemukan!",
+              });
+            }
 
-          if (contact.status !== "1") {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, kontak tidak aktif!",
-            });
+            if (contact.status !== "1") {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, kontak tidak aktif!",
+              });
+            }
+
+            // set contact
+            req.body.contact = contact._id;
           }
         }
         // End
-
         // Jika Checkout
         if (req.body.checkOutLat && req.body.checkOutLng) {
           if (!result.img && result.type === "outsite") {

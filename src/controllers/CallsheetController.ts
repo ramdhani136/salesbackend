@@ -1178,6 +1178,7 @@ class CallsheetController implements IController {
 
   update = async (req: Request | any, res: Response): Promise<any> => {
     // Validasi yang tidak boleh di rubah
+
     if (req.body.createdBy) {
       return res.status(404).json({
         status: 404,
@@ -1285,69 +1286,73 @@ class CallsheetController implements IController {
 
         //Mengecek Customer
         if (req.body.customer) {
-          const cekCustomer: any = await CustomerModel.findOne(
-            {
-              $and: [{ _id: req.body.customer }],
-            },
-            ["name", "status", "customerGroup"]
-          );
+          if (req.body.customer !== `${result.customer._id}`) {
+            const cekCustomer: any = await CustomerModel.findOne(
+              {
+                $and: [{ _id: req.body.customer }],
+              },
+              ["name", "status", "customerGroup"]
+            );
 
-          if (!cekCustomer) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customer tidak ditemukan!",
-            });
-          }
+            if (!cekCustomer) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, customer tidak ditemukan!",
+              });
+            }
 
-          if (cekCustomer.status != 1) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, customer tidak aktif!",
-            });
-          }
+            if (cekCustomer.status != 1) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, customer tidak aktif!",
+              });
+            }
 
-          req.body.customer = cekCustomer._id;
-          if (!req.boby.contact) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, data kontak sebelumnya tidak tersedia untuk konsumen ini, Silahkan ubah data kontak!",
-            });
+            req.body.customer = cekCustomer._id;
+            if (!req.body.contact) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, data kontak sebelumnya tidak tersedia untuk konsumen ini, Silahkan ubah data kontak!",
+              });
+            }
           }
         }
         // End
 
         // Mengecek contact jika terdapat kontak untuk customer
         if (req.body.contact) {
-          const contact = await ContactModel.findOne(
-            {
-              $and: [
-                { _id: req.body.contact },
-                {
-                  customer: req.body.customer
-                    ? req.body.customer
-                    : result.customer._id,
-                },
-              ],
-            },
-            ["name", "phone", "status"]
-          );
+          if (req.body.contact !== `${result.contact._id}`) {
+            const contact = await ContactModel.findOne(
+              {
+                $and: [
+                  { _id: req.body.contact },
+                  {
+                    customer: req.body.customer
+                      ? req.body.customer
+                      : result.customer._id,
+                  },
+                ],
+              },
+              ["name", "phone", "status"]
+            );
 
-          if (!contact) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, kontak tidak ditemukan!",
-            });
+            if (!contact) {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, kontak tidak ditemukan!",
+              });
+            }
+
+            if (contact.status !== "1") {
+              return res.status(404).json({
+                status: 404,
+                msg: "Error, kontak tidak aktif!",
+              });
+            }
+
+            // set contact
+            req.body.contact = contact._id;
           }
-
-          if (contact.status !== "1") {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, kontak tidak aktif!",
-            });
-          }
-
-          // set contact
-          req.body.contact = contact._id;
         }
         // End
 
@@ -1614,6 +1619,24 @@ class CallsheetController implements IController {
         } else {
           await Db.updateOne({ _id: req.params.id }, req.body);
         }
+
+        // Update note jika customer diganti
+        if (req.body.customer) {
+          if (req.body.customer !== `${result.customer._id}`) {
+            await NotesModel.updateMany(
+              {
+                $and: [
+                  { "doc.type": "callsheet" },
+                  { "doc._id": new ObjectId(req.params.id) },
+                ],
+              },
+              {
+                customer: new ObjectId(req.body.customer),
+              }
+            );
+          }
+        }
+        // End
 
         const getData: any = await Db.findOne({
           _id: req.params.id,

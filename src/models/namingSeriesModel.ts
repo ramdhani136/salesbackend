@@ -37,6 +37,12 @@ const NamingSeriesModel = new mongoose.Schema(
       default: "Draft",
       index: true,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "users",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,

@@ -27,6 +27,12 @@ class NamingSeriesController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Created By",
+        name: "createdBy",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
@@ -92,7 +98,7 @@ class NamingSeriesController implements IController {
             "createdAt",
             "updatedAt",
             "status",
-            "workflowState"
+            "workflowState",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -128,6 +134,7 @@ class NamingSeriesController implements IController {
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "_id",
         "branch",
+        "createdBy",
       ]);
       // End
 
@@ -168,6 +175,17 @@ class NamingSeriesController implements IController {
             foreignField: "_id",
             as: "branch",
           },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
         },
 
         {
@@ -319,6 +337,8 @@ class NamingSeriesController implements IController {
       }
       // End
 
+      req.body.createdBy = req.userId;
+
       const result = new Db(req.body);
       const response = await result.save();
 
@@ -433,7 +453,9 @@ class NamingSeriesController implements IController {
       // }
       const result: any = await Db.findOne({
         _id: req.params.id,
-      }).populate("branch", "name createdBy");
+      })
+        .populate("branch", "name createdBy")
+        .populate("createdBy", "name");
 
       if (!result) {
         return res

@@ -25,6 +25,12 @@ const NamingSeriesModel = new mongoose.Schema(
       required: true,
       index: 1,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "Users",
+      required: true,
+      index: 1,
+    },
     status: {
       type: String,
       enum: ["0", "1", "2"],
@@ -35,12 +41,6 @@ const NamingSeriesModel = new mongoose.Schema(
       type: String,
       required: true,
       default: "Draft",
-      index: true,
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "users",
-      required: true,
       index: true,
     },
   },

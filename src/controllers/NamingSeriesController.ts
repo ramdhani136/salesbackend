@@ -99,6 +99,7 @@ class NamingSeriesController implements IController {
             "updatedAt",
             "status",
             "workflowState",
+            "createdBy",
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -182,6 +183,11 @@ class NamingSeriesController implements IController {
             localField: "createdBy",
             foreignField: "_id",
             as: "createdBy",
+            pipeline: [
+              {
+                $project: { name: 1 },
+              },
+            ],
           },
         },
         {
@@ -451,11 +457,12 @@ class NamingSeriesController implements IController {
       //     workflow: buttonActions,
       //   });
       // }
+
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
-        .populate("branch", "name createdBy")
-        .populate("createdBy", "name");
+        .populate("createdBy", "name")
+        .populate("branch", "name createdBy");
 
       if (!result) {
         return res

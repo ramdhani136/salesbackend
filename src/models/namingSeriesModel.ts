@@ -21,7 +21,7 @@ const NamingSeriesModel = new mongoose.Schema(
     },
     doc: {
       type: String,
-      enum: ["visit", "callsheet", "schedule"],
+      enum: ["visit", "callsheet", "schedule","memo"],
       required: true,
       index: 1,
     },

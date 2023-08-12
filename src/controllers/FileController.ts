@@ -197,7 +197,7 @@ class TopicController {
 
       const result = await Db.aggregate(pipelineResult);
 
-      if (result.length > 0) {
+      // if (result.length > 0) {
         return res.status(200).json({
           status: 200,
           total: getAll,
@@ -207,11 +207,11 @@ class TopicController {
           data: result,
           filters: stateFilter,
         });
-      }
-      return res.status(400).json({
-        status: 404,
-        msg: "Data Not found!",
-      });
+      // }
+      // return res.status(400).json({
+      //   status: 404,
+      //   msg: "Data Not found!",
+      // });
     } catch (error: any) {
       return res.status(400).json({
         status: 400,

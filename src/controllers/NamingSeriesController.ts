@@ -40,6 +40,20 @@ class NamingSeriesController implements IController {
         typeOf: TypeOfState.String,
         isSort: true,
       },
+      {
+        alias: "Status",
+        name: "status",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
+        alias: "Worfklow State",
+        name: "workflowState",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
 
       {
         alias: "Branch",
@@ -77,6 +91,8 @@ class NamingSeriesController implements IController {
             "branch.name",
             "createdAt",
             "updatedAt",
+            "status",
+            "workflowState"
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -522,12 +538,12 @@ class NamingSeriesController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
-        if (req.body.id_workflow && req.body.id_state) {
+        if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
-              req.body.id_workflow,
+              redisName,
               req.userId,
-              req.body.id_state,
+              req.body.nextState,
               result.createdBy._id
             );
 

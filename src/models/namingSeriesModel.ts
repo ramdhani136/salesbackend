@@ -21,9 +21,21 @@ const NamingSeriesModel = new mongoose.Schema(
     },
     doc: {
       type: String,
-      enum: ["visit", "callsheet", "schedule","memo"],
+      enum: ["visit", "callsheet", "schedule", "memo"],
       required: true,
       index: 1,
+    },
+    status: {
+      type: String,
+      enum: ["0", "1", "2"],
+      default: "0",
+      index: true,
+    },
+    workflowState: {
+      type: String,
+      required: true,
+      default: "Draft",
+      index: true,
     },
   },
   {

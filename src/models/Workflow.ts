@@ -28,6 +28,7 @@ const Workflow = new mongoose.Schema(
         "topic",
         "notes",
         "tag",
+        "namingseries"
       ],
       index: true,
     },

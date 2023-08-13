@@ -62,6 +62,13 @@ class NotesController implements IController {
         isSort: true,
       },
       {
+        alias: "Result",
+        name: "result",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
         alias: "Customer",
         name: "customer",
         operator: ["=", "!="],
@@ -427,7 +434,7 @@ class NotesController implements IController {
         });
       }
       // End
-
+      
       const totalData = await Db.countDocuments({ $and: pipelineTotal });
       const getAll = totalData > 0 ? totalData : 0;
 

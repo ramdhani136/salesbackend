@@ -604,7 +604,7 @@ class ScheduleController implements IController {
         // End
 
         if (req.body.nextState) {
-          const checkedWorkflow =
+          const checkedWorkflow: any =
             await WorkflowController.permissionUpdateAction(
               redisName,
               req.userId,
@@ -613,6 +613,21 @@ class ScheduleController implements IController {
             );
 
           if (checkedWorkflow.status) {
+            if (result.status == "0" && checkedWorkflow.data.status == 1) {
+              // Cek apakah ada listschedulenya
+              const getList = await ScheduleListModel.findOne({
+                schedule: result._id,
+              });
+
+              if (!getList) {
+                return res.status(400).json({
+                  status: 400,
+                  msg: "Customer list wajib diisi minimal 1",
+                });
+              }
+              // End
+            }
+
             await Db.updateOne(
               { _id: req.params.id },
               checkedWorkflow.data

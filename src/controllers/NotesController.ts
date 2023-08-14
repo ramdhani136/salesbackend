@@ -470,6 +470,10 @@ class NotesController implements IController {
         throw "Topic wajib diisi!";
       }
 
+      if (!req.body.task) {
+        throw "Activity wajib diisi!";
+      }
+
       const topic = await TopicModel.findById(req.body.topic, [
         "_id",
         "status",
@@ -486,7 +490,7 @@ class NotesController implements IController {
       // End
 
       if (!req.body.result) {
-        throw "Result wajib diisi!";
+        throw "Feedback wajib diisi!";
       }
 
       if (!req.body.tags) {

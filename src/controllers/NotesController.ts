@@ -236,14 +236,15 @@ class NotesController implements IController {
 
       let pipelineResult: any = [
         {
+          $match: isFilter.data,
+        },
+        {
           $sort: order_by,
         },
         {
           $skip: limit > 0 ? page * limit - limit : 0,
         },
-        {
-          $match: isFilter.data,
-        },
+
         {
           $lookup: {
             from: "users",
@@ -423,7 +424,6 @@ class NotesController implements IController {
 
       // Menambahkan filter berdasarkan permission user
       if (userPermission.length > 0) {
-        console.log(userPermission);
         pipelineResult.unshift({
           $match: {
             createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
@@ -434,7 +434,7 @@ class NotesController implements IController {
         });
       }
       // End
-      
+
       const totalData = await Db.countDocuments({ $and: pipelineTotal });
       const getAll = totalData > 0 ? totalData : 0;
 

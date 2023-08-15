@@ -154,7 +154,7 @@ class FilterQuery {
       }
 
       if (notlike.length > 0) {
-        finalFilter = [...notlike, ...finalFilter];
+        finalFilter = [...notlike,...finalFilter, ];
       }
     }
 

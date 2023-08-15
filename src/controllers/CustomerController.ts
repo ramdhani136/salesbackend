@@ -184,224 +184,224 @@ class CustomerController implements IController {
       );
       // End
 
-      return res.send(isFilter.data);
-      // let pipelineTotal: any = [
-      //   {
-      //     $match: isFilter.data,
-      //   },
-      //   {
-      //     $project: { _id: 1, createdBy: 1, customerGroup: 1 },
-      //   },
-      //   {
-      //     $count: "total_orders",
-      //   },
-      // ];
+    
+      let pipelineTotal: any = [
+        {
+          $match: isFilter.data,
+        },
+        {
+          $project: { _id: 1, createdBy: 1, customerGroup: 1 },
+        },
+        {
+          $count: "total_orders",
+        },
+      ];
 
-      // let pipelineResult: any = [
-      //   {
-      //     $match: isFilter.data,
-      //   },
-      //   {
-      //     $skip: limit > 0 ? page * limit - limit : 0,
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "users",
-      //       localField: "createdBy",
-      //       foreignField: "_id",
-      //       as: "createdBy",
-      //     },
-      //   },
-      //   {
-      //     $unwind: "$createdBy",
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "customergroups",
-      //       localField: "customerGroup",
-      //       foreignField: "_id",
-      //       as: "customerGroup",
-      //     },
-      //   },
-      //   {
-      //     $unwind: "$customerGroup",
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "branches",
-      //       localField: "branch",
-      //       foreignField: "_id",
-      //       as: "branch",
-      //     },
-      //   },
-      //   {
-      //     $unwind: "$branch",
-      //   },
+      let pipelineResult: any = [
+        {
+          $match: isFilter.data,
+        },
+        {
+          $skip: limit > 0 ? page * limit - limit : 0,
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "createdBy",
+            foreignField: "_id",
+            as: "createdBy",
+          },
+        },
+        {
+          $unwind: "$createdBy",
+        },
+        {
+          $lookup: {
+            from: "customergroups",
+            localField: "customerGroup",
+            foreignField: "_id",
+            as: "customerGroup",
+          },
+        },
+        {
+          $unwind: "$customerGroup",
+        },
+        {
+          $lookup: {
+            from: "branches",
+            localField: "branch",
+            foreignField: "_id",
+            as: "branch",
+          },
+        },
+        {
+          $unwind: "$branch",
+        },
 
-      //   {
-      //     $project: setField,
-      //   },
-      //   {
-      //     $sort: order_by,
-      //   },
-      // ];
+        {
+          $project: setField,
+        },
+        {
+          $sort: order_by,
+        },
+      ];
 
-      // // Menambahkan filter berdasarkan permission branch
-      // if (branchPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       branch: { $in: branchPermission },
-      //     },
-      //   });
+      // Menambahkan filter berdasarkan permission branch
+      if (branchPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            branch: { $in: branchPermission },
+          },
+        });
 
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       branch: { $in: branchPermission },
-      //     },
-      //   });
-      // }
-      // // End
+        pipelineResult.unshift({
+          $match: {
+            branch: { $in: branchPermission },
+          },
+        });
+      }
+      // End
 
-      // // Menambahkan filter berdasarkan permission branch
-      // if (groupPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       customerGroup: { $in: groupPermission },
-      //     },
-      //   });
+      // Menambahkan filter berdasarkan permission branch
+      if (groupPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            customerGroup: { $in: groupPermission },
+          },
+        });
 
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       customerGroup: { $in: groupPermission },
-      //     },
-      //   });
-      // }
-      // // End
+        pipelineResult.unshift({
+          $match: {
+            customerGroup: { $in: groupPermission },
+          },
+        });
+      }
+      // End
 
-      // // Menambahkan filter berdasarkan permission user
-      // if (userPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
+      // Menambahkan filter berdasarkan permission user
+      if (userPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
 
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
-      //     },
-      //   });
-      // }
-      // // End
+        pipelineResult.unshift({
+          $match: {
+            createdBy: { $in: userPermission.map((id) => new ObjectId(id)) },
+          },
+        });
+      }
+      // End
 
-      // // Menambahkan filter berdasarkan permission branch
-      // if (customerPermission.length > 0) {
-      //   pipelineTotal.unshift({
-      //     $match: {
-      //       _id: { $in: customerPermission },
-      //     },
-      //   });
+      // Menambahkan filter berdasarkan permission branch
+      if (customerPermission.length > 0) {
+        pipelineTotal.unshift({
+          $match: {
+            _id: { $in: customerPermission },
+          },
+        });
 
-      //   pipelineResult.unshift({
-      //     $match: {
-      //       _id: { $in: customerPermission },
-      //     },
-      //   });
-      // }
-      // // End
+        pipelineResult.unshift({
+          $match: {
+            _id: { $in: customerPermission },
+          },
+        });
+      }
+      // End
 
-      // // Menambahkan filter nearby gps
+      // Menambahkan filter nearby gps
 
-      // if (nearby.length === 3) {
-      //   const targetLatitude = parseFloat(`${nearby[0]}`);
-      //   const targetLongitude = parseFloat(`${nearby[1]}`);
-      //   let maxDistance = parseInt(`${nearby[2]}`);
+      if (nearby.length === 3) {
+        const targetLatitude = parseFloat(`${nearby[0]}`);
+        const targetLongitude = parseFloat(`${nearby[1]}`);
+        let maxDistance = parseInt(`${nearby[2]}`);
 
-      //   // Cek Default jarak
-      //   if (parseInt(`${nearby[2]}`) < 1) {
-      //     const config: any = await ConfigModel.findOne({}, { customer: 1 });
-      //     if (config) {
-      //       if (config?.customer.locationDistance !== 0) {
-      //         maxDistance = parseInt(`${config?.customer.locationDistance}`);
-      //       }
-      //     }
-      //   }
-      //   // End
+        // Cek Default jarak
+        if (parseInt(`${nearby[2]}`) < 1) {
+          const config: any = await ConfigModel.findOne({}, { customer: 1 });
+          if (config) {
+            if (config?.customer.locationDistance !== 0) {
+              maxDistance = parseInt(`${config?.customer.locationDistance}`);
+            }
+          }
+        }
+        // End
 
-      //   pipelineTotal.unshift({
-      //     $geoNear: {
-      //       near: {
-      //         type: "Point",
-      //         coordinates: [targetLongitude, targetLatitude],
-      //       },
-      //       distanceField: "distance",
-      //       maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
-      //       spherical: true,
-      //     },
-      //   });
-      //   pipelineResult.unshift({
-      //     $geoNear: {
-      //       near: {
-      //         type: "Point",
-      //         coordinates: [targetLongitude, targetLatitude],
-      //       },
-      //       distanceField: "distance",
-      //       maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
-      //       spherical: true,
-      //     },
-      //   });
-      // }
+        pipelineTotal.unshift({
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [targetLongitude, targetLatitude],
+            },
+            distanceField: "distance",
+            maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
+            spherical: true,
+          },
+        });
+        pipelineResult.unshift({
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [targetLongitude, targetLatitude],
+            },
+            distanceField: "distance",
+            maxDistance: maxDistance, // Mengubah jarak maksimum menjadi meter
+            spherical: true,
+          },
+        });
+      }
 
-      // // End
+      // End
 
-      // const filterGroup = filters.filter((item: string[]) =>
-      //   ["customerGroup"].includes(item[0])
-      // );
+      const filterGroup = filters.filter((item: string[]) =>
+        ["customerGroup"].includes(item[0])
+      );
 
-      // const isGroup = filterGroup.map((item: any) => new ObjectId(item[2]));
-      // if (isGroup.length > 0) {
-      //   const childGroup = await PermissionMiddleware.getCustomerChild(isGroup);
+      const isGroup = filterGroup.map((item: any) => new ObjectId(item[2]));
+      if (isGroup.length > 0) {
+        const childGroup = await PermissionMiddleware.getCustomerChild(isGroup);
 
-      //   pipelineResult.unshift({
-      //     $match: { customerGroup: { $in: childGroup } },
-      //   });
-      //   pipelineTotal.unshift({
-      //     $match: { customerGroup: { $in: childGroup } },
-      //   });
-      // }
+        pipelineResult.unshift({
+          $match: { customerGroup: { $in: childGroup } },
+        });
+        pipelineTotal.unshift({
+          $match: { customerGroup: { $in: childGroup } },
+        });
+      }
 
-      // // // Menambahkan limit ketika terdapat limit
-      // if (limit > 0) {
-      //   pipelineResult.splice(
-      //     nearby.length === 3 ? 3 : isGroup.length > 0 ? 3 : 2,
-      //     0,
-      //     {
-      //       $limit: limit,
-      //     }
-      //   );
-      // }
-      // // End
+      // // Menambahkan limit ketika terdapat limit
+      if (limit > 0) {
+        pipelineResult.splice(
+          nearby.length === 3 ? 3 : isGroup.length > 0 ? 3 : 2,
+          0,
+          {
+            $limit: limit,
+          }
+        );
+      }
+      // End
 
-      // const totalData = await Db.aggregate(pipelineTotal);
+      const totalData = await Db.aggregate(pipelineTotal);
 
-      // const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
-      // const result = await Db.aggregate(pipelineResult);
+      const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
+      const result = await Db.aggregate(pipelineResult);
 
-      // if (result.length > 0) {
-      //   return res.status(200).json({
-      //     status: 200,
-      //     total: getAll,
-      //     limit,
-      //     nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
-      //     hasMore: getAll > page * limit && limit > 0 ? true : false,
-      //     data: result,
-      //     filters: stateFilter,
-      //   });
-      // }
-      // return res.status(400).json({
-      //   status: 404,
-      //   msg: "No Data",
-      // });
+      if (result.length > 0) {
+        return res.status(200).json({
+          status: 200,
+          total: getAll,
+          limit,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
+          data: result,
+          filters: stateFilter,
+        });
+      }
+      return res.status(400).json({
+        status: 404,
+        msg: "No Data",
+      });
     } catch (error: any) {
       return res.status(400).json({
         status: 400,

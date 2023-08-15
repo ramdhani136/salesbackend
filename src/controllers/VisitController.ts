@@ -1595,7 +1595,7 @@ class VistController implements IController {
                           status: 1,
                           closing: {
                             date: new Date(),
-                            user: req.userId,
+                            user: new ObjectId(req.userId),
                             doc: {
                               _id: req.params.id,
                               name: result.name,

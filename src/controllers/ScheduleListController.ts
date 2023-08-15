@@ -150,7 +150,7 @@ class ScheduleListController implements IController {
             "createdAt",
             "updatedAt",
             "closing",
-            "status"
+            "status",
           ];
 
       const order_by: any = req.query.order_by
@@ -277,17 +277,25 @@ class ScheduleListController implements IController {
         {
           $unwind: "$schedule",
         },
-        // {
-        //   $lookup: {
-        //     from: "usergroups",
-        //     localField: "schedule.userGroup",
-        //     foreignField: "_id",
-        //     as: "userGroup",
-        //   },
-        // },
-        // {
-        //   $unwind: "$userGroup",
-        // },
+        {
+          $lookup: {
+            from: "users",
+            localField: "closing.user",
+            foreignField: "_id",
+            as: "closing.user",
+            pipeline: [
+              {
+                $project: { name: 1 },
+              },
+            ],
+          },
+        },
+        {
+          $unwind: {
+            path: "$closing.user",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
       ];
 
       //Menambahkan limit ketika terdapat limit
@@ -1037,7 +1045,6 @@ class ScheduleListController implements IController {
 
           req.body.closing.user = {
             _id: new ObjectId(req.userId),
-            name: req.user,
           };
           // End
         }

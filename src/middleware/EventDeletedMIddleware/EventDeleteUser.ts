@@ -99,6 +99,11 @@ export const EventDeleteUser = async (
       model: ScheduleListModel,
     },
     {
+      doc: "ScheduleList",
+      filters: ["closing.user._id", "closing.user"],
+      model: ScheduleListModel,
+    },
+    {
       doc: "Schedule",
       filters: ["createdBy"],
       model: ScheduleModel,

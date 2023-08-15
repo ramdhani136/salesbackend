@@ -31,9 +31,8 @@ const ScheduleListModel = new mongoose.Schema(
       user: {
         _id: {
           type: Schema.Types.ObjectId,
-          index: 1,
+          ref: "Users",
         },
-        name: { type: String, index: 1 },
       },
       doc: {
         _id: {

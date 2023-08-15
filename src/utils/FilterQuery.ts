@@ -120,9 +120,21 @@ class FilterQuery {
     }
 
     let finalFilter: any = [];
+    const notlike = allFilter.filter((nl: any) => {
+      return (
+        Object.keys(nl[Object.keys(nl)[0]])[0] === "$ne" ||
+        Object.keys(nl[Object.keys(nl)[0]])[0] === "$not"
+      );
+    });
+    const validMerger = allFilter.filter((nl: any) => {
+      return (
+        Object.keys(nl[Object.keys(nl)[0]])[0] !== "$ne" &&
+        Object.keys(nl[Object.keys(nl)[0]])[0] !== "$not"
+      );
+    });
     for (const item of unicFilter) {
       // DISINI
-      let ismerge = allFilter.filter((all) => Object.keys(all)[0] === item);
+      let ismerge = validMerger.filter((all) => Object.keys(all)[0] === item);
       let simpan;
 
       if (ismerge.length > 1) {
@@ -137,7 +149,13 @@ class FilterQuery {
         simpan = ismerge[0];
       }
 
-      finalFilter.push(simpan);
+      if (simpan) {
+        finalFilter.push(simpan);
+      }
+
+      if (notlike.length > 0) {
+        finalFilter = [...notlike, ...finalFilter];
+      }
     }
 
     let filterData: any =

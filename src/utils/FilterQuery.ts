@@ -121,6 +121,7 @@ class FilterQuery {
 
     let finalFilter: any = [];
     for (const item of unicFilter) {
+      // DISINI
       let ismerge = allFilter.filter((all) => Object.keys(all)[0] === item);
       let simpan;
 

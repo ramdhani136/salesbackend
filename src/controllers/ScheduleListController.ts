@@ -147,11 +147,10 @@ class ScheduleListController implements IController {
             "customerGroup.name",
             "branch._id",
             "branch.name",
-            // "userGroup._id",
-            // "userGroup.name",
             "createdAt",
             "updatedAt",
-            "closing"
+            "closing",
+            "status"
           ];
 
       const order_by: any = req.query.order_by

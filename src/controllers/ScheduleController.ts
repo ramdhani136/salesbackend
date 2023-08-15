@@ -400,7 +400,7 @@ class ScheduleController implements IController {
       //   });
       // }
 
-      const result: any = await Db.findOne({
+      let result: any = await Db.findOne({
         _id: req.params.id,
       })
         // .populate("userGroup", "name")
@@ -473,11 +473,21 @@ class ScheduleController implements IController {
       //   JSON.stringify(result)
       // );
 
+      const open = await ScheduleListModel.count({
+        $and: [{ schedule: new ObjectId(req.params.id) }, { status: "0" }],
+      });
+      const closed = await ScheduleListModel.count({
+        $and: [{ schedule: new ObjectId(req.params.id) }, { status: "1" }],
+      });
+
       return res.status(200).json({
         status: 200,
         data: result,
         history: getHistory,
         workflow: buttonActions,
+        open,
+        closed,
+        progress: parseFloat(`${(100 / (open + closed)) * closed}`).toFixed(2),
       });
     } catch (error) {
       return res.status(404).json({ status: 404, data: error });

@@ -139,6 +139,7 @@ class ScheduleListController implements IController {
             "_id",
             "schedule._id",
             "schedule.name",
+            "schedule.status",
             "customer._id",
             "customer.name",
             "createdBy._id",

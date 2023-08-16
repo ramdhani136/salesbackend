@@ -179,6 +179,25 @@ class ScheduleController implements IController {
         .skip(limit > 0 ? page * limit - limit : 0)
         .populate("createdBy", "name");
 
+      const scheduleWithPercentage: any = await Promise.all(
+        result.map(async (schedule: any) => {
+          const closed = await ScheduleListModel.countDocuments({
+            schedule: schedule._id,
+            status: "1",
+          });
+          const open = await ScheduleListModel.countDocuments({
+            schedule: schedule._id,
+            status: "0",
+          });
+
+          const percentage = ((100 / (open + closed)) * closed).toFixed(1);
+
+          schedule._doc.progress = percentage;
+
+          return { ...schedule._doc };
+        })
+      );
+
       if (result.length > 0) {
         return res.status(200).json({
           status: 200,
@@ -186,7 +205,7 @@ class ScheduleController implements IController {
           limit,
           nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
           hasMore: getAll > page * limit && limit > 0 ? true : false,
-          data: result,
+          data: scheduleWithPercentage,
           filters: stateFilter,
         });
       }

@@ -49,7 +49,7 @@ class ScheduleListController implements IController {
       {
         alias: "ScheduleStatus",
         name: "schedule.status",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!=",],
         typeOf: TypeOfState.String,
       },
       {

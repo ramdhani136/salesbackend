@@ -1297,7 +1297,7 @@ class VistController implements IController {
 
         // Mengecek contact jika terdapat kontak untuk customer
         if (req.body.contact) {
-          if (req.body.contact !== `${result.contact._id}`) {
+          if (req.body.contact !== `${result?.contact?._id}` || !result?.contact) {
             const contact = await ContactModel.findOne(
               {
                 $and: [
@@ -1311,7 +1311,7 @@ class VistController implements IController {
               },
               ["name", "phone", "status"]
             );
-
+            
             if (!contact) {
               return res.status(404).json({
                 status: 404,

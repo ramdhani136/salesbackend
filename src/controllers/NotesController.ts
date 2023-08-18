@@ -493,17 +493,17 @@ class NotesController implements IController {
         throw "Feedback wajib diisi!";
       }
 
-      if (!req.body.tags) {
-        throw "Error, tags wajib diisi!";
-      }
+      // if (!req.body.tags) {
+      //   throw "Error, tags wajib diisi!";
+      // }
 
-      if (typeof req.body.tags !== "object") {
-        throw "Error, tags harus berupa object!";
-      }
+      // if (typeof req.body.tags !== "object") {
+      //   throw "Error, tags harus berupa object!";
+      // }
 
-      if (req.body.tags.length === 0) {
-        throw "Error, tags harus diisi minimal 1 tag!";
-      }
+      // if (req.body.tags.length === 0) {
+      //   throw "Error, tags harus diisi minimal 1 tag!";
+      // }
 
       for (const item of req.body.tags) {
         let getTag: any = await TagModel.findById(new ObjectId(item), ["name"]);

@@ -40,13 +40,13 @@ const NotesModel = new mongoose.Schema(
           index: 1,
         },
       ],
-      required: true,
-      validate: {
-        validator: function (arr: any) {
-          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
-        },
-        message: "Array harus diisi setidaknya dengan satu tag.",
-      },
+      // required: true,
+      // validate: {
+      //   validator: function (arr: any) {
+      //     return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
+      //   },
+      //   message: "Array harus diisi setidaknya dengan satu tag.",
+      // },
     },
     result: {
       type: String,

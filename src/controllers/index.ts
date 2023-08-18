@@ -31,6 +31,7 @@ import ConfigController from "./ConfigController";
 import TopicController from "./TopicController";
 import FileController from "./FileController";
 import NotesController from "./NotesController";
+import ReportController from "./ReportController";
 
 export {
   UserController,
@@ -65,5 +66,6 @@ export {
   ConfigController,
   TopicController,
   FileController,
-  NotesController
+  NotesController,
+  ReportController,
 };

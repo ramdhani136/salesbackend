@@ -44,6 +44,7 @@ import {
   TopicRoutes,
   FileRoutes,
   NotesRoutes,
+  ReportRoutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -298,14 +299,17 @@ class App {
       helmet({
         contentSecurityPolicy: {
           directives: {
-            scriptSrc: ["'self'",  'www.google.com www.gstatic.com',"https://*.statcounter.com", "'unsafe-inline'"], 
-            frameSrc: ["'self'", "www.google.com", "https://*.statcounter.com"], 
-            connectSrc: ["'self'", 'https://*.statcounter.com'],
+            scriptSrc: [
+              "'self'",
+              "www.google.com www.gstatic.com",
+              "https://*.statcounter.com",
+              "'unsafe-inline'",
+            ],
+            frameSrc: ["'self'", "www.google.com", "https://*.statcounter.com"],
+            connectSrc: ["'self'", "https://*.statcounter.com"],
           },
-          
-    
         },
-          
+
         crossOriginResourcePolicy: { policy: "cross-origin" },
         crossOriginEmbedderPolicy: false,
       })
@@ -417,7 +421,7 @@ class App {
 
   protected routes(): void {
     this.app.use("/users", UserRoutes);
-    this.app.use("/config",AuthMiddleware, RoleMiddleware, ConfigRoutes);
+    this.app.use("/config", AuthMiddleware, RoleMiddleware, ConfigRoutes);
     this.app.use("/erp", AuthMiddleware, RoleMiddleware, ErpDataRoutes);
     this.app.use("/branch", AuthMiddleware, RoleMiddleware, BranchRoutes);
     this.app.use(
@@ -461,6 +465,7 @@ class App {
     // this.app.use("/visitnote", AuthMiddleware, VisitNoteRoutes);
     // this.app.use("/callsheetnote", AuthMiddleware, CallsheetNoteRoutes);
     this.app.use("/memo", AuthMiddleware, RoleMiddleware, MemoRoutes);
+    this.app.use("/report", AuthMiddleware, ReportRoutes);
 
     this.app.use(
       "/workflowstate",

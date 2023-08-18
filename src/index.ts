@@ -66,6 +66,7 @@ const corsOptions = {
   origin: [
     "*",
     "http://localhost:5173",
+    "http://localhost:4173",
     "http://192.168.100.247:5173",
     "http://localhost",
   ],

@@ -14,6 +14,12 @@ const WorkflowAction = new mongoose.Schema(
       index: true,
       ref: "Users",
     },
+    status: {
+      type: String,
+      default: "0",
+      enum: ["0", "1"],
+      index: true,
+    },
   },
   {
     timestamps: true,

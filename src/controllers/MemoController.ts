@@ -871,13 +871,13 @@ class MemoController implements IController {
       });
 
       if (result) {
-        let update: any = {
-          display: req.body.display,
-          activeDate: req.body.activeDate,
-          closingDate: req.body.closingDate,
-          status: req.body.status,
-          workflowState: req.body.workflowState,
-        };
+        // let update: any = {
+        //   display: req.body.display,
+        //   activeDate: req.body.activeDate,
+        //   closingDate: req.body.closingDate,
+        //   status: req.body.status,
+        //   workflowState: req.body.workflowState,
+        // };
 
         // Jika display terdapat dashboard maka gambar wajib diupload
 
@@ -904,9 +904,9 @@ class MemoController implements IController {
         }
         // End
 
-        if (req.body.notes) {
-          update.notes = req.body.notes;
-        }
+        // if (req.body.notes) {
+        //   update.notes = req.body.notes;
+        // }
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -924,7 +924,8 @@ class MemoController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-          await Db.updateOne({ _id: req.params.id }, update);
+
+          await Db.updateOne({ _id: req.params.id }, req.body);
         }
 
         const getData: any = await Db.findOne({

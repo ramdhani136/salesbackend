@@ -537,6 +537,28 @@ class ScheduleController implements IController {
         .populate("createdBy", "name");
 
       if (result) {
+
+        // if (!req.body.type && !result.type) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, type wajib diisi!" });
+        // }
+        // if (!req.body.notes) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, notes wajib diisi!" });
+        // }
+    
+        // if (!req.body.activeDate) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
+        // }
+        // if (!req.body.closingDate) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
+        // }
         // Cek Permission user
 
         const cekPermission = await cekValidPermission(

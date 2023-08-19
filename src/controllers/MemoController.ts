@@ -871,6 +871,31 @@ class MemoController implements IController {
       });
 
       if (result) {
+
+
+        // if (!req.body.title && result.title) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, title wajib diisi!" });
+        // }
+        // if (!req.body.notes && result.notes) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, notes wajib diisi!" });
+        // }
+    
+        // if (!req.body.activeDate && result.activeDate) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
+        // }
+        // if (!req.body.closingDate && result) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
+        // }
+    
+
         // let update: any = {
         //   display: req.body.display,
         //   activeDate: req.body.activeDate,

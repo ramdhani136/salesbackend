@@ -263,7 +263,7 @@ class BranchController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     if (!req.body.name) {
-      return res.status(400).json({ status: 400, msg: "name Required!" });
+      return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
     }
     req.body.createdBy = req.userId;
 
@@ -462,6 +462,12 @@ class BranchController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
+        // if (!req.body.name && !result.name) {
+        //   return res
+        //     .status(400)
+        //     .json({ status: 400, msg: "Nama wajib diisi!" });
+        // }
+
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(

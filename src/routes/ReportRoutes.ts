@@ -6,7 +6,7 @@ class ReportRoutes extends RouteBase {
   routes(): void {
     this.router.get("/countedocperuser", Controller.countPerUser);
     this.router.get("/counterdoc", Controller.counterDoc);
-
+    this.router.get("/erp/:doc", Controller.erpReport);
   }
 }
 

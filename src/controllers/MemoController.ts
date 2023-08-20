@@ -15,6 +15,7 @@ import {
   MemoModel as Db,
   History,
   UserGroupListModel,
+  UserGroupModel,
   namingSeriesModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
@@ -337,51 +338,133 @@ class MemoController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (
-      !Array.isArray(req.body.display) ||
-      req.body.display.some(
-        (tag: any) =>
-          !["visit", "callsheet", "dashboard", "alert"].includes(tag)
-      )
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Display harus array dengan data yang ditentukan!." });
-    }
-
-    // Jika display terdapat dashboard maka gambar wajib diupload
-    if (req.body.display.includes("dashboard") && !req.file) {
-      return res.status(400).json({
-        status: 400,
-        msg: "Wajib melampirkan gambar ketika memilih display dashboard",
-      });
-    }
-
-    // End
-
-    if (!req.body.title) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, title wajib diisi!" });
-    }
-    if (!req.body.notes) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, notes wajib diisi!" });
-    }
-
-    if (!req.body.activeDate) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
-    }
-    if (!req.body.closingDate) {
-      return res
-        .status(400)
-        .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
-    }
-
     try {
+      req.body.display = JSON.parse(req.body.display);
+
+      if (
+        !Array.isArray(req.body.display) ||
+        req.body.display.some(
+          (tag: any) =>
+            !["visit", "callsheet", "dashboard", "alert"].includes(tag)
+        )
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Display harus array dengan data yang ditentukan!." });
+      }
+
+      // Jika display terdapat dashboard maka gambar wajib diupload
+      if (req.body.display.includes("dashboard") && !req.file) {
+        return res.status(400).json({
+          status: 400,
+          msg: "Wajib melampirkan gambar ketika memilih display dashboard",
+        });
+      }
+
+      // Jika display terdapat m maka gambar wajib diupload
+      if (req.body.display.includes("alert") && !req.file) {
+        return res.status(400).json({
+          status: 400,
+          msg: "Wajib melampirkan gambar ketika memilih display modal",
+        });
+      }
+
+      // End
+
+      // Cek Branch
+      req.body.branch = JSON.parse(req.body.branch);
+      if (req.body.branch.length > 0) {
+        for (const branch of req.body.branch) {
+          const ada = await BranchModel.findById(branch, ["name", "status"]);
+
+          if (!ada) {
+            return res.status(400).json({
+              status: 400,
+              msg: "Branch tidak ditemukan",
+            });
+          }
+          if (ada.status !== "1") {
+            return res.status(400).json({
+              status: 400,
+              msg: `Branch ${ada.name} tidak aktif`,
+            });
+          }
+        }
+      }
+      // End
+
+      // Cek Group
+      req.body.customerGroup = JSON.parse(req.body.customerGroup);
+      if (req.body.customerGroup.length > 0) {
+        for (const customerGroup of req.body.customerGroup) {
+          const ada = await CustomerGroupModel.findById(customerGroup, [
+            "name",
+            "status",
+          ]);
+
+          if (!ada) {
+            return res.status(400).json({
+              status: 400,
+              msg: "Customer Group tidak ditemukan",
+            });
+          }
+          if (ada.status !== "1") {
+            return res.status(400).json({
+              status: 400,
+              msg: `Customer Group ${ada.name} tidak aktif`,
+            });
+          }
+        }
+      }
+      // End
+
+      // Cek Group
+      req.body.userGroup = JSON.parse(req.body.userGroup);
+      if (req.body.userGroup.length > 0) {
+        for (const userGroup of req.body.userGroup) {
+          const ada = await UserGroupModel.findById(userGroup, [
+            "name",
+            "status",
+          ]);
+
+          if (!ada) {
+            return res.status(400).json({
+              status: 400,
+              msg: "User Group tidak ditemukan",
+            });
+          }
+          if (ada.status !== "1") {
+            return res.status(400).json({
+              status: 400,
+              msg: `User Group ${ada.name} tidak aktif`,
+            });
+          }
+        }
+      }
+      // End
+
+      if (!req.body.title) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, title wajib diisi!" });
+      }
+      if (!req.body.notes) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, notes wajib diisi!" });
+      }
+
+      if (!req.body.activeDate || req.body.activeDate == "null") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
+      }
+      if (!req.body.closingDate || req.body.closingDate == "null") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
+      }
+
       // Set nama/nomor doc
       // Cek naming series
       if (!req.body.namingSeries) {
@@ -682,37 +765,6 @@ class MemoController implements IController {
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // End
-
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
-
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
-
       const result: any = await Db.findOne({
         _id: req.params.id,
       })
@@ -805,7 +857,7 @@ class MemoController implements IController {
         workflow: buttonActions,
       });
     } catch (error) {
-      return res.status(404).json({ status: 404, data: error });
+      return res.status(404).json({ status: 404, msg: error });
     }
   };
 
@@ -823,46 +875,12 @@ class MemoController implements IController {
         msg: "Error, Tidak dapat merubah nomor dokumen!",
       });
     }
-    // if (req.body.status) {
-    //   return res.status(404).json({
-    //     status: 404,
-    //     msg: "Error, status tidak dapat dirubah",
-    //   });
-    // }
+
     if (req.body.img) {
       return res.status(404).json({
         status: 404,
         msg: "Error, Tidak dapat merubah img name!",
       });
-    }
-    // if (req.body.workflowState) {
-    //   return res.status(404).json({
-    //     status: 404,
-    //     msg: "Error, workflowState tidak dapat dirubah",
-    //   });
-    // }
-    // End
-
-    if (req.body.display) {
-      if (
-        !Array.isArray(req.body.display) ||
-        req.body.display.some(
-          (tag: any) =>
-            !["visit", "callsheet", "dashboard", "alert"].includes(tag)
-        )
-      ) {
-        return res
-          .status(400)
-          .json({ error: "Display harus array dengan data yang ditentukan!." });
-      }
-    }
-
-    if (req.body.notes) {
-      if (req.body.notes === "") {
-        return res
-          .status(400)
-          .json({ status: 400, msg: "Error, notes wajib diisi!" });
-      }
     }
 
     try {
@@ -871,67 +889,158 @@ class MemoController implements IController {
       });
 
       if (result) {
-
-
-        // if (!req.body.title && result.title) {
-        //   return res
-        //     .status(400)
-        //     .json({ status: 400, msg: "Error, title wajib diisi!" });
-        // }
-        // if (!req.body.notes && result.notes) {
-        //   return res
-        //     .status(400)
-        //     .json({ status: 400, msg: "Error, notes wajib diisi!" });
-        // }
-    
-        // if (!req.body.activeDate && result.activeDate) {
-        //   return res
-        //     .status(400)
-        //     .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
-        // }
-        // if (!req.body.closingDate && result) {
-        //   return res
-        //     .status(400)
-        //     .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
-        // }
-    
-
-        // let update: any = {
-        //   display: req.body.display,
-        //   activeDate: req.body.activeDate,
-        //   closingDate: req.body.closingDate,
-        //   status: req.body.status,
-        //   workflowState: req.body.workflowState,
-        // };
-
-        // Jika display terdapat dashboard maka gambar wajib diupload
-
         if (req.body.display) {
+          req.body.display = JSON.parse(req.body.display);
+
+          if (
+            !Array.isArray(req.body.display) ||
+            req.body.display.some(
+              (tag: any) =>
+                !["visit", "callsheet", "dashboard", "alert"].includes(tag)
+            )
+          ) {
+            return res.status(400).json({
+              error: "Display harus array dengan data yang ditentukan!.",
+            });
+          }
+
+          // Jika display terdapat dashboard maka gambar wajib diupload
           if (
             req.body.display.includes("dashboard") &&
-            (req.file ? false : result.image ? false : true)
+            !req.file &&
+            !result.img
           ) {
             return res.status(400).json({
               status: 400,
               msg: "Wajib melampirkan gambar ketika memilih display dashboard",
             });
           }
-        } else {
-          if (
-            result.display.includes("dashboard") &&
-            (req.file ? false : result.image ? false : true)
-          ) {
+
+          // Jika display terdapat m maka gambar wajib diupload
+          if (req.body.display.includes("alert") && !req.file && !result.img) {
             return res.status(400).json({
               status: 400,
-              msg: "Wajib melampirkan gambar ketika memilih display dashboard",
+              msg: "Wajib melampirkan gambar ketika memilih display modal",
             });
+          }
+
+          // End
+        }
+
+        if (req.body.branch) {
+          // Cek Branch
+          req.body.branch = JSON.parse(req.body.branch);
+          if (req.body.branch.length > 0) {
+            for (const branch of req.body.branch) {
+              const ada = await BranchModel.findById(branch, [
+                "name",
+                "status",
+              ]);
+
+              if (!ada) {
+                return res.status(400).json({
+                  status: 400,
+                  msg: "Branch tidak ditemukan",
+                });
+              }
+              if (ada.status !== "1") {
+                return res.status(400).json({
+                  status: 400,
+                  msg: `Branch ${ada.name} tidak aktif`,
+                });
+              }
+            }
+          }
+          // End
+        }
+
+        if (req.body.customerGroup) {
+          // Cek Group
+          req.body.customerGroup = JSON.parse(req.body.customerGroup);
+          if (req.body.customerGroup.length > 0) {
+            for (const customerGroup of req.body.customerGroup) {
+              const ada = await CustomerGroupModel.findById(customerGroup, [
+                "name",
+                "status",
+              ]);
+
+              if (!ada) {
+                return res.status(400).json({
+                  status: 400,
+                  msg: "Customer Group tidak ditemukan",
+                });
+              }
+              if (ada.status !== "1") {
+                return res.status(400).json({
+                  status: 400,
+                  msg: `Customer Group ${ada.name} tidak aktif`,
+                });
+              }
+            }
+          }
+          // End
+        }
+
+        if (req.body.userGroup) {
+          // Cek Group
+          req.body.userGroup = JSON.parse(req.body.userGroup);
+          if (req.body.userGroup.length > 0) {
+            for (const userGroup of req.body.userGroup) {
+              const ada = await UserGroupModel.findById(userGroup, [
+                "name",
+                "status",
+              ]);
+
+              if (!ada) {
+                return res.status(400).json({
+                  status: 400,
+                  msg: "User Group tidak ditemukan",
+                });
+              }
+              if (ada.status !== "1") {
+                return res.status(400).json({
+                  status: 400,
+                  msg: `User Group ${ada.name} tidak aktif`,
+                });
+              }
+            }
+          }
+          // End
+        }
+
+        console.log(req.body);
+
+        if (req.body.title) {
+          if (req.body.title === "" || req.body.title === "null") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, title wajib diisi!" });
           }
         }
-        // End
 
-        // if (req.body.notes) {
-        //   update.notes = req.body.notes;
-        // }
+        if (req.body.notes) {
+          if (!req.body.notes || req.body.notes === "null") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, notes wajib diisi!" });
+          }
+        }
+
+        if (req.body.activeDate) {
+          if (req.body.activeDate === "" || req.body.activeDate == "null") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
+          }
+        }
+        if (req.body.closingDate) {
+          if (req.body.closingDate == "" || req.body.closingDate == "null") {
+            return res
+              .status(400)
+              .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
+          }
+        }
+
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(
@@ -949,7 +1058,6 @@ class MemoController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
-
           await Db.updateOne({ _id: req.params.id }, req.body);
         }
 
@@ -1010,7 +1118,7 @@ class MemoController implements IController {
           .json({ status: 404, msg: "Error update, Data tidak di temukan!" });
       }
     } catch (error: any) {
-      return res.status(404).json({ status: 404, data: error });
+      return res.status(404).json({ status: 404, msg: error });
     }
   };
 

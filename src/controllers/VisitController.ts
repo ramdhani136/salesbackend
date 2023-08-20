@@ -1415,7 +1415,7 @@ class VistController implements IController {
                 // End
 
                 // Cek Contact
-                if (!req.body.contact && !result.contact) {
+                if (!req.body.contact && !result?.contact) {
                   return res.status(400).json({
                     status: 400,
                     msg: `Gagal, wajib mengisi contact !`,

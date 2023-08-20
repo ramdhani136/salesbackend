@@ -1321,7 +1321,7 @@ class CallsheetController implements IController {
 
         // Mengecek contact jika terdapat kontak untuk customer
         if (req.body.contact) {
-          if (req.body.contact !== `${result.contact._id}`) {
+          if (req.body.contact !== `${result?.contact?._id}`) {
             const contact = await ContactModel.findOne(
               {
                 $and: [

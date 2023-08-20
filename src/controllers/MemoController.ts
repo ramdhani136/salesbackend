@@ -1008,7 +1008,7 @@ class MemoController implements IController {
           // End
         }
 
-        console.log(req.body);
+       
 
         if (req.body.title) {
           if (req.body.title === "" || req.body.title === "null") {

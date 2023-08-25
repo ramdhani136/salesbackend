@@ -20,12 +20,12 @@ const redisName = "branch";
 class BranchController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-      {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+      // {
+      //   alias: "Id",
+      //   name: "_id",
+      //   operator: ["=", "!="],
+      //   typeOf: TypeOfState.String,
+      // },
       {
         alias: "Name",
         name: "name",
@@ -51,6 +51,10 @@ class BranchController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { valueData: "0", valueInput: "Draft" },
+          { valueData: "1", valueInput: "Submitted" },
+        ],
       },
       {
         alias: "WorkflowState",

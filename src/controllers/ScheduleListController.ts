@@ -29,12 +29,6 @@ class ScheduleListController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
         alias: "Schedule",
         name: "schedule",
         operator: ["=", "!="],
@@ -49,8 +43,13 @@ class ScheduleListController implements IController {
       {
         alias: "ScheduleStatus",
         name: "schedule.status",
-        operator: ["=", "!=",],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        listData: [
+          { value: "0", name: "Draft" },
+          { value: "1", name: "Submitted" },
+          { value: "2", name: "Canceled" },
+        ],
       },
       {
         alias: "WorkflowState",

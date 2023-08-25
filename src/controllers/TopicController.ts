@@ -17,12 +17,6 @@ class TopicController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
         alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
@@ -65,6 +59,11 @@ class TopicController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "0", name: "Draft" },
+          { value: "1", name: "Submitted" },
+          { value: "2", name: "Canceled" },
+        ],
       },
       {
         alias: "WorkflowState",

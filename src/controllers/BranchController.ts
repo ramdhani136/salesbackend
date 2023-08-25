@@ -52,8 +52,8 @@ class BranchController implements IController {
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
-          { valueData: "0", valueInput: "Draft" },
-          { valueData: "1", valueInput: "Submitted" },
+          { value: "0", name: "Draft" },
+          { value: "1", name: "Submitted" },
         ],
       },
       {

@@ -5,9 +5,8 @@ export enum TypeOfState {
 }
 
 interface IInput {
-  valueData: any;
-  valueInput: String;
-  other?: any;
+  name: String;
+  value: any;
 }
 
 interface IStateFilter {

@@ -34,12 +34,6 @@ class ScheduleController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
         alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],
@@ -84,28 +78,28 @@ class ScheduleController implements IController {
       {
         alias: "ActiveDate",
         name: "activeDate",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "ClosingDate",
         name: "closingDate",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
@@ -543,7 +537,6 @@ class ScheduleController implements IController {
         .populate("createdBy", "name");
 
       if (result) {
-
         // if (!req.body.type && !result.type) {
         //   return res
         //     .status(400)
@@ -554,7 +547,7 @@ class ScheduleController implements IController {
         //     .status(400)
         //     .json({ status: 400, msg: "Error, notes wajib diisi!" });
         // }
-    
+
         // if (!req.body.activeDate) {
         //   return res
         //     .status(400)

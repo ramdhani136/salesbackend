@@ -21,37 +21,56 @@ const redisName = "permission";
 class PermissionController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-      {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+
       {
         alias: "Allow",
         name: "allow",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "Branch", value: "branch" },
+          { name: "User", value: "user" },
+          { name: "Customer", value: "customer" },
+          { name: "Customer Group", value: "customergroup" },
+          { name: "User Group", value: "usergroup" },
+        ],
       },
       {
         alias: "Doc",
         name: "doc",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "Branch", value: "branch" },
+          { name: "Visit", value: "visit" },
+          { name: "Callsheet", value: "callsheet" },
+          { name: "Customer Group", value: "customergroup" },
+          { name: "Customer", value: "customer" },
+          { name: "Role Profile", value: "roleprofile" },
+          { name: "Schedule", value: "schedule" },
+          { name: "Memo", value: "memo" },
+          { name: "Contact", value: "contact" },
+          { name: "Notes", value: "notes" },
+          { name: "User Group", value: "usergroup" },
+        ],
       },
       {
         alias: "Alldoc",
         name: "allDoc",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Value",
         name: "value",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!=",],
         typeOf: TypeOfState.String,
         isSort: true,
       },
@@ -72,9 +91,14 @@ class PermissionController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "0", name: "Draft" },
+          { value: "1", name: "Submitted" },
+          { value: "2", name: "Canceled" },
+        ],
       },
       {
         alias: "WorkflowState",
@@ -86,14 +110,14 @@ class PermissionController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

@@ -78,7 +78,7 @@ class MemoController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!=", ],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [

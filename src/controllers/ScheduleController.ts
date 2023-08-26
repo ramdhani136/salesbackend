@@ -43,9 +43,14 @@ class ScheduleController implements IController {
       {
         alias: "Type",
         name: "type",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "Visit", value: "visit" },
+          { name: "Callsheet", value: "callsheet" },
+          { name: "All", value: "all" },
+        ],
       },
 
       {
@@ -57,7 +62,7 @@ class ScheduleController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", ],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [

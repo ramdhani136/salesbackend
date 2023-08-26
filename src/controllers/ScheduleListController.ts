@@ -37,8 +37,13 @@ class ScheduleListController implements IController {
       {
         alias: "ScheduleType",
         name: "schedule.type",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        listData: [
+          { name: "Visit", value: "visit" },
+          { name: "Callsheet", value: "callsheet" },
+          { name: "All", value: "all" },
+        ],
       },
       {
         alias: "ScheduleStatus",
@@ -60,19 +65,19 @@ class ScheduleListController implements IController {
       {
         alias: "ActiveDate",
         name: "schedule.activeDate",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
         alias: "ClosingDate",
         name: "schedule.closingDate",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
         alias: "ScheduleCreatedAt",
         name: "schedule.createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       // {
@@ -102,13 +107,12 @@ class ScheduleListController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=",],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
           { value: "0", name: "Active" },
           { value: "1", name: "Closed" },
-
         ],
       },
       {
@@ -127,7 +131,7 @@ class ScheduleListController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

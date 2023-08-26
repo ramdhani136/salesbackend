@@ -22,12 +22,6 @@ class UserGroupListController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
         alias: "User",
         name: "user",
         operator: ["=", "!="],

@@ -22,12 +22,6 @@ class RoleUserController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias: "_Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
         alias: "RoleProfile",
         name: "roleprofile",
         operator: ["=", "!="],

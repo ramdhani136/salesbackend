@@ -54,9 +54,13 @@ class CallsheetController implements IController {
       {
         alias: "Type",
         name: "type",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "in", name: "In Coming Call" },
+          { value: "out", name: "Out Going Call" },
+        ],
       },
       {
         alias: "ScheduleList",
@@ -80,8 +84,12 @@ class CallsheetController implements IController {
       {
         alias: "CustomerType",
         name: "customer.type",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        listData: [
+          { value: "Company", name: "Company" },
+          { value: "Individual", name: "Individual" },
+        ],
       },
       {
         alias: "CustomerGroup",
@@ -104,7 +112,7 @@ class CallsheetController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
@@ -124,7 +132,7 @@ class CallsheetController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

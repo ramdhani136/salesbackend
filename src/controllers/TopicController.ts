@@ -40,12 +40,20 @@ class TopicController implements IController {
         name: "tags.allowTaggingItem",
         operator: ["=", "!="],
         typeOf: TypeOfState.Number,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "TaskActive",
         name: "taskActive",
         operator: ["=", "!="],
         typeOf: TypeOfState.Number,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "CreatedBy",
@@ -56,7 +64,7 @@ class TopicController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", ],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
@@ -75,14 +83,14 @@ class TopicController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

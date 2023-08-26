@@ -21,12 +21,6 @@ class RoleListController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
-      {
         alias: "RoleProfile",
         name: "roleprofile",
         operator: ["=", "!="],
@@ -51,77 +45,207 @@ class RoleListController implements IController {
       {
         alias: "Doc",
         name: "doc",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "Users", value: "users" },
+          { name: "Branch", value: "branch" },
+          {
+            name: "Permission",
+            value: "permission",
+          },
+          { name: "Customer", value: "customer" },
+          { name: "Customer Group", value: "customergroup" },
+          {
+            name: "Visit",
+            value: "visit",
+          },
+          {
+            name: "Callsheet",
+            value: "callsheet",
+          },
+          {
+            name: "Contact",
+            value: "contact",
+          },
+          {
+            name: "Config",
+            value: "config",
+          },
+          {
+            name: "Naming Series",
+            value: "namingseries",
+          },
+          {
+            name: "User Group",
+            value: "usergroup",
+          },
+          {
+            name: "User Group List",
+            value: "usergrouplist",
+          },
+          {
+            name: "Schedule",
+            value: "schedule",
+          },
+          {
+            name: "Schedule List",
+            value: "schedulelist",
+          },
+          {
+            name: "Role Profile",
+            value: "roleprofile",
+          },
+          {
+            name: "Role List",
+            value: "rolelist",
+          },
+          {
+            name: "Role User",
+            value: "roleuser",
+          },
+          {
+            name: "Tag",
+            value: "tag",
+          },
+          {
+            name: "Memo",
+            value: "memo",
+          },
+          {
+            name: "Erp",
+            value: "erp",
+          },
+          {
+            name: "Workflow State",
+            value: "workflowstate",
+          },
+          {
+            name: "Workflow Action",
+            value: "workflowaction",
+          },
+          {
+            name: "Workflow",
+            value: "workflow",
+          },
+          {
+            name: "Workflow Transition",
+            value: "workflowtransition",
+          },
+          {
+            name: "Workflow Changer",
+            value: "workflowchanger",
+          },
+          {
+            name: "Topic",
+            value: "topic",
+          },
+          {
+            name: "Notes",
+            value: "notes",
+          },
+        ],
       },
       {
         alias: "Create",
         name: "create",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Read",
         name: "read",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Update",
         name: "update",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Delete",
         name: "delete",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Submit",
         name: "submit",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Amend",
         name: "amend",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Export",
         name: "export",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "Report",
         name: "report",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { name: "0", value: 0 },
+          { name: "1", value: 1 },
+        ],
       },
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

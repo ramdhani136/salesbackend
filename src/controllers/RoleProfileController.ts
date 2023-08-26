@@ -21,12 +21,7 @@ const redisName = "roleprofile";
 class RoleProfileController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-      {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+    
       {
         alias: "Name",
         name: "name",

@@ -28,12 +28,6 @@ class HistoryController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
       {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
         alias: "User",
         name: "user.name",
         operator: ["=", "!=", "like", "notlike"],

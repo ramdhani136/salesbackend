@@ -77,12 +77,12 @@ class VistController implements IController {
         typeOf: TypeOfState.Date,
         isSort: true,
       },
-      {
-        alias: "ScheduleList",
-        name: "schedulelist",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+      // {
+      //   alias: "ScheduleList",
+      //   name: "schedulelist",
+      //   operator: ["=", "!="],
+      //   typeOf: TypeOfState.String,
+      // },
       {
         alias: "Contact",
         name: "contact",

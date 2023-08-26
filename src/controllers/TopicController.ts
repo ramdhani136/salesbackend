@@ -26,13 +26,13 @@ class TopicController implements IController {
       {
         alias: "TagsRestrict",
         name: "tags.restrict",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!=",],
         typeOf: TypeOfState.String,
       },
       {
         alias: "TagsMandatory",
         name: "tags.mandatory",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!=", ],
         typeOf: TypeOfState.String,
       },
       {

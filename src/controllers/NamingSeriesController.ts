@@ -53,7 +53,7 @@ class NamingSeriesController implements IController {
         ],
       },
       {
-        alias: "Worfklow State",
+        alias: "Workflow State",
         name: "workflowState",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,

@@ -330,7 +330,7 @@ class NotesController implements IController {
       //Menambahkan limit ketika terdapat limit
 
       if (limit > 0) {
-        pipelineResult.splice(2, 0, { $limit: limit });
+        pipelineResult.splice(3, 0, { $limit: limit });
       }
 
       //  Cek Customer group dan branch

@@ -94,13 +94,13 @@ class NotesController implements IController {
           {name:"Callsheet",value:"callsheet"},
         ]
       },
-      // {
-      //   alias: "Doc Id",
-      //   name: "doc._id",
-      //   operator: ["=", "!="],
-      //   typeOf: TypeOfState.String,
-      //   isSort: true,
-      // },
+      {
+        alias: "Doc Id",
+        name: "doc._id",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
       {
         alias: "Doc Name",
         name: "doc.name",

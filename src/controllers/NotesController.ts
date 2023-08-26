@@ -86,13 +86,13 @@ class NotesController implements IController {
       {
         alias: "Doc Type",
         name: "doc.type",
-        operator: ["=", "!=", ],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
-        listData:[
-          {name:"Visit",value:"visit"},
-          {name:"Callsheet",value:"callsheet"},
-        ]
+        listData: [
+          { name: "Visit", value: "visit" },
+          { name: "Callsheet", value: "callsheet" },
+        ],
       },
       {
         alias: "Doc Id",

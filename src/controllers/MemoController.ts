@@ -64,8 +64,14 @@ class MemoController implements IController {
       {
         alias: "Display",
         name: "display",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        listData: [
+          { name: "Visit", value: "visit" },
+          { name: "Callsheet", value: "callsheet" },
+          { name: "Dahsboard", value: "dashboard" },
+          { name: "Modal", value: "alert" },
+        ],
       },
 
       {
@@ -78,7 +84,7 @@ class MemoController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", ],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [

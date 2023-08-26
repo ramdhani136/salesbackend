@@ -91,6 +91,7 @@ class MemoController implements IController {
           { value: "0", name: "Draft" },
           { value: "1", name: "Submitted" },
           { value: "2", name: "Canceled" },
+          { value: "3", name: "Closed" },
         ],
       },
       {

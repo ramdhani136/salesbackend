@@ -130,6 +130,11 @@ class NotesController implements IController {
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "0", name: "Draft" },
+          { value: "1", name: "Submitted" },
+          { value: "2", name: "Canceled" },
+        ],
       },
       {
         alias: "WorkflowState",
@@ -141,14 +146,14 @@ class NotesController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

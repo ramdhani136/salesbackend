@@ -63,14 +63,14 @@ class CustomerGroupController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

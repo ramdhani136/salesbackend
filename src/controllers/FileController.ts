@@ -75,14 +75,14 @@ class TopicController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
@@ -198,15 +198,15 @@ class TopicController {
       const result = await Db.aggregate(pipelineResult);
 
       // if (result.length > 0) {
-        return res.status(200).json({
-          status: 200,
-          total: getAll,
-          limit,
-          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
-          hasMore: getAll > page * limit && limit > 0 ? true : false,
-          data: result,
-          filters: stateFilter,
-        });
+      return res.status(200).json({
+        status: 200,
+        total: getAll,
+        limit,
+        nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+        hasMore: getAll > page * limit && limit > 0 ? true : false,
+        data: result,
+        filters: stateFilter,
+      });
       // }
       // return res.status(400).json({
       //   status: 404,

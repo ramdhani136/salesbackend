@@ -17,12 +17,7 @@ const redisName = "workflowchanger";
 class WorkflowChangerController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-      {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+      
       {
         alias: "User",
         name: "user",
@@ -61,14 +56,14 @@ class WorkflowChangerController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", , ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=",  ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

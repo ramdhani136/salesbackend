@@ -43,9 +43,14 @@ class UserGroupController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "0", name: "Draft" },
+          { value: "1", name: "Submitted" },
+          { value: "2", name: "Canceled" },
+        ],
       },
       {
         alias: "WorkflowState",
@@ -57,14 +62,14 @@ class UserGroupController implements IController {
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=",">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

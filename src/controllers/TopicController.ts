@@ -56,7 +56,7 @@ class TopicController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!=", ],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
@@ -75,14 +75,14 @@ class TopicController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=",  ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=",  ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

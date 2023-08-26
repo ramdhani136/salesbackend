@@ -98,28 +98,28 @@ class MemoController implements IController {
       {
         alias: "ActiveDate",
         name: "activeDate",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "ClosingDate",
         name: "closingDate",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", , ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
@@ -1006,8 +1006,6 @@ class MemoController implements IController {
           }
           // End
         }
-
-       
 
         if (req.body.title) {
           if (req.body.title === "" || req.body.title === "null") {

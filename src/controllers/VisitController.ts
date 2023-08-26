@@ -54,22 +54,26 @@ class VistController implements IController {
       {
         alias: "Type",
         name: "type",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "insite", name: "In Site" },
+          { value: "outsite", name: "Out Site" },
+        ],
       },
 
       {
         alias: "CheckInAt",
         name: "checkIn.createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "ChecOutAt",
         name: "checkOut.createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
@@ -94,8 +98,12 @@ class VistController implements IController {
       {
         alias: "CustomerType",
         name: "customer.type",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
+        listData: [
+          { value: "Individual", name: "Individual" },
+          { value: "Company", name: "Company" },
+        ],
       },
       {
         alias: "CustomerGroup",
@@ -118,7 +126,7 @@ class VistController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
@@ -138,14 +146,14 @@ class VistController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
@@ -1296,7 +1304,10 @@ class VistController implements IController {
 
         // Mengecek contact jika terdapat kontak untuk customer
         if (req.body.contact) {
-          if (req.body.contact !== `${result?.contact?._id}` || !result?.contact) {
+          if (
+            req.body.contact !== `${result?.contact?._id}` ||
+            !result?.contact
+          ) {
             const contact = await ContactModel.findOne(
               {
                 $and: [
@@ -1310,7 +1321,7 @@ class VistController implements IController {
               },
               ["name", "phone", "status"]
             );
-            
+
             if (!contact) {
               return res.status(404).json({
                 status: 404,

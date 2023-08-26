@@ -22,12 +22,7 @@ const redisName = "workflow";
 class workflowStateController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-      {
-        alias: "Id",
-        name: "_id",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-      },
+
       {
         alias: "Name",
         name: "name",
@@ -38,9 +33,28 @@ class workflowStateController implements IController {
       {
         alias: "Doc",
         name: "doc",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "visit", name: "Visit" },
+          { value: "callsheet", name: "Callsheet" },
+          { value: "branch", name: "Branch" },
+          { value: "schedule", name: "Schedule" },
+          { value: "user", name: "User" },
+          { value: "contact", name: "Contact" },
+          { value: "customergroup", name: "Customer Group" },
+          { value: "customer", name: "Customer" },
+          { value: "roleprofile", name: "Role Profile" },
+          { value: "roeluser", name: "Role User" },
+          { value: "permission", name: "Permission" },
+          { value: "usergroup", name: "User Group" },
+          { value: "memo", name: "Memo" },
+          { value: "topic", name: "Topic" },
+          { value: "notes", name: "Notes" },
+          { value: "tag", name: "Tag" },
+          { value: "namingSeries", name: "Naming Series" },
+        ],
       },
       {
         alias: "User",
@@ -52,14 +66,14 @@ class workflowStateController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=",  ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=", "like", "notlike", ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },

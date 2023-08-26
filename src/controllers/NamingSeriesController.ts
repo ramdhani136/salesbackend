@@ -39,6 +39,12 @@ class NamingSeriesController implements IController {
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
+        listData: [
+          { value: "visit", name: "Visit" },
+          { value: "callsheet", name: "Callsheet" },
+          { value: "schedule", name: "Schedule" },
+          { value: "memo", name: "Memo" },
+        ],
       },
       {
         alias: "Status",

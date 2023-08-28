@@ -1037,6 +1037,18 @@ class ScheduleController implements IController {
       const response: any = await result.save();
 
       if (response) {
+        // push history
+        await HistoryController.pushHistory({
+          document: {
+            _id: response._id,
+            name: response.name,
+            type: redisName,
+          },
+          message: `${req.user} menambahkan schedule ${response.name} `,
+          user: req.userId,
+        });
+        // End
+
         const getList: any = await ScheduleListModel.find(
           { schedule: CekData._id },
           ["customer"]

@@ -21,6 +21,7 @@ const Permission = new mongoose.Schema(
         "visit",
         "callsheet",
         "",
+        "user",
         "customergroup",
         "customer",
         "roleprofile",

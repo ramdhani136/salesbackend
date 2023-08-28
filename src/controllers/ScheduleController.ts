@@ -15,7 +15,6 @@ import {
   ScheduleModel as Db,
   History,
   ScheduleListModel,
-  ScheduleModel,
   namingSeriesModel,
   visitModel,
 } from "../models";
@@ -925,7 +924,7 @@ class ScheduleController implements IController {
   ): Promise<Response> => {
     try {
       const id = req.params.id;
-      const CekData = await ScheduleModel.findById(id, ["type"]);
+      const CekData = await Db.findById(id, ["type"]);
 
       if (!CekData) {
         return res

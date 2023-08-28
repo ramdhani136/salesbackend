@@ -7,7 +7,13 @@ import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { History, PermissionModel, RoleUserModel } from "../models";
+import {
+  CallsheetModel,
+  History,
+  PermissionModel,
+  RoleUserModel,
+  visitModel,
+} from "../models";
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
@@ -316,6 +322,16 @@ class UserController implements IController {
         }
       }
 
+      const visitCountUser = await visitModel.countDocuments({
+        createdBy: new ObjectId(req.params.id),
+      });
+      const callsheetCounter = await CallsheetModel.countDocuments({
+        createdBy: new ObjectId(req.params.id),
+      });
+      const permissionUserCount = await PermissionModel.countDocuments({
+        user: new ObjectId(req.params.id),
+      });
+
       const buttonActions = await WorkflowController.getButtonAction(
         "user",
         req.userId,
@@ -331,9 +347,15 @@ class UserController implements IController {
         .sort({ createdAt: -1 })
         .populate("user", "name");
       // await Redis.client.set(`user-${req.params.id}`, JSON.stringify(users));
+
       return res.status(200).json({
         status: 200,
-        data: users,
+        data: {
+          ...users._doc,
+          visit: visitCountUser,
+          callsheet: callsheetCounter,
+          permission: permissionUserCount,
+        },
         history: getHistory,
         workflow: buttonActions,
       });

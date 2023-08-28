@@ -932,8 +932,11 @@ class ScheduleController implements IController {
           .json({ status: 404, msg: "Schedule tidak ditemukan" });
       }
 
-      req.body.type = CekData.type;
-
+      if (!req.body.type) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, type wajib diisi!" });
+      }
       if (!req.body.namingSeries) {
         return res
           .status(400)

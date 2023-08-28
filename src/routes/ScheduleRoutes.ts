@@ -13,6 +13,7 @@ class ScheduleRoutes extends RouteBase {
       ScheduleController.index
     );
     this.router.post("/", ScheduleController.create);
+    this.router.post("/duplicate/:id", ScheduleController.getDuplicate);
     this.router.get(
       "/:id",
       CheckExpiredScheduleMiddleWare,

@@ -52,6 +52,13 @@ class CustomerController implements IController {
         ],
       },
       {
+        alias: "Id",
+        name: "_id",
+        operator: ["=", "!=", ],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
         alias: "Name",
         name: "name",
         operator: ["=", "!=", "like", "notlike"],

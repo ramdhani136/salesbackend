@@ -359,6 +359,7 @@ class PermissionController implements IController {
               {
                 $unwind: "$createdBy",
               },
+             
               {
                 $lookup: {
                   from: "users",
@@ -376,7 +377,7 @@ class PermissionController implements IController {
                 },
               },
               {
-                $unwind: "$createdBy",
+                $unwind: "$user",
               },
 
               {
@@ -616,7 +617,7 @@ class PermissionController implements IController {
           },
         },
         {
-          $unwind: "$createdBy",
+          $unwind: "$user",
         },
       ];
 

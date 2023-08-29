@@ -54,7 +54,7 @@ class CustomerController implements IController {
       {
         alias: "Id",
         name: "_id",
-        operator: ["=", "!=", ],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
       },
@@ -364,6 +364,7 @@ class CustomerController implements IController {
       );
 
       const isGroup = filterGroup.map((item: any) => new ObjectId(item[2]));
+
       if (isGroup.length > 0) {
         const childGroup = await PermissionMiddleware.getCustomerChild(isGroup);
 
@@ -377,13 +378,22 @@ class CustomerController implements IController {
 
       // // Menambahkan limit ketika terdapat limit
       if (limit > 0) {
-        pipelineResult.splice(
-          nearby.length === 3 ? 3 : isGroup.length > 0 ? 3 : 2,
-          0,
-          {
-            $limit: limit,
-          }
-        );
+        let lengthFilter: any[] = [];
+        if (nearby.length === 3) {
+          lengthFilter.push("nearby");
+        }
+        if (isGroup.length > 0) {
+          lengthFilter.push("isGroup");
+        }
+        if (groupPermission.length > 0) {
+          lengthFilter.push("groupPermissionm");
+        }
+
+        console.log(lengthFilter);
+
+        pipelineResult.splice(lengthFilter.length + 2, 0, {
+          $limit: limit,
+        });
       }
       // End
 

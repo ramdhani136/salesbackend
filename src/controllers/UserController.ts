@@ -685,6 +685,24 @@ class UserController implements IController {
     }
     // End
   };
+
+  // getDuplicate = async (
+  //   req: Request | any,
+  //   res: Response
+  // ): Promise<Response> => {
+  //   const id = req.params.id;
+  //   try {
+  //     const user: any = await User.findById(id, ["name"]);
+  //     if (!user) {
+  //       return res.status(404).json({ status: 404, msg: "User not found" });
+  //     }
+  //     return res.send(user);
+  //   } catch (error) {
+  //     return res
+  //       .status(400)
+  //       .json({ status: 400, msg: error ?? "Error, Connection" });
+  //   }
+  // };
 }
 
 export default new UserController();

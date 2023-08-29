@@ -28,6 +28,12 @@ class UserRoutes extends RouteBase {
       RoleMiddleware,
       UserController.create
     );
+    // this.router.post(
+    //   "/duplicate/:id",
+    //   AuthMiddleware,
+    //   RoleMiddleware,
+    //   UserController.getDuplicate
+    // );
     this.router.post("/login", UserController.login);
     this.router.get("/token", UserController.refreshToken);
     this.router.delete("/logout", UserController.logout);

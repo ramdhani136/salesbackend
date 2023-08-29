@@ -438,27 +438,26 @@ class NotesController implements IController {
       }
       // End
 
-      return res.send(pipelineResult)
-      // const totalData = await Db.countDocuments({ $and: pipelineTotal });
-      // const getAll = totalData > 0 ? totalData : 0;
+      const totalData = await Db.countDocuments({ $and: pipelineTotal });
+      const getAll = totalData > 0 ? totalData : 0;
 
-      // const result = await Db.aggregate(pipelineResult);
+      const result = await Db.aggregate(pipelineResult);
 
-      // if (result.length > 0) {
-      //   return res.status(200).json({
-      //     status: 200,
-      //     total: getAll,
-      //     limit,
-      //     nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
-      //     hasMore: getAll > page * limit && limit > 0 ? true : false,
-      //     data: result,
-      //     filters: stateFilter,
-      //   });
-      // }
-      // return res.status(400).json({
-      //   status: 404,
-      //   msg: "No data",
-      // });
+      if (result.length > 0) {
+        return res.status(200).json({
+          status: 200,
+          total: getAll,
+          limit,
+          nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
+          hasMore: getAll > page * limit && limit > 0 ? true : false,
+          data: result,
+          filters: stateFilter,
+        });
+      }
+      return res.status(400).json({
+        status: 404,
+        msg: "No data",
+      });
     } catch (error: any) {
       return res.status(400).json({
         status: 400,

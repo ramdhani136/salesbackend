@@ -388,6 +388,12 @@ class CustomerController implements IController {
         if (groupPermission.length > 0) {
           lengthFilter.push("groupPermissionm");
         }
+        if (userPermission.length > 0) {
+          lengthFilter.push("userPermission");
+        }
+        if (groupPermission.length > 0) {
+          lengthFilter.push("groupPermission");
+        }
 
         console.log(lengthFilter);
 

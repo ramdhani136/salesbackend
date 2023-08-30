@@ -26,9 +26,10 @@ const History = new mongoose.Schema(
       require: true,
     },
     status: {
-      type: Boolean,
-      default: 0,
-      index: 1,
+      type: String,
+      enum: ["0", "1"],
+      default: "0",
+      index: true,
     },
   },
   {

@@ -492,7 +492,7 @@ class App {
       RoleMiddleware,
       WorkflowCangerRoutes
     );
-    // this.app.use("/history", AuthMiddleware, HistoryRoutes);
+    this.app.use("/history", AuthMiddleware, HistoryRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);
   }

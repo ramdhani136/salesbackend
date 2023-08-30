@@ -58,7 +58,7 @@ class workflowActionController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["name", "user.name"];
+        : ["name", "user.name", "status"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -182,6 +182,7 @@ class workflowActionController implements IController {
   };
 
   update = async (req: Request, res: Response): Promise<Response> => {
+    console.log(req.body);
     try {
       const result = await Db.findOne({ _id: req.params.id }).populate(
         "user",
@@ -194,7 +195,7 @@ class workflowActionController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      await Db.updateOne({ name: req.params.id }, req.body);
+      await Db.updateOne({ _id: req.params.id }, req.body);
       const getData = await Db.findOne({ _id: req.params.id }).populate(
         "user",
         "name"

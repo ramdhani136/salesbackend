@@ -662,7 +662,7 @@ class CallsheetController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan callsheet ${response.name} `,
+        message: `menambahkan callsheet ${response.name} `,
         user: req.userId,
       });
       //End

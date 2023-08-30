@@ -790,7 +790,7 @@ class VistController implements IController {
           name: response.name,
           type: redisName,
         },
-        message: `${req.user} menambahkan visit ${response.name} `,
+        message: `menambahkan visit ${response.name} `,
         user: req.userId,
       });
       //End

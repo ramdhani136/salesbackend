@@ -29,16 +29,27 @@ class workflowActionController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
+      },
+      {
+        alias: "Status",
+        name: "status",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+        listData: [
+          { value: "0", name: "Disabled" },
+          { value: "1", name: "Enabled" },
+        ],
       },
     ];
     try {

@@ -14,6 +14,12 @@ const WorkflowState = new mongoose.Schema(
       index: true,
       ref: "Users",
     },
+    status: {
+      type: String,
+      enum: ["0", "1"],
+      default: "0",
+      index: true,
+    },
   },
   {
     timestamps: true,

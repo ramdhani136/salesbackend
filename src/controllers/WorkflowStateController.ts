@@ -27,6 +27,17 @@ class workflowStateController implements IController {
       },
 
       {
+        alias: "Status",
+        name: "status",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+        listData: [
+          { value: "0", name: "Disabled" },
+          { value: "1", name: "Enabled" },
+        ],
+      },
+      {
         alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=",  ">", "<", ">=", "<="],

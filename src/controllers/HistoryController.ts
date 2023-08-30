@@ -78,7 +78,7 @@ class HistoryController implements IController {
         : ["document", "user.name","user.img", "message", "status", "createdAt"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
-        : { updatedAt: -1 };
+        : { createdAt: -1 };
       const limit: number | string = parseInt(`${req.query.limit}`) || 10;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);
@@ -122,14 +122,15 @@ class HistoryController implements IController {
           $match: isFilter.data,
         },
         {
+          $sort: order_by,
+        },
+        {
           $limit: limit,
         },
         {
           $project: setField,
         },
-        {
-          $sort: order_by,
-        },
+      
       ]);
 
       if (result.length > 0) {

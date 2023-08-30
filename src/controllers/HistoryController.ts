@@ -75,7 +75,7 @@ class HistoryController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["document", "user.name", "message", "status", "createdAt"];
+        : ["document", "user.name","user.img", "message", "status", "createdAt"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };

@@ -1894,6 +1894,9 @@ class CallsheetController implements IController {
     id: ObjectId,
     data: any
   ): Promise<any> => {
+    // hapus history
+    History.deleteMany({ "document._id": id });
+    // End
     // Hapus file note
     try {
       const files = await FileModel.find(

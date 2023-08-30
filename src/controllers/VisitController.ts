@@ -1975,6 +1975,9 @@ class VistController implements IController {
       await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       // End
       const result: any = await Db.deleteOne({ _id: req.params.id });
+      // hapus history
+      await History.deleteMany({ "document.name": getData.name });
+      // End
       if (
         fs.existsSync(path.join(__dirname, "../public/images/" + getData.img))
       ) {
@@ -2006,10 +2009,6 @@ class VistController implements IController {
     id: ObjectId,
     data: any
   ): Promise<any> => {
-    // hapus history
-    History.deleteMany({ "document._id": id });
-    // End
-
     // Hapus file note
     try {
       const files = await FileModel.find(

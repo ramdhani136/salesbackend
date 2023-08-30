@@ -1822,6 +1822,7 @@ class CallsheetController implements IController {
           createdBy: 1,
           status: 1,
           schedulelist: 1,
+          name: 1,
         }
       ).populate("customer", "customerGroup branch");
 
@@ -1882,6 +1883,9 @@ class CallsheetController implements IController {
       await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       // End
       const result: any = await Db.deleteOne({ _id: req.params.id });
+      // hapus history
+      await History.deleteMany({ "document.name": getData.name });
+      // End
 
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       return res.status(200).json({ status: 200, data: result });
@@ -1894,9 +1898,6 @@ class CallsheetController implements IController {
     id: ObjectId,
     data: any
   ): Promise<any> => {
-    // hapus history
-    History.deleteMany({ "document._id": id });
-    // End
     // Hapus file note
     try {
       const files = await FileModel.find(

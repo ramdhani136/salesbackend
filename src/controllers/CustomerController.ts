@@ -408,6 +408,7 @@ class CustomerController implements IController {
 
       const totalData = await Db.aggregate(pipelineTotal);
 
+    //  return res.send(pipelineResult);
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);
 

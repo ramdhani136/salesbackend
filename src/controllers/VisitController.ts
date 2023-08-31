@@ -1065,38 +1065,38 @@ class VistController implements IController {
   update = async (req: Request | any, res: Response): Promise<any> => {
     // Validasi yang tidak boleh di rubah
     if (req.body.createdBy) {
-      return res.status(404).json({
-        status: 404,
+      return res.status(400).json({
+        status: 400,
         msg: "Error, Tidak dapat merubah data createdBy!",
       });
     }
     if (req.body.name) {
-      return res.status(404).json({
-        status: 404,
+      return res.status(400).json({
+        status: 400,
         msg: "Error, Tidak dapat merubah nomor dokumen!",
       });
     }
     if (req.body.img) {
-      return res.status(404).json({
-        status: 404,
+      return res.status(400).json({
+        status: 400,
         msg: "Error, Tidak dapat merubah img name!",
       });
     }
     if (req.body.status) {
-      return res.status(404).json({
+      return res.status(400).json({
         status: 404,
         msg: "Error, status tidak dapat dirubah",
       });
     }
     if (req.body.workflowState) {
-      return res.status(404).json({
-        status: 404,
+      return res.status(400).json({
+        status: 400,
         msg: "Error, workflowState tidak dapat dirubah",
       });
     }
     if (req.body.checkIn) {
-      return res.status(404).json({
-        status: 404,
+      return res.status(400).json({
+        status: 400,
         msg: "Error,  CheckIn tidak dapat dirubah",
       });
     }
@@ -1155,6 +1155,15 @@ class VistController implements IController {
       const result = current[0];
 
       if (result) {
+        if (result.checkOut) {
+          if (req.body.customer) {
+            return res.status(400).json({
+              status: 400,
+              msg: "Error, Customer tidak dapat dirubah karena sudah melakukan checkout sebelumnya!",
+            });
+          }
+        }
+
         if (result.status !== "0") {
           if (req.body.type) {
             return res.status(404).json({

@@ -515,6 +515,10 @@ class CustomerController implements IController {
       const result = new Db(req.body);
       const response: any = await result.save();
 
+      const data = await Db.findById(result._id)
+        .populate("customerGroup", "name")
+        .populate("branch", "name");
+
       // Upload data ketika outsite
       if (req.file) {
         const compressedImage = path.join(
@@ -558,7 +562,7 @@ class CustomerController implements IController {
       });
       // End
 
-      return res.status(200).json({ status: 200, data: response });
+      return res.status(200).json({ status: 200, data: data });
     } catch (error) {
       return res
         .status(400)
@@ -862,10 +866,7 @@ class CustomerController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        })
-          .populate("createdBy", "name")
-          .populate("customerGroup", "name")
-          .populate("branch", "name");
+        });
 
         // await Redis.client.set(
         //   `${redisName}-${req.params.id}`,

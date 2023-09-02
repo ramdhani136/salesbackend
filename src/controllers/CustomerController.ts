@@ -408,7 +408,7 @@ class CustomerController implements IController {
 
       const totalData = await Db.aggregate(pipelineTotal);
 
-    //  return res.send(pipelineResult);
+      //  return res.send(pipelineResult);
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);
 
@@ -722,7 +722,6 @@ class CustomerController implements IController {
         }
 
         if (req.body.branch) {
-          console.log(req.body.branch);
           if (req.body.branch == "" || req.body.branch == "null") {
             console.log("Ddddd");
             return res.status(400).json({
@@ -863,7 +862,10 @@ class CustomerController implements IController {
 
         const getData: any = await Db.findOne({
           _id: req.params.id,
-        });
+        })
+          .populate("createdBy", "name")
+          .populate("customerGroup", "name")
+          .populate("branch", "name");
 
         // await Redis.client.set(
         //   `${redisName}-${req.params.id}`,

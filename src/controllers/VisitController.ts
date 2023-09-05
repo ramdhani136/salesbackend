@@ -1063,6 +1063,7 @@ class VistController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<any> => {
+    console.log(req.file);
     // Validasi yang tidak boleh di rubah
     if (req.body.createdBy) {
       return res.status(400).json({
@@ -1155,6 +1156,25 @@ class VistController implements IController {
       const result = current[0];
 
       if (result) {
+        if (
+          req.body.checkInLat &&
+          req.body.checkInLng &&
+          result.status == "0" &&
+          result.checkOut === undefined
+        ) {
+          const getLocation: any = await GetNameLocation({
+            lat: parseFloat(req.body.checkInLat),
+            lng: parseFloat(req.body.checkInLng),
+          });
+
+          req.body.checkIn = {
+            lat: parseFloat(req.body.checkInLat),
+            lng: parseFloat(req.body.checkInLng),
+            createdAt: new Date(),
+            address: getLocation.data.display_name,
+          };
+        }
+
         if (result.checkOut) {
           if (req.body.customer) {
             return res.status(400).json({
@@ -1198,7 +1218,10 @@ class VistController implements IController {
           }
         }
 
-        if (req.file && result.type === "outsite") {
+        if (
+          req.file &&
+          (result.type === "outsite" || req.body.type === "outsite")
+        ) {
           req.body.img = req.params.id + ".jpg";
           const compressedImage = path.join(
             __dirname,
@@ -1260,19 +1283,6 @@ class VistController implements IController {
               .status(400)
               .json({ status: 400, msg: "Error, pilih insite atau outsite !" });
           }
-
-          if (req.body.type !== result.type) {
-            if (req.body.type === "outsite") {
-              if (!req.file) {
-                return res.status(404).json({
-                  status: 404,
-                  msg: "Error, img wajib diisi!",
-                });
-              }
-            } else {
-              req.body.img = "";
-            }
-          }
         }
         // End
 
@@ -1298,6 +1308,10 @@ class VistController implements IController {
                 status: 404,
                 msg: "Error, customer tidak aktif!",
               });
+            }
+
+            if (!req.file) {
+              req.body.img = "";
             }
 
             req.body.customer = cekCustomer._id;
@@ -1902,6 +1916,29 @@ class VistController implements IController {
         );
 
         // End
+
+        if (req.body.customer !== `${result.customer._id}` && !req.file) {
+          if (
+            fs.existsSync(
+              path.join(__dirname, "../public/images/" + result.img)
+            )
+          ) {
+            fs.unlink(
+              path.join(__dirname, "../public/images/" + result.img),
+              function (err) {
+                if (err && err.code == "ENOENT") {
+                  // file doens't exist
+                  console.log(err);
+                } else if (err) {
+                  // other errors, e.g. maybe we don't have enough permission
+                  console.log("Error occurred while trying to remove file");
+                } else {
+                  console.log(`removed`);
+                }
+              }
+            );
+          }
+        }
 
         return res.status(200).json({ status: 200, data: resultUpdate[0] });
         // End

@@ -1917,26 +1917,28 @@ class VistController implements IController {
 
         // End
 
-        if (req.body.customer !== `${result.customer._id}` && !req.file) {
-          if (
-            fs.existsSync(
-              path.join(__dirname, "../public/images/" + result.img)
-            )
-          ) {
-            fs.unlink(
-              path.join(__dirname, "../public/images/" + result.img),
-              function (err) {
-                if (err && err.code == "ENOENT") {
-                  // file doens't exist
-                  console.log(err);
-                } else if (err) {
-                  // other errors, e.g. maybe we don't have enough permission
-                  console.log("Error occurred while trying to remove file");
-                } else {
-                  console.log(`removed`);
+        if (req.body.customer) {
+          if (req.body.customer !== `${result.customer._id}` && !req.file) {
+            if (
+              fs.existsSync(
+                path.join(__dirname, "../public/images/" + result.img)
+              )
+            ) {
+              fs.unlink(
+                path.join(__dirname, "../public/images/" + result.img),
+                function (err) {
+                  if (err && err.code == "ENOENT") {
+                    // file doens't exist
+                    console.log(err);
+                  } else if (err) {
+                    // other errors, e.g. maybe we don't have enough permission
+                    console.log("Error occurred while trying to remove file");
+                  } else {
+                    console.log(`removed`);
+                  }
                 }
-              }
-            );
+              );
+            }
           }
         }
 
@@ -1962,6 +1964,7 @@ class VistController implements IController {
           createdBy: 1,
           status: 1,
           schedulelist: 1,
+          img:1,
         }
       ).populate("customer", "customerGroup branch");
 
@@ -2021,9 +2024,6 @@ class VistController implements IController {
       await this.DeletedRelateChild(new ObjectId(req.params.id), getData);
       // End
       const result: any = await Db.deleteOne({ _id: req.params.id });
-      // hapus history
-      await History.deleteMany({ "document.name": getData.name });
-      // End
       if (
         fs.existsSync(path.join(__dirname, "../public/images/" + getData.img))
       ) {
@@ -2042,6 +2042,9 @@ class VistController implements IController {
           }
         );
       }
+      // hapus history
+      await History.deleteMany({ "document.name": getData.name });
+      // End
 
       // await Redis.client.del(`${redisName}-${req.params.id}`);
 

@@ -1063,7 +1063,6 @@ class VistController implements IController {
   };
 
   update = async (req: Request | any, res: Response): Promise<any> => {
-    console.log(req.file);
     // Validasi yang tidak boleh di rubah
     if (req.body.createdBy) {
       return res.status(400).json({
@@ -1912,7 +1911,7 @@ class VistController implements IController {
           req.user,
           req.userId,
           redisName,
-          ["taskNotes", "schedulelist"]
+          ["taskNotes", "schedulelist", "signature"]
         );
 
         // End
@@ -1964,7 +1963,7 @@ class VistController implements IController {
           createdBy: 1,
           status: 1,
           schedulelist: 1,
-          img:1,
+          img: 1,
         }
       ).populate("customer", "customerGroup branch");
 

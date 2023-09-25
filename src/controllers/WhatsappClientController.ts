@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 // import Redis from "../config/Redis";
+import { Client } from "whatsapp-web.js";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
@@ -554,6 +555,31 @@ class WhatsappAccountController implements IController {
         const state = await client.getState()
         status = state ?? "Loading..";
         return res.status(200).json({ status: 200, data: status });
+      } else {
+        return res.status(400).json({ status: 400, msg: "Error, Account tidak ditemukan!" });
+      }
+
+    } catch (error) {
+      return res.status(400).json({ status: 400, msg: error });
+    }
+  };
+
+
+  logout = async (req: Request | any, res: Response) => {
+    try {
+      if (!req.accounts) {
+        return res.status(400).json({ status: 404, msg: "Error, Account tidak ada!" });
+      }
+      const client: Client = await req.accounts[req.params.user];
+      if (client) {
+        const state = await client.getState()
+        if (state !== "CONNECTED") {
+          return res.status(400).json({ status: 400, msg: "Error, User not connected" });
+        } else {
+          client.destroy();
+          client.initialize();
+          return res.status(200).json({ status: 400, msg: "Logout was successful" });
+        }
       } else {
         return res.status(400).json({ status: 400, msg: "Error, Account tidak ditemukan!" });
       }

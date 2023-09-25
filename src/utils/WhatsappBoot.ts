@@ -15,100 +15,104 @@ class WhatsAppBoot {
 
   InitialClient = (user: String, store: any) => {
     if (store) {
-      const client: Client = new Client({
-        authStrategy: new RemoteAuth({
-          store: store,
-          backupSyncIntervalMs: 300000,
-          // puppeteer: {
-          //   headless: true,
-          //   args: [
-          //     "--no-sanbox",
-          //     "--disable-setuid-sandbox",
-          //     "--disable-dev-shm-usage",
-          //     "--disable-accelerated-2d-canvas",
-          //     "--no-first-run",
-          //     "--no-zygote",
-          //     "--single-process",
-          //     "--disable-gpu",
-          //   ],
-          // },
-          clientId: user,
-        }),
-      });
+      try {
+        const client: Client = new Client({
+          authStrategy: new RemoteAuth({
+            store: store,
+            backupSyncIntervalMs: 300000,
+            puppeteer: {
+              headless: true,
+              args: [
+                "--no-sanbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-accelerated-2d-canvas",
+                "--no-first-run",
+                "--no-zygote",
+                "--single-process",
+                "--disable-gpu",
+              ],
+            },
+            clientId: user,
+          }),
+        });
 
 
-      client.initialize();
-
-      client.on("qr", (qr: any) => {
-        console.log(user);
-        qrcode.generate(qr, { small: true });
-        try {
-          qrcode.toDataURL(qr, (err: any, url: any) => {
-            io.emit("qr", url);
-            io.emit("message", "QR Code received,scan please .");
-          });
-        } catch (error) {
-          io.emit("message", "QR Code Failded to Call! .");
-        }
-      });
-
-      client.on("ready", () => {
-        console.log(user + " Client is ready!");
-        io.emit("message", "Client is ready!");
-        io.emit("qr", null);
-      });
-
-      client.on("remote_session_saved", () => {
-        console.log(user + " Session Saved");
-        io.emit("message", "Session Saved!");
-      });
-
-      client.on("authenticated", (session: any) => {
-        console.log(user + " authenticated");
-        io.emit("message", "Whatsapp is authenticated!");
-      });
-
-      client.on("auth_failure", (session: any) => {
-        io.emit("message", "Auth eror ,restarting...");
-        console.log(user + " auth_failure");;
         client.initialize();
-      });
 
-      client.on("disconnected", (reason: any) => {
-        io.emit("message", "Whatsapp is disconnected!");
-        console.log(user + " disconnected");
-        client.initialize();
-      });
-
-
-      client.on("loading_screen", (percent: any, message: any) => {
-        try {
-          console.log(user + " LOADING SCREEN", percent, message);
-        } catch (error) {
-          console.log(error);
-        }
-      });
-
-      client.on("change_state", (state: any) => {
-        console.log(user + " CHANGE STATE", state);
-      });
-
-      setInterval(async () => {
-        if (client) {
-          const state = await client.getState();
-          console.log(user + " Status:", state);
-          if (state) {
-            io.emit("message", state);
-            io.emit("qr", null);
-          } else {
-            io.emit("message", "Get Status ..");
-            io.emit("qr", null);
+        client.on("qr", (qr: any) => {
+          console.log(user);
+          qrcode.generate(qr, { small: true });
+          try {
+            qrcode.toDataURL(qr, (err: any, url: any) => {
+              io.emit("qr", url);
+              io.emit("message", "QR Code received,scan please .");
+            });
+          } catch (error) {
+            io.emit("message", "QR Code Failded to Call! .");
           }
-        }
-      }, 10000);
+        });
 
-      // Save client
-      this.clients[`${user}`] = client;
+        client.on("ready", () => {
+          console.log(user + " Client is ready!");
+          io.emit("message", "Client is ready!");
+          io.emit("qr", null);
+        });
+
+        client.on("remote_session_saved", () => {
+          console.log(user + " Session Saved");
+          io.emit("message", "Session Saved!");
+        });
+
+        client.on("authenticated", (session: any) => {
+          console.log(user + " authenticated");
+          io.emit("message", "Whatsapp is authenticated!");
+        });
+
+        client.on("auth_failure", (session: any) => {
+          io.emit("message", "Auth eror ,restarting...");
+          console.log(user + " auth_failure");;
+          client.initialize();
+        });
+
+        client.on("disconnected", (reason: any) => {
+          io.emit("message", "Whatsapp is disconnected!");
+          console.log(user + " disconnected");
+          client.initialize();
+        });
+
+
+        client.on("loading_screen", (percent: any, message: any) => {
+          try {
+            console.log(user + " LOADING SCREEN", percent, message);
+          } catch (error) {
+            console.log(error);
+          }
+        });
+
+        client.on("change_state", (state: any) => {
+          console.log(user + " CHANGE STATE", state);
+        });
+
+        setInterval(async () => {
+          if (client) {
+            const state = await client.getState();
+            console.log(user + " Status:", state);
+            if (state) {
+              io.emit("message", state);
+              io.emit("qr", null);
+            } else {
+              io.emit("message", "Get Status ..");
+              io.emit("qr", null);
+            }
+          }
+        }, 10000);
+
+        // Save client
+        this.clients[`${user}`] = client;
+      } catch (error) {
+        console.log(error)
+      }
     }
 
   }

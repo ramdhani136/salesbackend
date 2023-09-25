@@ -52,6 +52,7 @@ class UserController implements IController {
   };
 
   index = async (req: Request | any, res: Response): Promise<Response> => {
+
     const stateFilter: IStateFilter[] = [
       {
         alias: "Name",

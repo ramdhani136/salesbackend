@@ -1,7 +1,7 @@
 
 import { Client } from "whatsapp-web.js";
 import { system, io } from "..";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
 
 const {
@@ -102,7 +102,7 @@ class WhatsAppBoot {
           io.emit("message", "Get Status ..");
           io.emit("qr", null);
         }
-      }, 30000);
+      }, 10000);
 
       // Save client
       this.clients[`${user}`] = client;
@@ -118,17 +118,23 @@ class WhatsAppBoot {
     this.InitialClient("client1", store);
     this.InitialClient("client2", store);
 
-    system.app.get('/cobain', async (req: Request, res: Response) => {
-      let status: string;
-      const client = await this.getClient("client1");
-      if (client) {
-        const state = await client.getState()
-        status = state;
-      } else {
-        status = "Not Connected";
-      }
-      return res.send(status);
-    });
+    // system.app.use((req: Request | any, res: Response, next: NextFunction) => {
+    //   req.waclient = "cobaa";
+    //   next();
+    // });
+    // system.app.get('/cobain', async (req: Request, res: Response) => {
+    //   let status: string;
+    //   const client = await this.getClient("client1");
+    //   if (client) {
+    //     const state = await client.getState()
+    //     status = state;
+    //   } else {
+    //     status = "Not Connected";
+    //   }
+    //   return res.send(status);
+    // });
+
+
 
   }
 }

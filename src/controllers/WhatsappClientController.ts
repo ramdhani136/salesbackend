@@ -601,8 +601,7 @@ class WhatsappAccountController implements IController {
         if (state === "CONNECTED") {
           return res.status(400).json({ status: 400, msg: "Error, this account is connected" });
         } else {
-          await client.destroy();
-          client.initialize();
+          // client.initialize();
           return res.status(200).json({ status: 400, msg: "Success, Please wait for the new qr code" });
         }
       } else {

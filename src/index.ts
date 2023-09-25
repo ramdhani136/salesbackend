@@ -499,12 +499,14 @@ class App {
 }
 
 const port: number = 5000;
-const app = new App();
-const send = app.database;
-const io = app.io;
+const system = new App();
+const send = system.database;
+const io = system.io;
 
-app.server.listen(port, () => {
+
+
+system.server.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
 
-export { io, send };
+export { io, send, system };

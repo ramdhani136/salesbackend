@@ -29,7 +29,7 @@ class DataConnect {
       });
 
     const db = mongoose.connection;
-    db.on("error", (error) => console.log(error));
+    db.on("error", (error:any) => console.log(error));
     db.on("open", () => console.log("Database Connected"));
   }
 }

@@ -207,7 +207,10 @@ class WhatsappAccountController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-
+    // if (req.InitialClient && req.store) {
+    //    req.InitialClient("client3", req.store);
+    // }
+    // client.initialize();
     if (!req.body.name) {
       return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
     }
@@ -604,10 +607,7 @@ class WhatsappAccountController implements IController {
 
           await client.destroy()
           client.initialize();
-          // if (req.InitialClient && req.store) {
-          //    req.InitialClient("client3", req.store);
-          // }
-          // client.initialize();
+
           return res.status(200).json({ status: 400, msg: "Success, Please wait for the new qr code" });
         }
       } else {

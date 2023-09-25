@@ -2,6 +2,7 @@
 import { Client } from "whatsapp-web.js";
 import { system, io } from "..";
 import { NextFunction, Request, Response } from "express";
+import { WhatsAppClientRoutes } from "../routes";
 
 
 const {
@@ -118,10 +119,16 @@ class WhatsAppBoot {
     this.InitialClient("client1", store);
     this.InitialClient("client2", store);
 
-    // system.app.use((req: Request | any, res: Response, next: NextFunction) => {
-    //   req.waclient = "cobaa";
-    //   next();
-    // });
+    const setDataWa = async (req: Request | any, res: Response, next: NextFunction) => {
+      req.accounts = this.clients;
+      next();
+    };
+
+    system.app.use("/waaccount", setDataWa, WhatsAppClientRoutes);
+
+
+
+
     // system.app.get('/cobain', async (req: Request, res: Response) => {
     //   let status: string;
     //   const client = await this.getClient("client1");

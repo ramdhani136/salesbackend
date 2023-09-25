@@ -30,7 +30,7 @@ import ConfigModel from "./ConfigModel";
 import TopicModel from "./TopicModel";
 import FileModel from "./FileModel";
 import NotesModel from "./NotesModel";
-import WhatsappAccountModel from "./WhatsappAccountModel";
+import WhatsappClientModel from "./WhatsappClientModel";
 
 export {
   ConfigModel,
@@ -65,5 +65,5 @@ export {
   TopicModel,
   FileModel,
   NotesModel,
-  WhatsappAccountModel
+  WhatsappClientModel
 };

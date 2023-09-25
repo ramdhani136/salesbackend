@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { History, PermissionModel, WhatsappAccountModel } from "../models";
+import { History, PermissionModel, WhatsappClientModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -14,7 +14,7 @@ import {
 } from "../middleware/PermissionMiddleware";
 import { ObjectId } from "mongodb";
 
-const Db = WhatsappAccountModel;
+const Db = WhatsappClientModel;
 const redisName = "whatsappclient";
 
 class WhatsappAccountController implements IController {
@@ -92,7 +92,7 @@ class WhatsappAccountController implements IController {
         value: req.query.search || "",
       };
 
-    
+
       // Mengambil hasil fields
       let setField = FilterQuery.getField(fields);
       // End
@@ -137,7 +137,7 @@ class WhatsappAccountController implements IController {
         },
       ];
 
-      
+
 
       const totalData = await Db.aggregate(pipelineTotal);
 
@@ -170,8 +170,8 @@ class WhatsappAccountController implements IController {
         },
       ];
 
-      
-      
+
+
       // End
 
       // Menambahkan limit ketika terdapat limit
@@ -206,34 +206,21 @@ class WhatsappAccountController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
+
     if (!req.body.name) {
       return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
     }
+
+    let name = "";
+    const lastAccount = await Db.findOne({}, { _id: 1 }).sort({ createdAt: -1 });
+    console.log(lastAccount);
     req.body.createdBy = req.userId;
 
     try {
       const result = new Db(req.body);
       const response = await result.save();
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name,
-          type: redisName,
-        },
-        message: `Membuat ${redisName} baru`,
-        user: req.userId,
-      });
-      // End
 
-      // await Redis.client.set(
-      //   `${redisName}-${response._id}`,
-      //   JSON.stringify(response),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {

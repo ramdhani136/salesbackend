@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const WhatsappAccountModel = new mongoose.Schema(
+const WhatsappClientModel = new mongoose.Schema(
   {
     _id: {
       type: String, 
@@ -25,7 +25,7 @@ const WhatsappAccountModel = new mongoose.Schema(
     status: {
       type: String,
       enum: ["0", "1"],
-      default: "0",
+      default: "1",
       index: 1,
     },
   },
@@ -34,9 +34,9 @@ const WhatsappAccountModel = new mongoose.Schema(
   }
 );
 
-WhatsappAccountModel.index({
+WhatsappClientModel.index({
   name: -1,
 });
 
 
-export default mongoose.model("whatsappaccount", WhatsappAccountModel);
+export default mongoose.model("whatsappaccount", WhatsappClientModel);

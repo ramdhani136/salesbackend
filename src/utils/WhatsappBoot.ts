@@ -94,14 +94,16 @@ class WhatsAppBoot {
       });
 
       setInterval(async () => {
-        const state = await client.getState();
-        console.log(user + " Status:", state);
-        if (state) {
-          io.emit("message", state);
-          io.emit("qr", null);
-        } else {
-          io.emit("message", "Get Status ..");
-          io.emit("qr", null);
+        if (client) {
+          const state = await client.getState();
+          console.log(user + " Status:", state);
+          if (state) {
+            io.emit("message", state);
+            io.emit("qr", null);
+          } else {
+            io.emit("message", "Get Status ..");
+            io.emit("qr", null);
+          }
         }
       }, 10000);
 

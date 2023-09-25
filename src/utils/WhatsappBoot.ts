@@ -13,7 +13,7 @@ const qrcode = require("qrcode-terminal");
 class WhatsAppBoot {
   private clients: Record<string, any> = {};
 
-   InitialClient = (user: String, store: any) => {
+  InitialClient = (user: String, store: any) => {
     if (store) {
       const client: Client = new Client({
         authStrategy: new RemoteAuth({
@@ -121,6 +121,8 @@ class WhatsAppBoot {
 
     const setDataWa = async (req: Request | any, res: Response, next: NextFunction) => {
       req.accounts = this.clients;
+      req.InitialClient = this.InitialClient;
+      req.store = store;
       next();
     };
 

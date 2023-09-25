@@ -541,6 +541,27 @@ class WhatsappAccountController implements IController {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
+
+  getStatus = async (req: Request | any, res: Response) => {
+    try {
+      if (!req.accounts) {
+        return res.status(400).json({ status: 404, msg: "Error, Account tidak ada!" });
+      }
+
+      let status: string;
+      const client = await req.accounts[req.params.user];
+      if (client) {
+        const state = await client.getState()
+        status = state ?? "Loading..";
+        return res.status(200).json({ status: 200, data: status });
+      } else {
+        return res.status(400).json({ status: 400, msg: "Error, Account tidak ditemukan!" });
+      }
+
+    } catch (error) {
+      return res.status(400).json({ status: 400, msg: error });
+    }
+  };
 }
 
 export default new WhatsappAccountController();

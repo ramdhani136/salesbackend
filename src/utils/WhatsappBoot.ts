@@ -124,23 +124,7 @@ class WhatsAppBoot {
       next();
     };
 
-    system.app.use("/waaccount", setDataWa, WhatsAppClientRoutes);
-
-
-
-
-    // system.app.get('/cobain', async (req: Request, res: Response) => {
-    //   let status: string;
-    //   const client = await this.getClient("client1");
-    //   if (client) {
-    //     const state = await client.getState()
-    //     status = state;
-    //   } else {
-    //     status = "Not Connected";
-    //   }
-    //   return res.send(status);
-    // });
-
+    system.app.use("/whatsapp", setDataWa, WhatsAppClientRoutes);
 
 
   }

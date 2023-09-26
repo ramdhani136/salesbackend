@@ -97,6 +97,11 @@ class WhatsAppBoot {
           console.log(user + " CHANGE STATE", state);
         });
 
+        client.on('message', message => {
+          console.log(message);
+        });
+
+
         // setInterval(async () => {
         //   if (client) {
         //     const state = await client.getState();

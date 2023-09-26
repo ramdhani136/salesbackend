@@ -234,6 +234,7 @@ class WhatsappAccountController implements IController {
       if (req.InitialClient && req.store) {
         req.InitialClient("client3", req.store);
       }
+
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
@@ -332,24 +333,24 @@ class WhatsappAccountController implements IController {
           .json({ status: 404, msg: "Data tidak ditemukan!" });
       }
 
-      const buttonActions = await WorkflowController.getButtonAction(
-        redisName,
-        req.userId,
-        result.workflowState
-      );
+      // const buttonActions = await WorkflowController.getButtonAction(
+      //   redisName,
+      //   req.userId,
+      //   result.workflowState
+      // );
 
-      // return res.send(buttonActions)
-      const getHistory = await History.find(
-        {
-          $and: [
-            { "document._id": result._id },
-            { "document.type": redisName },
-          ],
-        },
-        ["_id", "message", "createdAt", "updatedAt"]
-      )
-        .populate("user", "name")
-        .sort({ createdAt: -1 });
+      // // return res.send(buttonActions)
+      // const getHistory = await History.find(
+      //   {
+      //     $and: [
+      //       { "document._id": result._id },
+      //       { "document.type": redisName },
+      //     ],
+      //   },
+      //   ["_id", "message", "createdAt", "updatedAt"]
+      // )
+      //   .populate("user", "name")
+      //   .sort({ createdAt: -1 });
 
       // await Redis.client.set(
       //   `${redisName}-${req.params.id}`,
@@ -362,8 +363,8 @@ class WhatsappAccountController implements IController {
       return res.status(200).json({
         status: 200,
         data: result,
-        history: getHistory,
-        workflow: buttonActions,
+        // history: getHistory,
+        // workflow: buttonActions,
       });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

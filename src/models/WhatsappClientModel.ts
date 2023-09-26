@@ -22,12 +22,6 @@ const WhatsappClientModel = new mongoose.Schema(
       required: true,
       index: 1,
     },
-    status: {
-      type: String,
-      enum: ["0", "1"],
-      default: "1",
-      index: 1,
-    },
   },
   {
     timestamps: true,

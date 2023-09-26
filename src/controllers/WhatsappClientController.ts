@@ -44,17 +44,6 @@ class WhatsappAccountController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        alias: "Status",
-        name: "status",
-        operator: ["=", "!=",],
-        typeOf: TypeOfState.String,
-        isSort: true,
-        listData: [
-          { value: "0", name: "Disabled" },
-          { value: "1", name: "Enabled" },
-        ],
-      },
-      {
         alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", ">", "<", ">=", "<="],
@@ -182,16 +171,31 @@ class WhatsappAccountController implements IController {
       }
       // End
 
-      const result = await Db.aggregate(pipelineResult);
+      const result: any = await Db.aggregate(pipelineResult);
+      let finalData: any = []
+
 
       if (result.length > 0) {
+        const setData = result.map(async (item: any) => {
+          let status = "Disconnected";
+          let client: Client = req.accounts[item._id];
+          if (client) {
+            if (await client.getState() == "CONNECTED") {
+              status = "Connected"
+            } else {
+              status = "Disconnected"
+            }
+          }
+          return { ...item, status: status };
+        });
+        finalData = await Promise.all(setData)
         return res.status(200).json({
           status: 200,
           total: getAll,
           limit,
           nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
           hasMore: getAll > page * limit && limit > 0 ? true : false,
-          data: result,
+          data: finalData,
           filters: stateFilter,
         });
       }
@@ -538,7 +542,7 @@ class WhatsappAccountController implements IController {
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
-      
+
       return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

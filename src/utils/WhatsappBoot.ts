@@ -4,6 +4,7 @@ import { system, io } from "..";
 import { NextFunction, Request, Response } from "express";
 import { WhatsAppClientRoutes } from "../routes";
 import { AuthMiddleware } from "../middleware";
+import { WhatsappClientModel } from "../models";
 
 
 const {
@@ -13,13 +14,14 @@ const qrcode = require("qrcode-terminal");
 
 class WhatsAppBoot {
   private clients: Record<string, any> = {};
+  private store: string;
 
-  InitialClient = (user: String, store: any) => {
-    if (store) {
+  InitialClient = (user: String) => {
+    if (this.store) {
       try {
         const client: Client = new Client({
           authStrategy: new RemoteAuth({
-            store: store,
+            store: this.store,
             backupSyncIntervalMs: 300000,
             puppeteer: {
               headless: true,
@@ -42,7 +44,7 @@ class WhatsAppBoot {
         client.initialize();
 
         client.on("qr", (qr: any) => {
-          // qrcode.generate(qr, { small: true });
+          qrcode.generate(qr, { small: true });
           try {
             qrcode.toDataURL(qr, (err: any, url: any) => {
               io.to(user).emit("qr", url);
@@ -118,13 +120,22 @@ class WhatsAppBoot {
 
   }
 
+  private getAccount = async () => {
+    const accounts = await WhatsappClientModel.find({}, { _id: 1 });
+    if (accounts.length > 0) {
+      for (const account of accounts) {
+        this.InitialClient(account._id);
+      }
+    }
+  }
+
   public getClient(user: string) {
     return this.clients[user];
   }
 
   constructor(store: any) {
-    this.InitialClient("client1", store);
-    this.InitialClient("client2", store);
+    this.store = store;
+    this.getAccount();
 
     const setDataWa = async (req: Request | any, res: Response, next: NextFunction) => {
       req.accounts = this.clients;

@@ -20,15 +20,19 @@ class WhatsAppBoot {
   private async pushMessage(user: string) {
 
     try {
-      const isClient = this.clients[`${user}`];
+      const isClient: Client = this.clients[`${user}`];
       if (isClient) {
         const status = await isClient.getState()
         if (status === "CONNECTED") {
           io.to(user).emit("message", "Client is connected!");
           io.to(user).emit("qr", null);
-        } else {
+        } else if (!status) {
           io.to(user).emit("message", "Loading ..");
-        }
+          // if (isClient) {
+          //   await isClient.destroy();
+          //   isClient.initialize();
+          // }
+        } else { io.to(user).emit("message", status) }
       }
     } catch (error) {
       console.log(error)

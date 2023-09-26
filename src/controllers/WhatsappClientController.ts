@@ -195,7 +195,7 @@ class WhatsappAccountController implements IController {
         });
         finalData = await Promise.all(setData)
 
-        console.log(finalData);
+
         return res.status(200).json({
           status: 200,
           total: getAll,

@@ -14,6 +14,7 @@ import {
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
 import { ObjectId } from 'bson';
+import { io } from "..";
 
 const Db = WhatsappClientModel;
 const redisName = "whatsappclient";
@@ -555,8 +556,12 @@ class WhatsappAccountController implements IController {
       let status: string;
       const client = await req.accounts[req.params.user];
       if (client) {
+        io.to(req.params.user).emit("message", "Loading .. ");
         const state = await client.getState()
-        status = state ?? "Not Connected..";
+        status = state ? state === "CONNECTED" ? "Client is connected!" : state : "Not Connected..";
+
+        io.to(req.params.user).emit("message", status);
+
         return res.status(200).json({ status: 200, data: status });
       } else {
         return res.status(400).json({ status: 400, msg: "Error, Account tidak ditemukan!" });
@@ -579,10 +584,17 @@ class WhatsappAccountController implements IController {
         if (state !== "CONNECTED") {
           return res.status(400).json({ status: 400, msg: "Error, User not connected" });
         } else {
-          await client.logout();
-          await client.destroy();
-          client.initialize();
-          return res.status(200).json({ status: 400, msg: "Logout was successful" });
+          try {
+            io.to(req.params.user).emit("message", "Loading");
+            await client.logout();
+            await client.destroy();
+            client.initialize();
+            io.to(req.params.user).emit("message", "Logout was successful");
+            return res.status(200).json({ status: 400, msg: "Logout was successful" });
+          } catch (error) {
+            io.to(req.params.user).emit("message", "Failed to log out");
+          }
+
         }
       } else {
         return res.status(400).json({ status: 400, msg: "Error, Account tidak ditemukan!" });
@@ -604,11 +616,17 @@ class WhatsappAccountController implements IController {
         if (state === "CONNECTED") {
           return res.status(400).json({ status: 400, msg: "Error, this account is connected" });
         } else {
+          try {
 
-          await client.destroy()
-          client.initialize();
+            await client.destroy()
+            client.initialize();
+            io.to(req.params.user).emit("message", "Waiting for new qr :)");
+            return res.status(200).json({ status: 400, msg: "Success, Please wait for the new qr code" });
+          } catch (error) {
+            io.to(req.params.user).emit("message", "Failed to refresh");
+            return res.status(400).json({ status: 400, msg: "Error, refresh error" });
+          }
 
-          return res.status(200).json({ status: 400, msg: "Success, Please wait for the new qr code" });
         }
       } else {
         return res.status(400).json({ status: 400, msg: "Error, Account tidak ditemukan!" });

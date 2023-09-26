@@ -55,7 +55,7 @@ class WhatsAppBoot {
 
         client.on("ready", () => {
           console.log(user + " Client is ready!");
-          io.to(user).emit("message", "Client is ready!");
+          io.to(user).emit("message", "Client is connected!");
           io.to(user).emit("qr", null);
         });
 

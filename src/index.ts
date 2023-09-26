@@ -372,18 +372,24 @@ class App {
       socket.on("setup", (userData: String) => {
         socket.join(userData);
         socket.emit("connected");
-        console.log(`User ${userData} Connected`);
+ 
+        // console.log(`User ${userData} Connected`);
       });
 
       socket.on("join", (user: any) => {
-        console.log(`${user} joined the chat`);
+        // console.log(`${user} joined the chat`);
         users[socket.id] = { user };
         io.emit("activeUsers", Object.values(users));
       });
 
       socket.on("join chat", (room: String) => {
         socket.join(room);
-        console.log("User Joined Room: " + room);
+        // console.log("User Joined Room: " + room);
+      });
+
+      socket.on("get qr", (room: String) => {
+        socket.join(room);
+        // console.log("User Joined Room: " + room);
       });
 
       socket.on("typing", (room: String) => socket.in(room).emit("typing"));

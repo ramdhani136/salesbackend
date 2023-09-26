@@ -178,17 +178,24 @@ class WhatsappAccountController implements IController {
       if (result.length > 0) {
         const setData = result.map(async (item: any) => {
           let status = "Disconnected";
+          let account = "";
+          let phone = "";
           let client: Client = req.accounts[item._id];
           if (client) {
+
             if (await client.getState() == "CONNECTED") {
               status = "Connected"
+              account = client.info.pushname;
+              phone = client.info.wid.user;
             } else {
               status = "Disconnected"
             }
           }
-          return { ...item, status: status };
+          return { ...item, status: status, account, phone };
         });
         finalData = await Promise.all(setData)
+
+        console.log(finalData);
         return res.status(200).json({
           status: 200,
           total: getAll,

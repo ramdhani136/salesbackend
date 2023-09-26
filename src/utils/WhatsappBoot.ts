@@ -3,6 +3,7 @@ import { Client } from "whatsapp-web.js";
 import { system, io } from "..";
 import { NextFunction, Request, Response } from "express";
 import { WhatsAppClientRoutes } from "../routes";
+import { AuthMiddleware } from "../middleware";
 
 
 const {
@@ -132,7 +133,7 @@ class WhatsAppBoot {
       next();
     };
 
-    system.app.use("/whatsapp", setDataWa, WhatsAppClientRoutes);
+    system.app.use("/whatsapp", AuthMiddleware, setDataWa, WhatsAppClientRoutes);
 
 
   }

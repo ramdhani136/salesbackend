@@ -42,7 +42,7 @@ class WhatsAppBoot {
         client.initialize();
 
         client.on("qr", (qr: any) => {
-          qrcode.generate(qr, { small: true });
+          // qrcode.generate(qr, { small: true });
           try {
             qrcode.toDataURL(qr, (err: any, url: any) => {
               io.to(user).emit("qr", url);

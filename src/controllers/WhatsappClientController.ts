@@ -208,25 +208,32 @@ class WhatsappAccountController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    // if (req.InitialClient && req.store) {
-    //    req.InitialClient("client3", req.store);
-    // }
-    // client.initialize();
+
     if (!req.body.name) {
       return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
     }
 
-    let name = "";
-    const lastAccount = await Db.findOne({}, { _id: 1 }).sort({ createdAt: -1 });
-    console.log(lastAccount);
-    req.body.createdBy = req.userId;
+    const duplc = await Db.findOne({ name: req.body.name }, { _id: 1 })
+    if (duplc) {
+      return res.status(400).json({ status: 400, msg: `Nama ${req.body.name} sudah digunakan!` });
+    }
 
+    const lastAccount = await Db.findOne({}, { _id: 1 }).sort({ _id: -1 });
+
+
+    if (!lastAccount) {
+      req.body._id = "client1";
+    } else {
+      const angkaDiBelakangClient = parseInt(lastAccount._id.replace("client", ""), 10);
+      req.body._id = `client${angkaDiBelakangClient + 1}`
+    }
+    req.body.createdBy = req.userId;
     try {
       const result = new Db(req.body);
       const response = await result.save();
-
-
-
+      if (req.InitialClient && req.store) {
+        req.InitialClient("client3", req.store);
+      }
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });

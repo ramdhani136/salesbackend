@@ -10,11 +10,38 @@ import { WhatsappClientModel } from "../models";
 const {
   RemoteAuth,
 } = require("whatsapp-web.js");
-const qrcode = require("qrcode-terminal");
+const qrcode = require("qrcode");
 
 class WhatsAppBoot {
   private clients: Record<string, any> = {};
   private store: string;
+
+
+  private async pushMessage(user: string) {
+
+    try {
+      const isClient = this.clients[`${user}`];
+      if (isClient) {
+        const status = await isClient.getState()
+        if (status === "CONNECTED") {
+          io.to(user).emit("message", "Client is connected!");
+          io.to(user).emit("qr", null);
+        } else {
+          io.to(user).emit("message", "Loading ..");
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    }
+
+
+    // if (await client.getState() === "CONNECTED") {
+    //   io.to(user).emit("message", "Client is connected!");
+    //   io.to(user).emit("qr", null);
+    // } else {
+    //   io.to(user).emit("message", "Client is connected!");
+    // }
+  }
 
   InitialClient = (user: String) => {
     if (this.store) {
@@ -44,13 +71,14 @@ class WhatsAppBoot {
         client.initialize();
 
         client.on("qr", (qr: any) => {
-          qrcode.generate(qr, { small: true });
+          // qrcode.generate(qr, { small: true });
           try {
             qrcode.toDataURL(qr, (err: any, url: any) => {
               io.to(user).emit("qr", url);
               io.to(user).emit("message", "QR Code received,scan please .");
             });
           } catch (error) {
+            console.log(error);
             io.to(user).emit("message", "QR Code Failded to Call! .");
           }
         });
@@ -102,6 +130,7 @@ class WhatsAppBoot {
         });
 
 
+
         // setInterval(async () => {
         //   if (client) {
         //     const state = await client.getState();
@@ -141,6 +170,19 @@ class WhatsAppBoot {
   constructor(store: any) {
     this.store = store;
     this.getAccount();
+
+
+    io.on("connection", (socket: any) => {
+      socket.on("get qr", (room: String) => {
+        socket.join(room);
+        console.log("User Joined Room: " + room);
+        this.pushMessage(`${room}`)
+        console.log("Dddd");
+      });
+    })
+
+
+
 
     const setDataWa = async (req: Request | any, res: Response, next: NextFunction) => {
       req.accounts = this.clients;

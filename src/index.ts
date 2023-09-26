@@ -384,14 +384,10 @@ class App {
 
       socket.on("join chat", (room: String) => {
         socket.join(room);
-        // console.log("User Joined Room: " + room);
+        console.log("User Joined Room: " + room);
       });
 
-      socket.on("get qr", (room: String) => {
-        socket.join(room);
-        // console.log("User Joined Room: " + room);
-      });
-
+    
       socket.on("typing", (room: String) => socket.in(room).emit("typing"));
 
       socket.on("stop typing", (room: String) =>

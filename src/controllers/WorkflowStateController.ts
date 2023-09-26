@@ -6,7 +6,7 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { WorkflowState } from "../models";
 import { ISearch } from "../utils/FilterQuery";
-
+import { ObjectId } from 'bson';
 const Db = WorkflowState;
 const redisName = "workflowstate";
 

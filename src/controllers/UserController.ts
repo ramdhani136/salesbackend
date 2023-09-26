@@ -19,9 +19,8 @@ import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
 import path from "path";
 import fs from "fs";
-
+import { ObjectId } from 'bson';
 import WorkflowController from "./WorkflowController";
-import { ObjectId } from "mongodb";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
@@ -361,6 +360,7 @@ class UserController implements IController {
         workflow: buttonActions,
       });
     } catch (error) {
+      console.log(error);
       return res.status(404).json({ status: 404, data: error });
     }
   };

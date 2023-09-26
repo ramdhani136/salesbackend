@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 // import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
+import { ObjectId } from 'bson';
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {

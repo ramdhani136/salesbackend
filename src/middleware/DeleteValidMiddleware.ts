@@ -12,7 +12,7 @@ import {
   EventDeleteWorkflowAction,
   EventDeleteWorkflowState,
 } from "./EventDeletedMIddleware";
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 
 const CheckData = async (
   req: Request,

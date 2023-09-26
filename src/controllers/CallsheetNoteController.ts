@@ -16,7 +16,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 import HistoryController from "./HistoryController";
 import { ISearch } from "../utils/FilterQuery";
 

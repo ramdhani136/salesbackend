@@ -12,7 +12,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 import UserModel from "../models/UserModel";
 
 const Db = PermissionModel;

@@ -8,8 +8,7 @@ import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
 import path from "path";
 import fs from "fs";
-
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 
 const Db = FileModel;
 const redisName = "files";

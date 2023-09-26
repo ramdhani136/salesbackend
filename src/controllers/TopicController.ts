@@ -7,8 +7,7 @@ import { History, TagModel, TopicModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
-
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 
 const Db = TopicModel;
 const redisName = "topic";

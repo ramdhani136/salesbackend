@@ -13,7 +13,7 @@ import {
   visitModel,
 } from "../models";
 
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";

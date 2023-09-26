@@ -1,7 +1,7 @@
 // filters=[["nama","=","Ilham Ramdhani"]]
 // fields=["name","username","email"]
 
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 import { IStateFilter } from "../Interfaces";
 
 interface IFilterQuery {

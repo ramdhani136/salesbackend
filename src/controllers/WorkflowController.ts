@@ -14,7 +14,7 @@ import {
 
 import { ISearch } from "../utils/FilterQuery";
 import HistoryController from "./HistoryController";
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 
 const Db = Workflow;
 const redisName = "workflow";

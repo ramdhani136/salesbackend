@@ -13,7 +13,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 
 const Db = WhatsappClientModel;
 const redisName = "whatsappclient";

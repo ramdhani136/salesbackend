@@ -4,7 +4,7 @@ import {
   PermissionModel,
   UserGroupListModel,
 } from "../models";
-import { ObjectId } from "mongodb";
+import { ObjectId } from 'bson';
 
 export enum selPermissionAllow {
   BRANCH = "branch",

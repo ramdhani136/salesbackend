@@ -177,7 +177,7 @@ class WhatsappAccountController implements IController {
 
       if (result.length > 0) {
         const setData = result.map(async (item: any) => {
-          let status = "Disconnected";
+          let status = "Not Connected";
           let account = "";
           let phone = "";
           let client: Client = req.accounts[item._id];
@@ -188,7 +188,7 @@ class WhatsappAccountController implements IController {
               account = client.info.pushname;
               phone = client.info.wid.user;
             } else {
-              status = "Disconnected"
+              status = "Not Connected"
             }
           }
           return { ...item, status: status, account, phone };

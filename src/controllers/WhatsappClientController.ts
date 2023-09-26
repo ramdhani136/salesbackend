@@ -472,20 +472,20 @@ class WhatsappAccountController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      // Mengecek permission user
-      const userPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.USER,
-        selPermissionType.BRANCH
-      );
-      // End
-      // Mengecek permission user
-      const branchPermission = await PermissionMiddleware.getPermission(
-        req.userId,
-        selPermissionAllow.BRANCH,
-        selPermissionType.BRANCH
-      );
-      // End
+      // // Mengecek permission user
+      // const userPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.USER,
+      //   selPermissionType.BRANCH
+      // );
+      // // End
+      // // Mengecek permission user
+      // const branchPermission = await PermissionMiddleware.getPermission(
+      //   req.userId,
+      //   selPermissionAllow.BRANCH,
+      //   selPermissionType.BRANCH
+      // );
+      // // End
 
       let pipeline: any[] = [
         {
@@ -493,13 +493,13 @@ class WhatsappAccountController implements IController {
         },
       ];
 
-      if (userPermission.length > 0) {
-        pipeline.push({ createdBy: { $in: userPermission } });
-      }
+      // if (userPermission.length > 0) {
+      //   pipeline.push({ createdBy: { $in: userPermission } });
+      // }
 
-      if (branchPermission.length > 0) {
-        pipeline.push({ _id: { $in: branchPermission } });
-      }
+      // if (branchPermission.length > 0) {
+      //   pipeline.push({ _id: { $in: branchPermission } });
+      // }
 
       const result = await Db.findOne({ $and: pipeline });
 
@@ -509,26 +509,26 @@ class WhatsappAccountController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
-      // Cek apakah digunakan di permission data
-      const permission = await PermissionModel.findOne(
-        {
-          $and: [
-            { allow: "branch" },
-            {
-              value: new ObjectId(req.params.id),
-            },
-          ],
-        },
-        { _id: 1 }
-      );
+      // // Cek apakah digunakan di permission data
+      // const permission = await PermissionModel.findOne(
+      //   {
+      //     $and: [
+      //       { allow: "branch" },
+      //       {
+      //         value: new ObjectId(req.params.id),
+      //       },
+      //     ],
+      //   },
+      //   { _id: 1 }
+      // );
 
-      if (permission) {
-        return res.status(404).json({
-          status: 404,
-          msg: "Branch ini sudah digunakan oleh data permission!",
-        });
-      }
-      // End
+      // if (permission) {
+      //   return res.status(404).json({
+      //     status: 404,
+      //     msg: "Branch ini sudah digunakan oleh data permission!",
+      //   });
+      // }
+      // // End
 
       // if (result.status === "1") {
       //   return res
@@ -538,17 +538,7 @@ class WhatsappAccountController implements IController {
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: result._id,
-          name: result.name,
-          type: redisName,
-        },
-        message: `Menghapus ${redisName} nomor ${result.name}`,
-        user: req.userId,
-      });
-      // End
+      
       return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

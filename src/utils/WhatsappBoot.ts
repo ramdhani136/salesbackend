@@ -122,7 +122,7 @@ class WhatsAppBoot {
           io.to(user).emit("message", "Auth eror ,restarting...");
           console.log(user + " auth_failure");;
           delete this.clients[user];
-          io.to(user).emit("reset", 3000);
+          io.to(user).emit("reset", 30000);
           await client.initialize();
           this.clients[`${user}`] = client;
           io.to(user).emit("loading", false);
@@ -134,7 +134,7 @@ class WhatsAppBoot {
           io.to(user).emit("message", "Whatsapp is disconnected!");
           console.log(user + " disconnected");
           delete this.clients[user];
-          io.to(user).emit("reset", 3000);
+          io.to(user).emit("reset", 30000);
           await client.initialize();
           this.clients[`${user}`] = client;
         });

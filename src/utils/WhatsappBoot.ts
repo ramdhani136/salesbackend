@@ -27,11 +27,14 @@ class WhatsAppBoot {
           io.to(user).emit("message", "Client is connected!");
           io.to(user).emit("qr", null);
         } else if (!status) {
+          io.to(user).emit("loading", true);
           io.to(user).emit("message", "Loading ..");
           // if (isClient) {
           //   await isClient.destroy();
-          //   isClient.initialize();
+          //   delete this.clients[`${user}`]
+          //   await isClient.initialize();
           // }
+          io.to(user).emit("loading", false);
         } else { io.to(user).emit("message", status) }
       }
     } catch (error) {
@@ -48,6 +51,7 @@ class WhatsAppBoot {
   }
 
   InitialClient = (user: String) => {
+  
     if (this.store) {
       try {
         const client: Client = new Client({
@@ -76,6 +80,7 @@ class WhatsAppBoot {
 
         client.on("qr", (qr: any) => {
           // qrcode.generate(qr, { small: true });
+          io.to(user).emit("loading", true);
           try {
             qrcode.toDataURL(qr, (err: any, url: any) => {
               io.to(user).emit("qr", url);
@@ -85,12 +90,14 @@ class WhatsAppBoot {
             console.log(error);
             io.to(user).emit("message", "QR Code Failded to Call! .");
           }
+          io.to(user).emit("loading", false);
         });
 
         client.on("ready", () => {
           console.log(user + " Client is ready!");
           io.to(user).emit("message", "Client is connected!");
           io.to(user).emit("qr", null);
+          io.to(user).emit("loading", false);
         });
 
         client.on("remote_session_saved", () => {
@@ -99,6 +106,7 @@ class WhatsAppBoot {
         });
 
         client.on("authenticated", (session: any) => {
+          io.to(user).emit("loading", true);
           console.log(user + " authenticated");
           io.to(user).emit("message", "Whatsapp is authenticated!");
         });
@@ -107,6 +115,7 @@ class WhatsAppBoot {
           io.to(user).emit("message", "Auth eror ,restarting...");
           console.log(user + " auth_failure");;
           client.initialize();
+          io.to(user).emit("loading", false);
         });
 
         client.on("disconnected", (reason: any) => {
@@ -117,6 +126,7 @@ class WhatsAppBoot {
 
 
         client.on("loading_screen", (percent: any, message: any) => {
+          io.to(user).emit("loading", true);
           try {
             io.to(user).emit("message", "Loading ..");
             console.log(user + " LOADING SCREEN", percent, message);
@@ -172,6 +182,7 @@ class WhatsAppBoot {
   }
 
   constructor(store: any) {
+    console.log("DIJALANKAN!")
     this.store = store;
     this.getAccount();
 

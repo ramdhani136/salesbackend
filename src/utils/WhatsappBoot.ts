@@ -34,7 +34,7 @@ class WhatsAppBoot {
           //   delete this.clients[`${user}`]
           //   await isClient.initialize();
           // }
-          io.to(user).emit("loading", false);
+          // io.to(user).emit("loading", false);
         } else { io.to(user).emit("message", status) }
       }
     } catch (error) {
@@ -51,7 +51,7 @@ class WhatsAppBoot {
   }
 
   InitialClient = (user: String) => {
-  
+
     if (this.store) {
       try {
         const client: Client = new Client({
@@ -112,23 +112,27 @@ class WhatsAppBoot {
         });
 
         client.on("auth_failure", (session: any) => {
+          io.to(user).emit("loading", true);
           io.to(user).emit("message", "Auth eror ,restarting...");
           console.log(user + " auth_failure");;
           client.initialize();
           io.to(user).emit("loading", false);
         });
 
-        client.on("disconnected", (reason: any) => {
+        client.on("disconnected", async (reason: any) => {
+          io.to(user).emit("loading", true);
           io.to(user).emit("message", "Whatsapp is disconnected!");
           console.log(user + " disconnected");
-          client.initialize();
+
+          await client.initialize();
+          io.to(user).emit("loading", false);
         });
 
 
         client.on("loading_screen", (percent: any, message: any) => {
           io.to(user).emit("loading", true);
           try {
-            io.to(user).emit("message", "Loading ..");
+            io.to(user).emit("message", "Connecting ..");
             console.log(user + " LOADING SCREEN", percent, message);
           } catch (error) {
             console.log(error);

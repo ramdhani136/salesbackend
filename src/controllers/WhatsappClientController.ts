@@ -619,6 +619,7 @@ class WhatsappAccountController implements IController {
       if (!req.accounts) {
         return res.status(400).json({ status: 404, msg: "Error, Account tidak ada!" });
       }
+      io.to(req.params.user).emit("loading", true);
       const client: Client = await req.accounts[req.params.user];
       if (client) {
         const state = await client.getState()
@@ -630,20 +631,25 @@ class WhatsappAccountController implements IController {
             await client.destroy()
             client.initialize();
             io.to(req.params.user).emit("message", "Waiting for new qr :)");
+
             return res.status(200).json({ status: 400, msg: "Success, Please wait for the new qr code" });
           } catch (error) {
             io.to(req.params.user).emit("message", "Failed to refresh");
+            io.to(req.params.user).emit("loading", false);
             return res.status(400).json({ status: 400, msg: "Error, refresh error" });
           }
 
         }
       } else {
+        io.to(req.params.user).emit("loading", false);
         return res.status(400).json({ status: 400, msg: "Error, Account tidak ditemukan!" });
       }
 
     } catch (error) {
+      io.to(req.params.user).emit("loading", false);
       return res.status(400).json({ status: 400, msg: error });
     }
+
   };
 }
 

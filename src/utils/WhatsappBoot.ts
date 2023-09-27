@@ -122,7 +122,7 @@ class WhatsAppBoot {
           io.to(user).emit("message", "Auth eror ,restarting...");
           console.log(user + " auth_failure");;
           delete this.clients[user];
-          io.to(user).emit("reset", 30000);
+          io.to(user).emit("reset", 10000);
           await client.initialize();
           this.clients[`${user}`] = client;
           io.to(user).emit("loading", false);
@@ -134,7 +134,7 @@ class WhatsAppBoot {
           io.to(user).emit("message", "Whatsapp is disconnected!");
           console.log(user + " disconnected");
           delete this.clients[user];
-          io.to(user).emit("reset", 30000);
+          io.to(user).emit("reset", 10000);
           await this.InitialClient({ user: user });
         });
 
@@ -245,6 +245,25 @@ class WhatsAppBoot {
               io.to(`${room}`).emit("loading", true);
               io.to(`${room}`).emit("message", "Waiting for new qr :)");
               delete this.clients[`${room}`];
+              await client.destroy();
+              this.InitialClient({ user: `${room}` });
+            }
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      });
+
+      socket.on("logout", async (room: String) => {
+        try {
+          const client: Client = this.clients[`${room}`]
+          if (client) {
+            console.log('Logout');
+            if (await client.getState() === "CONNECTED") {
+              io.to(`${room}`).emit("loading", true);
+              io.to(`${room}`).emit("message", "Waiting .. :)");
+              delete this.clients[`${room}`];
+              await client.logout();
               await client.destroy();
               this.InitialClient({ user: `${room}` });
             }

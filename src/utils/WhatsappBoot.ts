@@ -227,6 +227,15 @@ class WhatsAppBoot {
         }
       });
 
+      socket.on("close", async (room: String) => {
+        try {
+          socket.leave(room);
+          console.log("User UnJoined Room: " + room);
+        } catch (error) {
+          console.log(error)
+        }
+      });
+
 
       // socket.on("close", async (room: String) => {
       //   try {

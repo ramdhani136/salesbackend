@@ -29,12 +29,11 @@ class WhatsAppBoot {
         } else if (!status) {
           io.to(user).emit("loading", true);
           io.to(user).emit("message", "Loading ..");
-          // if (isClient) {
-          //   await isClient.destroy();
-          //   delete this.clients[`${user}`]
-          //   await isClient.initialize();
-          // }
-          // io.to(user).emit("loading", false);
+
+          // await isClient.destroy();
+          // delete this.clients[`${user}`]
+          // await isClient.initialize();
+
         } else { io.to(user).emit("message", status) }
       }
     } catch (error) {
@@ -118,21 +117,24 @@ class WhatsAppBoot {
           io.to(user).emit("message", "Whatsapp is authenticated!");
         });
 
-        client.on("auth_failure", (session: any) => {
+        client.on("auth_failure", async (session: any) => {
           io.to(user).emit("loading", true);
           io.to(user).emit("message", "Auth eror ,restarting...");
           console.log(user + " auth_failure");;
-          client.initialize();
+          delete this.clients[user];
+          await client.initialize();
+          this.clients[`${user}`] = client;
           io.to(user).emit("loading", false);
+
         });
 
         client.on("disconnected", async (reason: any) => {
           io.to(user).emit("loading", true);
           io.to(user).emit("message", "Whatsapp is disconnected!");
           console.log(user + " disconnected");
-
+          delete this.clients[user];
           await client.initialize();
-          io.to(user).emit("loading", false);
+          this.clients[`${user}`] = client;
         });
 
 
@@ -199,7 +201,7 @@ class WhatsAppBoot {
 
 
     io.on("connection", (socket: any) => {
-      socket.on("get qr", (room: String) => {
+      socket.on("open", (room: String) => {
         try {
           socket.join(room);
           console.log("User Joined Room: " + room);
@@ -210,6 +212,40 @@ class WhatsAppBoot {
             io.to(`${room}`).emit("loading", true);
             io.to(`${room}`).emit("message", "Loading ..");
             this.InitialClient({ user: `${room}` });
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      });
+
+
+      socket.on("close", async (room: String) => {
+        try {
+          console.log("User Unjoint Room: " + room);
+          const client: Client = this.clients[`${room}`]
+          if (client) {
+            console.log(await client.getState());
+            if (await client.getState() !== "CONNECTED") {
+              console.log("Akan di destory");
+            }
+          }
+        } catch (error) {
+          console.log(error)
+        }
+      });
+
+      socket.on("qrrefresh", async (room: String) => {
+        try {
+          const client: Client = this.clients[`${room}`]
+          if (client) {
+            console.log('Get Refresh Qr');
+            if (await client.getState() !== "CONNECTED") {
+              io.to(`${room}`).emit("loading", true);
+              io.to(`${room}`).emit("message", "Waiting for new qr :)");
+              await client.destroy();
+              await client.initialize();
+
+            }
           }
         } catch (error) {
           console.log(error)

@@ -21,18 +21,32 @@ class WhatsAppBoot {
     try {
       const status = await client.getState()
       if (status === "CONNECTED") {
+        const info: any = client.info;
+        let img: string = "";
+
+        if (info) {
+          img = await client.getProfilePicUrl(info.me._serialized)
+        }
+
+        const userData = ({
+          name: info.pushname,
+          phone: info.me.user,
+          img: img,
+          platform: info.platform,
+        })
+
+        // console.log(await client.getProfilePicUrl("6289637428874@c.us"))
+        // console.log(await client.archiveChat("6289637428874@c.us"))
+        // console.log(await client.getMessageById("6289637428874@c.us"))
+
+        // console.log(await client.archiveChat())
         io.to(user).emit("message", "Client is connected!");
+        io.to(user).emit("getuserdata", userData);
         io.to(user).emit("qr", null);
       } else if (!status) {
         io.to(`${user}`).emit("loading", true);
         io.to(`${user}`).emit("message", "Waiting ..");
-        // const id = setInterval(async () => {
-        //   io.to(`${user}`).emit("message", "Connecting ..");
-        //   delete this.clients[`${user}`];
-        //   await client.destroy();
-        //   this.InitialClient({ user: `${user}` });
-        //   clearInterval(id);
-        // }, 11000);
+
       } else {
         io.to(user).emit("message", status);
         client.initialize();

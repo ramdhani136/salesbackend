@@ -135,8 +135,7 @@ class WhatsAppBoot {
           console.log(user + " disconnected");
           delete this.clients[user];
           io.to(user).emit("reset", 30000);
-          await client.initialize();
-          this.clients[`${user}`] = client;
+          await this.InitialClient({ user: user });
         });
 
 
@@ -177,6 +176,7 @@ class WhatsAppBoot {
         // Save client
         this.clients[`${user}`] = client;
       } catch (error) {
+        console.log("Ddddddddddddddd");
         console.log(error)
       }
     }
@@ -244,10 +244,9 @@ class WhatsAppBoot {
             if (await client.getState() !== "CONNECTED") {
               io.to(`${room}`).emit("loading", true);
               io.to(`${room}`).emit("message", "Waiting for new qr :)");
-              await client.destroy();
               delete this.clients[`${room}`];
-              await client.initialize();
-
+              await client.destroy();
+              this.InitialClient({ user: `${room}` });
             }
           }
         } catch (error) {

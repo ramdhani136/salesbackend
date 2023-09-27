@@ -17,36 +17,29 @@ class WhatsAppBoot {
   private store: string;
 
 
-  private async pushMessage(user: string) {
-
+  private async pushMessage(user: string, client: Client) {
     try {
-      const isClient: Client = this.clients[`${user}`];
-      if (isClient) {
-        const status = await isClient.getState()
-        if (status === "CONNECTED") {
-          io.to(user).emit("message", "Client is connected!");
-          io.to(user).emit("qr", null);
-        } else if (!status) {
-          io.to(user).emit("loading", true);
-          io.to(user).emit("message", "Loading ..");
-
-          // await isClient.destroy();
-          // delete this.clients[`${user}`]
-          // await isClient.initialize();
-
-        } else { io.to(user).emit("message", status) }
+      const status = await client.getState()
+      if (status === "CONNECTED") {
+        io.to(user).emit("message", "Client is connected!");
+        io.to(user).emit("qr", null);
+      } else if (!status) {
+        io.to(`${user}`).emit("loading", true);
+        io.to(`${user}`).emit("message", "Waiting ..");
+        // const id = setInterval(async () => {
+        //   io.to(`${user}`).emit("message", "Connecting ..");
+        //   delete this.clients[`${user}`];
+        //   await client.destroy();
+        //   this.InitialClient({ user: `${user}` });
+        //   clearInterval(id);
+        // }, 11000);
+      } else {
+        io.to(user).emit("message", status);
+        client.initialize();
       }
     } catch (error) {
       console.log(error)
     }
-
-
-    // if (await client.getState() === "CONNECTED") {
-    //   io.to(user).emit("message", "Client is connected!");
-    //   io.to(user).emit("qr", null);
-    // } else {
-    //   io.to(user).emit("message", "Client is connected!");
-    // }
   }
 
   InitialClient = ({ user, deleteWhenNotActive }: { user: string, deleteWhenNotActive?: boolean }) => {
@@ -197,7 +190,6 @@ class WhatsAppBoot {
   }
 
   constructor(store: any) {
-    console.log("DIJALANKAN!")
     this.store = store;
     this.getAccount();
 
@@ -209,7 +201,7 @@ class WhatsAppBoot {
           console.log("User Joined Room: " + room);
           const client = this.clients[`${room}`]
           if (client) {
-            this.pushMessage(`${room}`)
+            this.pushMessage(`${room}`, client)
           } else {
             io.to(`${room}`).emit("loading", true);
             io.to(`${room}`).emit("message", "Connecting ..");

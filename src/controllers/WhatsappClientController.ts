@@ -243,7 +243,8 @@ class WhatsappAccountController implements IController {
       const result = new Db(req.body);
       const response = await result.save();
       if (req.InitialClient && req.store) {
-        req.InitialClient("client3", req.store);
+        
+        // req.InitialClient("client3", req.store);
       }
 
       return res.status(200).json({ status: 200, data: response });

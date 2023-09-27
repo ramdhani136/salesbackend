@@ -50,7 +50,7 @@ class WhatsAppBoot {
     // }
   }
 
-  InitialClient = (user: String) => {
+  InitialClient = ({ user, deleteWhenNotActive }: { user: string, deleteWhenNotActive?: boolean }) => {
 
     if (this.store) {
       try {
@@ -79,18 +79,25 @@ class WhatsAppBoot {
         client.initialize();
 
         client.on("qr", (qr: any) => {
-          // qrcode.generate(qr, { small: true });
-          io.to(user).emit("loading", true);
-          try {
-            qrcode.toDataURL(qr, (err: any, url: any) => {
-              io.to(user).emit("qr", url);
-              io.to(user).emit("message", "QR Code received,scan please .");
-            });
-          } catch (error) {
-            console.log(error);
-            io.to(user).emit("message", "QR Code Failded to Call! .");
+          if (!deleteWhenNotActive) {
+            console.log(user + qr);
+            // qrcode.generate(qr, { small: true });
+            io.to(user).emit("loading", true);
+            try {
+              qrcode.toDataURL(qr, (err: any, url: any) => {
+                io.to(user).emit("qr", url);
+                io.to(user).emit("message", "QR Code received,scan please .");
+              });
+            } catch (error) {
+              console.log(error);
+              io.to(user).emit("message", "QR Code Failded to Call! .");
+            }
+            io.to(user).emit("loading", false);
+          } else {
+            console.log(user + " Destroy");
+            client.destroy();
+            delete this.clients[user];
           }
-          io.to(user).emit("loading", false);
         });
 
         client.on("ready", () => {
@@ -176,7 +183,7 @@ class WhatsAppBoot {
     const accounts = await WhatsappClientModel.find({}, { _id: 1 });
     if (accounts.length > 0) {
       for (const account of accounts) {
-        this.InitialClient(account._id);
+        this.InitialClient({ user: account._id, deleteWhenNotActive: true });
       }
     }
   }
@@ -193,10 +200,20 @@ class WhatsAppBoot {
 
     io.on("connection", (socket: any) => {
       socket.on("get qr", (room: String) => {
-        socket.join(room);
-        console.log("User Joined Room: " + room);
-        this.pushMessage(`${room}`)
-        console.log("Dddd");
+        try {
+          socket.join(room);
+          console.log("User Joined Room: " + room);
+          const client = this.clients[`${room}`]
+          if (client) {
+            this.pushMessage(`${room}`)
+          } else {
+            io.to(`${room}`).emit("loading", true);
+            io.to(`${room}`).emit("message", "Loading ..");
+            this.InitialClient({ user: `${room}` });
+          }
+        } catch (error) {
+          console.log(error)
+        }
       });
     })
 

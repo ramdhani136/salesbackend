@@ -203,7 +203,7 @@ class WhatsAppBoot {
 
 
     io.on("connection", (socket: any) => {
-      socket.on("open", (room: String) => {
+      socket.on("open", async (room: String) => {
         try {
           socket.join(room);
           console.log("User Joined Room: " + room);
@@ -212,8 +212,9 @@ class WhatsAppBoot {
             this.pushMessage(`${room}`)
           } else {
             io.to(`${room}`).emit("loading", true);
-            io.to(`${room}`).emit("message", "Loading ..");
+            io.to(`${room}`).emit("message", "Connecting ..");
             this.InitialClient({ user: `${room}` });
+            // this.InitialClient({ user: `${room}` });
           }
         } catch (error) {
           console.log(error)
@@ -221,20 +222,20 @@ class WhatsAppBoot {
       });
 
 
-      socket.on("close", async (room: String) => {
-        try {
-          console.log("User Unjoint Room: " + room);
-          const client: Client = this.clients[`${room}`]
-          if (client) {
-            console.log(await client.getState());
-            if (await client.getState() !== "CONNECTED") {
-              console.log("Akan di destory");
-            }
-          }
-        } catch (error) {
-          console.log(error)
-        }
-      });
+      // socket.on("close", async (room: String) => {
+      //   try {
+      //     console.log("User Unjoint Room: " + room);
+      //     const client: Client = this.clients[`${room}`]
+      //     if (client) {
+      //       console.log(await client.getState());
+      //       if (await client.getState() !== "CONNECTED") {
+      //         console.log("Akan di destory");
+      //       }
+      //     }
+      //   } catch (error) {
+      //     console.log(error)
+      //   }
+      // });
 
       socket.on("qrrefresh", async (room: String) => {
         try {

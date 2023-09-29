@@ -259,7 +259,7 @@ class WhatsAppBoot {
             console.log('Get Refresh Qr');
             if (await client.getState() !== "CONNECTED") {
               io.to(`${room}`).emit("loading", true);
-              io.to(`${room}`).emit("message", "Waiting for new qr :)");
+              io.to(`${room}`).emit("message", "Waiting ..");
               delete this.clients[`${room}`];
               await client.destroy();
               this.InitialClient({ user: `${room}` });

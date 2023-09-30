@@ -23,21 +23,29 @@ class WhatsAppBoot {
       if (status === "CONNECTED") {
         const info: any = client.info;
         let img: string = "";
+        let isBusiness: boolean=false;
 
         if (info) {
-          img = await client.getProfilePicUrl(info.me._serialized)
+          img = await client.getProfilePicUrl(info.me._serialized);
+          const contact = await client.getContactById(info.me._serialized)
+          isBusiness = contact.isBusiness
         }
 
         const userData = ({
           name: info.pushname,
           phone: info.me.user,
+          isBusiness: isBusiness,
           img: img,
           platform: info.platform,
         })
 
-        // console.log(await client.getProfilePicUrl("6289637428874@c.us"))
-        // console.log(await client.archiveChat("6289637428874@c.us"))
-        // console.log(await client.getMessageById("6289637428874@c.us"))
+        // const contact = await client.getChatById("6289636829437@c.us")
+
+        // const data = await contact.fetchMessages({
+        //   limit: 1024 
+        // });
+        // console.log(data);
+        // io.to(user).emit("coba", data);
 
         // console.log(await client.archiveChat())
         io.to(user).emit("message", "Client is connected!");

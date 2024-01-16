@@ -2,11 +2,6 @@ import mongoose, { Schema } from "mongoose";
 
 const AssesmentIndicator = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     assesmentTemplateId: {
       type: Schema.Types.ObjectId,
       ref: "assesmenttemplate ",
@@ -35,9 +30,6 @@ AssesmentIndicator.index({
 });
 AssesmentIndicator.index({
   updatedAt: -1,
-});
-AssesmentIndicator.index({
-  name: -1,
 });
 
 export default mongoose.model("assesmentindicator", AssesmentIndicator);

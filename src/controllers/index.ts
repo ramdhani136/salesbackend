@@ -34,6 +34,8 @@ import NotesController from "./NotesController";
 import ReportController from "./ReportController";
 import WhatsappClientController from "./WhatsappClientController";
 import AssesmentQuestionController from "./AssesmentQuestionController";
+import AssesmentIndicatorController from "./AssesmentIndicatorController";
+import AssesmentTemplateController from "./AssesmentTemplateController";
 
 
 export {
@@ -72,5 +74,7 @@ export {
   NotesController,
   ReportController,
   WhatsappClientController,
-  AssesmentQuestionController
+  AssesmentQuestionController,
+  AssesmentIndicatorController,
+  AssesmentTemplateController
 };

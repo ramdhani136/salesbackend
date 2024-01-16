@@ -39,6 +39,8 @@ const RoleListModel = new mongoose.Schema(
         "topic",
         "notes",
         "assesmentquestion",
+        "assesmentindicator",
+        "assesmenttemplate"
       ],
       require: true,
       index: 1,

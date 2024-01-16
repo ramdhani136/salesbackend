@@ -33,6 +33,9 @@ import FileRoutes from "./FileRoutes";
 import NotesRoutes from "./NotesRoutes";
 import ReportRoutes from "./ReportRoutes";
 import WhatsAppClientRoutes from "./WhatsappClientRoutes";
+import AssesmentIndicatorroutes from "./AssesmentIndicatorroutes";
+import AssesmentQuestionRoutes from "./AssesmentQuestionRoutes";
+import AssesmentTemplateRoutes from "./AssesmentTemplateRoutes";
 
 export {
   ConfigRoutes,
@@ -69,5 +72,8 @@ export {
   FileRoutes,
   NotesRoutes,
   ReportRoutes,
-  WhatsAppClientRoutes
+  WhatsAppClientRoutes,
+  AssesmentTemplateRoutes,
+  AssesmentIndicatorroutes,
+  AssesmentQuestionRoutes
 };

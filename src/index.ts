@@ -45,6 +45,9 @@ import {
   FileRoutes,
   NotesRoutes,
   ReportRoutes,
+  AssesmentTemplateRoutes,
+  AssesmentQuestionRoutes,
+  AssesmentIndicatorroutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -60,7 +63,7 @@ import {
   User,
   WorkflowState,
 } from "./models";
-import AssesmentQuestionRoutes from "./routes/AssesmentQuestionRoutes";
+
 
 const cookieParser = require("cookie-parser");
 
@@ -498,6 +501,8 @@ class App {
     );
     this.app.use("/history", AuthMiddleware, HistoryRoutes);
     this.app.use("/assesmentquestion", AuthMiddleware, RoleMiddleware, AssesmentQuestionRoutes);
+    this.app.use("/assesmentindicator", AuthMiddleware, RoleMiddleware, AssesmentIndicatorroutes);
+    this.app.use("/assesmenttemplate", AuthMiddleware, RoleMiddleware, AssesmentTemplateRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);
   }

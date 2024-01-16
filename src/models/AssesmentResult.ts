@@ -31,20 +31,26 @@ const AssesmentResult = new mongoose.Schema(
       default: "0",
       index: 1,
     },
+    workflowState: {
+      type: String,
+      required: true,
+      default: "Draft",
+      index: 1,
+    },
     score: {
       type: Number,
-      required:true,
+      required: true,
     },
     grade: {
       type: String,
-      required:true,
+      required: true,
     },
     detail: [
       { question: { type: String, required: true }, answer: { type: String, required: true } }
     ],
     desc: {
       type: String,
-      required:true,
+      required: true,
     },
   },
   {

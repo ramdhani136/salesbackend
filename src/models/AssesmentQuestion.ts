@@ -16,8 +16,8 @@ const AssesmentQuestion = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["0", "1", "2","3"],
-      default: "0",
+      enum: ["0", "1", "2"],
+      default: "1",
       index: 1,
     },
   },

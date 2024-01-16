@@ -33,6 +33,8 @@ import FileController from "./FileController";
 import NotesController from "./NotesController";
 import ReportController from "./ReportController";
 import WhatsappClientController from "./WhatsappClientController";
+import AssesmentQuestionController from "./AssesmentQuestionController";
+
 
 export {
   UserController,
@@ -69,5 +71,6 @@ export {
   FileController,
   NotesController,
   ReportController,
-  WhatsappClientController
+  WhatsappClientController,
+  AssesmentQuestionController
 };

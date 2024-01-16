@@ -33,12 +33,18 @@ const AssesmentResult = new mongoose.Schema(
     },
     score: {
       type: Number,
+      required:true,
+    },
+    grade: {
+      type: String,
+      required:true,
     },
     detail: [
       { question: { type: String, required: true }, answer: { type: String, required: true } }
     ],
     desc: {
       type: String,
+      required:true,
     },
   },
   {

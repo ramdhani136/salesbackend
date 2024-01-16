@@ -15,14 +15,19 @@ const AssesmentGrade = new mongoose.Schema(
     condition: {
       type: String,
       enum: [">", ">=", "<", "<=", "="],
-      required:true,
+      required: true,
+    },
+    grade: {
+      type: String,
+      required: true,
     },
     value: {
       type: Number,
-      required:true,
+      required: true,
     },
     desc: {
       type: String,
+      required: true,
     },
   },
   {

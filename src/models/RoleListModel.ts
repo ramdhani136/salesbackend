@@ -38,6 +38,7 @@ const RoleListModel = new mongoose.Schema(
         "workflowchanger",
         "topic",
         "notes",
+        "assesmentquestion",
       ],
       require: true,
       index: 1,

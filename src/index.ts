@@ -60,6 +60,7 @@ import {
   User,
   WorkflowState,
 } from "./models";
+import AssesmentQuestionRoutes from "./routes/AssesmentQuestionRoutes";
 
 const cookieParser = require("cookie-parser");
 
@@ -424,6 +425,7 @@ class App {
   protected routes(): void {
     this.app.use("/users", UserRoutes);
     this.app.use("/config", AuthMiddleware, RoleMiddleware, ConfigRoutes);
+    this.app.use("/config", AuthMiddleware, RoleMiddleware, ConfigRoutes);
     this.app.use("/erp", AuthMiddleware, RoleMiddleware, ErpDataRoutes);
     this.app.use("/branch", AuthMiddleware, RoleMiddleware, BranchRoutes);
     this.app.use(
@@ -495,6 +497,7 @@ class App {
       WorkflowCangerRoutes
     );
     this.app.use("/history", AuthMiddleware, HistoryRoutes);
+    this.app.use("/assesmentquestion", AuthMiddleware, RoleMiddleware, AssesmentQuestionRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);
   }

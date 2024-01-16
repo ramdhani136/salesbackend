@@ -31,6 +31,7 @@ class AssesmentQuestionController implements IController {
           "question.name",
           "weight",
           "desc",
+          "options",
           "updatedAt",
           "createdAt",
         ];

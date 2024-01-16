@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentTemplate, History, PermissionModel } from "../models";
+import { AssesmentQuestion, AssesmentTemplate, History, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -76,12 +76,12 @@ class AssesmentTemplateController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "name",
-            "workflowState",
-            "createdBy.name",
-            "status",
-            "updatedAt",
-          ];
+          "name",
+          "workflowState",
+          "createdBy.name",
+          "status",
+          "updatedAt",
+        ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -253,40 +253,143 @@ class AssesmentTemplateController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.name) {
-      return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
-    }
-    req.body.createdBy = req.userId;
-
     try {
-      const result = new Db(req.body);
-      const response = await result.save();
+      req.body.createdBy = req.userId;
+      if (!req.body.name) {
+        return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
+      }
+      if (!req.body.indicators) {
+        return res.status(400).json({ status: 400, msg: "Indicators wajib diisi!" });
+      }
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name,
-          type: redisName,
-        },
-        message: `Membuat ${redisName} baru`,
-        user: req.userId,
-      });
-      // End
+      if (typeof req.body.indicators !== 'object') {
+        return res.status(400).json({ status: 400, msg: "Indicators array object!" });
+      }
 
-      // await Redis.client.set(
-      //   `${redisName}-${response._id}`,
-      //   JSON.stringify(response),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
+      if (req.body.indicators.length === 0) {
+        return res.status(400).json({ status: 400, msg: "Indicators wajib diisi!" });
+      }
 
-      return res.status(200).json({ status: 200, data: response });
+      const indicatorOk: { valid: boolean, data?: string[] } = await this.cekIndicator(req.body.indicators);
+
+      if (indicatorOk.valid) {
+        // Cek grade
+        if (!req.body.grades) {
+          return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
+        }
+
+        if (typeof req.body.grades !== 'object') {
+          return res.status(400).json({ status: 400, msg: "Grades array object!" });
+        }
+
+        if (req.body.grades.length === 0) {
+          return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
+        }
+        // End
+
+
+        // const result = new Db(req.body);
+        // const response = await result.save();
+
+        // // push history
+        // await HistoryController.pushHistory({
+        //   document: {
+        //     _id: response._id,
+        //     name: response.name,
+        //     type: redisName,
+        //   },
+        //   message: `Membuat ${redisName} baru`,
+        //   user: req.userId,
+        // });
+        // End
+        return res.status(200).json({ status: 200, data: 'response' });
+      } else {
+        return res.status(400).json({ status: 400, msg: indicatorOk.data });
+      }
     } catch (error) {
-      return res.status(400).json({ status: 400, data: error });
+      return res.status(400).json({ status: 400, msg: error });
     }
   };
+
+  cekIndicator = async (indicators: any[]): Promise<{ valid: boolean; data?: string[]; }> => {
+    let errors: string[] = [];
+    for (const indicator of indicators) {
+      const keysToCheck = ['questionId', 'weight', 'options'];
+      const index = indicators.indexOf(indicator) + 1;
+      const missingKeys = keysToCheck.filter(key => !Object.keys(indicator).includes(key));
+      if (missingKeys.length > 0) {
+        errors.push(`Data ${missingKeys} di indicator no ${index} wajib diisi!`)
+      } else {
+        // cek question
+        try {
+          const cekQuestion = await AssesmentQuestion.findById(indicator.questionId);
+          if (!cekQuestion) {
+            errors.push(`Question di indicator no ${index} tidak ditemukan!`)
+          } else {
+            // Cek options
+            if (typeof indicator.options !== "object") {
+              errors.push(`Question options di indicator no ${index} bukan object data!`)
+            } else {
+              if (indicator.options.length === 0) {
+                errors.push(`Cek kembali question di indikator no ${index}!`)
+              } else {
+                const optionToCheck = ['name', 'weight'];
+                for (const option of indicator.options) {
+                  const idOption = indicator.options.indexOf(option) + 1;
+                  const missingOption = optionToCheck.filter(key => !Object.keys(option).includes(key));
+                  if (missingOption.length > 0) {
+                    errors.push(`Data ${missingOption} di option indicator no ${idOption} wajib diisi!`)
+                  }
+                }
+
+              }
+            }
+
+            // End
+          }
+        } catch (error) {
+          errors.push(`question ${index} tidak valid!`)
+        }
+        // End
+      }
+    }
+
+    // Cek indikator
+    const dupIndicator: any[] = this.findDuplicateQuestionIds(indicators);
+    if (dupIndicator.length > 0) {
+      for (const dup of dupIndicator) {
+        errors.push(`Duplikasi question di nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
+      }
+    }
+    // End
+
+    if (errors.length > 0) {
+      return { valid: false, data: errors };
+    } else {
+      return { valid: true };
+    }
+
+  }
+
+  findDuplicateQuestionIds(indicators: any[]) {
+    const seenIds = new Map(); // Menggunakan Map untuk menyimpan data dengan questionId yang sama
+    const duplicates: any = [];
+
+    indicators.forEach((indicator, index) => {
+      if (seenIds.has(indicator.questionId)) {
+        const existingIndex = seenIds.get(indicator.questionId);
+        duplicates.push({ existingIndex, currentIndex: index, questionId: indicator.questionId });
+      } else {
+        seenIds.set(indicator.questionId, index);
+      }
+    });
+
+    return duplicates;
+  }
+
+
+
+
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
@@ -393,7 +496,7 @@ class AssesmentTemplateController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
-    
+
 
         if (req.body.nextState) {
           const checkedWorkflow =

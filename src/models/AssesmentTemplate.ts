@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import AssesmentIndicatorModel from "./AssesmentIndicatorModel";
+import AssesmentGradeModel from "./AssesmentGradeModel";
 
 const AssesmentTemplate = new mongoose.Schema(
   {
@@ -29,6 +31,20 @@ const AssesmentTemplate = new mongoose.Schema(
     desc: {
       type: String,
     },
+    indicators: {
+      type: [AssesmentIndicatorModel],
+      required: true,
+      validate: {
+        validator: function (arr: any) {
+          return arr.length > 0; 
+        },
+        message: "Indicator wajib diisi!",
+      },
+    },
+    grades: {
+      type: [AssesmentGradeModel],
+      required: true
+    }
   },
   {
     timestamps: true,

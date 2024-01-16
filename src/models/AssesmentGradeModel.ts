@@ -1,0 +1,32 @@
+import { Schema } from "mongoose";
+
+const AssesmentGradeModel =
+{
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  bottom: {
+    type: Number,
+    required: true,
+  },
+  top: {
+    type: Number,
+    required: true,
+  },
+  grade: {
+    type: String,
+    required: true,
+  },
+  desc: {
+    type: String,
+    required: true,
+  },
+};
+
+
+
+
+
+export default AssesmentGradeModel;

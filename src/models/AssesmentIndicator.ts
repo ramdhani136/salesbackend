@@ -4,7 +4,7 @@ const AssesmentIndicator = new mongoose.Schema(
   {
     assesmentTemplateId: {
       type: Schema.Types.ObjectId,
-      ref: "assesmenttemplate ",
+      ref: "assesmenttemplate",
       required: true,
     },
     questionId: {
@@ -14,11 +14,31 @@ const AssesmentIndicator = new mongoose.Schema(
     },
     weight: {
       type: Number,
-      required:true,
+      required: true,
     },
     desc: {
       type: String,
     },
+    options: {
+      type: [{
+        name: {
+          type: String,
+          required: true,
+          unique: true,
+        },
+        weight: {
+          type: Number,
+          required: true
+        },
+      }],
+      required: true,
+      validate: {
+        validator: function (arr: any) {
+          return arr.length > 0; // Memvalidasi bahwa array memiliki setidaknya satu elemen
+        },
+        message: "Wajib mengisi pilihan jawaban!.",
+      },
+    }
   },
   {
     timestamps: true,

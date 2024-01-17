@@ -373,6 +373,20 @@ class AssesmentTemplateController implements IController {
         errors = [...errors, ...overlap.errors!];
       }
       // End
+
+      // Cek kekosongan angka
+      if (errors.length === 0) {
+        const cekRangeKosong = this.cariKekosonganRentang(grades);
+        if (cekRangeKosong.valid) {
+
+
+          for (const range of cekRangeKosong.data!) {
+            errors.push(`Terdapat kekosongan range pada grade ${range.bottom} - ${range.top} !`)
+          }
+        }
+      }
+
+      // End
     }
 
 
@@ -403,6 +417,46 @@ class AssesmentTemplateController implements IController {
     }
     return { valid: false }; // Jika tidak ada tumpang tindih
   }
+
+
+
+  cariKekosonganRentang(data: any[]): { valid: boolean, data?: any[] } {
+    // Menyimpan angka-angka yang mewakili kekosongan rentang
+    let angkaKekosongan: any[] = [];
+
+    // Mengurutkan data berdasarkan bottom
+    data.sort((a, b) => a.bottom - b.bottom);
+
+    // Menambahkan rentang awal jika rentang pertama tidak dimulai dari 0
+    if (data.length === 0 || data[0].bottom > 0) {
+      const rentangAwal = { bottom: 0, top: data.length > 0 ? Math.min(data[0].bottom - 1, Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER };
+      angkaKekosongan.push(rentangAwal);
+    }
+
+    // Memeriksa kekosongan atau tumpang tindih
+    for (let i = 0; i < data.length - 1; i++) {
+      if (data[i].top >= data[i + 1].bottom) {
+        // Tidak ada kekosongan atau tumpang tindih
+        console.log(`Rentang ${data[i].name} - ${data[i + 1].name} valid.`);
+      } else {
+        if (data[i].top + 1 <= data[i + 1].bottom - 1) {
+          // Ada kekosongan atau tumpang tindih, menyimpan angka yang mewakili kekosongan
+          angkaKekosongan.push({ bottom: data[i].top + 1, top: data[i + 1].bottom - 1 });
+          console.error(`Rentang ${data[i].name} - ${data[i + 1].name} tidak valid.`);
+        }
+      }
+    }
+
+    if (angkaKekosongan.length > 0) {
+      return { valid: true, data: angkaKekosongan }
+    } else {
+      return { valid: false }
+    }
+
+    console.log(angkaKekosongan);
+  }
+
+
 
 
 

@@ -301,21 +301,21 @@ class AssesmentTemplateController implements IController {
         // End
 
         if (gradeOk.valid) {
-          // const result = new Db(req.body);
-          // const response = await result.save();
+          const result = new Db(req.body);
+          const response = await result.save();
 
-          // // push history
-          // await HistoryController.pushHistory({
-          //   document: {
-          //     _id: response._id,
-          //     name: response.name,
-          //     type: redisName,
-          //   },
-          //   message: `Membuat ${redisName} baru`,
-          //   user: req.userId,
-          // });
-          // // End
-          return res.status(200).json({ status: 200, data: 'response' });
+          // push history
+          await HistoryController.pushHistory({
+            document: {
+              _id: response._id,
+              name: response.name,
+              type: redisName,
+            },
+            message: `Membuat ${redisName} baru`,
+            user: req.userId,
+          });
+          // End
+          return res.status(200).json({ status: 200, data: response });
         } else {
           return res.status(400).json({ status: 400, msg: gradeOk.data });
         }

@@ -766,7 +766,48 @@ class AssesmentTemplateController implements IController {
 
           const gradeOk: { valid: boolean, data?: string[] } = await this.cekGrade(req.body.grades ?? result.grades, indicatorOk.indicatorWeight!);
           if (gradeOk.valid) {
-            return res.status(200).json({ status: 200, data: result });
+            if (req.body.nextState) {
+              const checkedWorkflow =
+                await WorkflowController.permissionUpdateAction(
+                  redisName,
+                  req.userId,
+                  req.body.nextState,
+                  result.createdBy._id
+                );
+
+              if (checkedWorkflow.status) {
+                await Db.updateOne(
+                  { _id: req.params.id },
+                  checkedWorkflow.data
+                ).populate("createdBy", "name");
+              } else {
+                return res
+                  .status(403)
+                  .json({ status: 403, msg: checkedWorkflow.msg });
+              }
+            } else {
+              await Db.updateOne({ _id: req.params.id }, req.body).populate(
+                "createdBy",
+                "name"
+              );
+            }
+
+            const getData: any = await Db.findOne({
+              _id: req.params.id,
+            }).populate("createdBy", "name");
+
+            // // push history semua field yang di update
+            // await HistoryController.pushUpdateMany(
+            //   result,
+            //   getData,
+            //   req.user,
+            //   req.userId,
+            //   redisName
+
+            // );
+
+            return res.status(200).json({ status: 200, data: getData });
+            // End
           } else {
             return res
               .status(400)
@@ -778,48 +819,6 @@ class AssesmentTemplateController implements IController {
             .status(400)
             .json({ status: 400, msg: indicatorOk.data });
         }
-
-        // if (req.body.nextState) {
-        //   const checkedWorkflow =
-        //     await WorkflowController.permissionUpdateAction(
-        //       redisName,
-        //       req.userId,
-        //       req.body.nextState,
-        //       result.createdBy._id
-        //     );
-
-        //   if (checkedWorkflow.status) {
-        //     await Db.updateOne(
-        //       { _id: req.params.id },
-        //       checkedWorkflow.data
-        //     ).populate("createdBy", "name");
-        //   } else {
-        //     return res
-        //       .status(403)
-        //       .json({ status: 403, msg: checkedWorkflow.msg });
-        //   }
-        // } else {
-        //   await Db.updateOne({ _id: req.params.id }, req.body).populate(
-        //     "createdBy",
-        //     "name"
-        //   );
-        // }
-
-        // const getData: any = await Db.findOne({
-        //   _id: req.params.id,
-        // }).populate("createdBy", "name");
-
-        // // push history semua field yang di update
-        // await HistoryController.pushUpdateMany(
-        //   result,
-        //   getData,
-        //   req.user,
-        //   req.userId,
-        //   redisName
-        // );
-
-        // return res.status(200).json({ status: 200, data: result });
-        // End
       } else {
         return res
           .status(404)

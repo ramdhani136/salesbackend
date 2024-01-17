@@ -314,7 +314,7 @@ class AssesmentTemplateController implements IController {
           //   message: `Membuat ${redisName} baru`,
           //   user: req.userId,
           // });
-          // End
+          // // End
           return res.status(200).json({ status: 200, data: 'response' });
         } else {
           return res.status(400).json({ status: 400, msg: gradeOk.data });
@@ -410,8 +410,9 @@ class AssesmentTemplateController implements IController {
   cekIndicator = async (indicators: any[]): Promise<{ valid: boolean; data?: string[]; }> => {
     let errors: string[] = [];
     const keysToCheck = ['questionId', 'weight', 'options'];
-    let totalWeight: number = 0;
+    // let totalWeight: number = 0;
     for (const indicator of indicators) {
+      let totalOptionWeight = 0;
       const index = indicators.indexOf(indicator) + 1;
       const missingKeys = keysToCheck.filter(key => !Object.keys(indicator).includes(key));
       if (missingKeys.length > 0) {
@@ -427,7 +428,7 @@ class AssesmentTemplateController implements IController {
 
         if (errors.length === 0) {
           // hitung weight total
-          totalWeight += indicator.weight;
+          // totalWeight += indicator.weight;
           // End
 
           // cek question
@@ -458,6 +459,10 @@ class AssesmentTemplateController implements IController {
                       })
                       // End
                     }
+
+                    if (errors.length === 0) {
+                      totalOptionWeight += option.weight;
+                    }
                   }
                 }
               }
@@ -470,13 +475,20 @@ class AssesmentTemplateController implements IController {
 
         }
       }
+      if (errors.length === 0) {
+        if (totalOptionWeight < 100 || totalOptionWeight > 100) {
+          errors.push(`Total weigh (${totalOptionWeight}%) pada option indicator nomor ${index} tidak boleh lebih atau kurang dari 100%!`)
+        }
+      }
     }
 
 
     if (errors.length === 0) {
-      if (totalWeight < 100 || totalWeight > 100) {
-        errors.push(`Total weight (${totalWeight}%) pada indicator tidak boleh lebih dan kurang dari 100%!`)
-      }
+      // if (totalWeight < 100 || totalWeight > 100) {
+      //   errors.push(`Total weight (${totalWeight}%) pada indicator tidak boleh lebih atau kurang dari 100%!`)
+      // }
+
+
 
       // Cek indikator
       const dupIndicator: any[] = this.findDuplicateQuestionIds(indicators);

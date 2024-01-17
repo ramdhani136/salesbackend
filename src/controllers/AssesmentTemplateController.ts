@@ -13,10 +13,10 @@ import {
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
 import { ObjectId } from 'bson';
-import { Double } from "mongodb";
 
 const Db = AssesmentTemplate;
 const redisName = "assesmenttemplate";
+
 
 class AssesmentTemplateController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
@@ -459,12 +459,10 @@ class AssesmentTemplateController implements IController {
     for (let i = 0; i < data.length - 1; i++) {
       if (data[i].top >= data[i + 1].bottom) {
         // Tidak ada kekosongan atau tumpang tindih
-        console.log(`Rentang ${data[i].name} - ${data[i + 1].name} valid.`);
       } else {
         if (data[i].top + 1 <= data[i + 1].bottom - 1) {
           // Ada kekosongan atau tumpang tindih, menyimpan angka yang mewakili kekosongan
           angkaKekosongan.push({ bottom: data[i].top + 1, top: data[i + 1].bottom - 1 });
-          console.error(`Rentang ${data[i].name} - ${data[i + 1].name} tidak valid.`);
         }
       }
     }
@@ -643,7 +641,7 @@ class AssesmentTemplateController implements IController {
 
       const result: any = await Db.findOne({
         $and: pipeline,
-      }).populate("createdBy", "name");
+      }).populate("createdBy", "name").populate("indicators.questionId", "name");
 
       if (!result) {
         return res
@@ -714,61 +712,126 @@ class AssesmentTemplateController implements IController {
 
       const result: any = await Db.findOne({
         $and: pipeline,
-      }).populate("createdBy", "name");
+      }).populate("createdBy", "name").populate("indicators.questionId", "name").lean()
 
       if (result) {
 
+        if (req.body.name) {
+          const duplicate = await Db.findOne({
+            $and: [
+              {
+                name: req.body.name,
+              },
+              {
+                _id: { $ne: req.params.id },
+              },
+            ],
+          }, ["_id"]).count();
 
-        if (req.body.nextState) {
-          const checkedWorkflow =
-            await WorkflowController.permissionUpdateAction(
-              redisName,
-              req.userId,
-              req.body.nextState,
-              result.createdBy._id
-            );
-
-          if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
-          } else {
-            return res
-              .status(403)
-              .json({ status: 403, msg: checkedWorkflow.msg });
+          if (duplicate > 0) {
+            return res.status(200).json({ status: 200, data: `Nama ${req.body.name} sudah digunakan sebelumya!` });
           }
-        } else {
-          await Db.updateOne({ _id: req.params.id }, req.body).populate(
-            "createdBy",
-            "name"
-          );
         }
 
-        const getData: any = await Db.findOne({
-          _id: req.params.id,
-        }).populate("createdBy", "name");
+        if (req.body.indicators) {
+          if (typeof req.body.indicators !== 'object') {
+            return res.status(400).json({ status: 400, msg: "Indicators array object!" });
+          }
 
-        // push history semua field yang di update
-        await HistoryController.pushUpdateMany(
-          result,
-          getData,
-          req.user,
-          req.userId,
-          redisName
-        );
+          if (req.body.indicators.length === 0) {
+            return res.status(400).json({ status: 400, msg: "Indicators wajib diisi!" });
+          }
+        }
 
-        return res.status(200).json({ status: 200, data: getData });
+        const indicatorOk: { valid: boolean, data?: string[], indicatorWeight?: number } = await this.cekIndicator(req.body.indicators ?? result.indicators);
+        console.log(indicatorOk)
+        if (indicatorOk.valid) {
+          // Cek grade
+
+          if (req.body.grades) {
+            if (!req.body.grades) {
+              return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
+            }
+
+            if (typeof req.body.grades !== 'object') {
+              return res.status(400).json({ status: 400, msg: "Grades array object!" });
+            }
+
+            if (req.body.grades.length === 0) {
+              return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
+            }
+          }
+
+
+
+          const gradeOk: { valid: boolean, data?: string[] } = await this.cekGrade(req.body.grades ?? result.grades, indicatorOk.indicatorWeight!);
+          if (gradeOk.valid) {
+            return res.status(200).json({ status: 200, data: result });
+          } else {
+            return res
+              .status(400)
+              .json({ status: 400, msg: gradeOk.data });
+          }
+
+        } else {
+          return res
+            .status(400)
+            .json({ status: 400, msg: indicatorOk.data });
+        }
+
+        // if (req.body.nextState) {
+        //   const checkedWorkflow =
+        //     await WorkflowController.permissionUpdateAction(
+        //       redisName,
+        //       req.userId,
+        //       req.body.nextState,
+        //       result.createdBy._id
+        //     );
+
+        //   if (checkedWorkflow.status) {
+        //     await Db.updateOne(
+        //       { _id: req.params.id },
+        //       checkedWorkflow.data
+        //     ).populate("createdBy", "name");
+        //   } else {
+        //     return res
+        //       .status(403)
+        //       .json({ status: 403, msg: checkedWorkflow.msg });
+        //   }
+        // } else {
+        //   await Db.updateOne({ _id: req.params.id }, req.body).populate(
+        //     "createdBy",
+        //     "name"
+        //   );
+        // }
+
+        // const getData: any = await Db.findOne({
+        //   _id: req.params.id,
+        // }).populate("createdBy", "name");
+
+        // // push history semua field yang di update
+        // await HistoryController.pushUpdateMany(
+        //   result,
+        //   getData,
+        //   req.user,
+        //   req.userId,
+        //   redisName
+        // );
+
+        // return res.status(200).json({ status: 200, data: result });
         // End
       } else {
         return res
-          .status(400)
+          .status(404)
           .json({ status: 404, msg: "Error update, data not found" });
       }
     } catch (error: any) {
       return res.status(404).json({ status: 404, data: error });
     }
   };
+
+
+
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {

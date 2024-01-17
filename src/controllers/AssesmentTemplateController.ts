@@ -281,7 +281,7 @@ class AssesmentTemplateController implements IController {
         return res.status(400).json({ status: 400, msg: "Indicators wajib diisi!" });
       }
 
-      const indicatorOk: { valid: boolean, data?: string[] } = await this.cekIndicator(req.body.indicators);
+      const indicatorOk: { valid: boolean, data?: string[], indicatorWeight?: number } = await this.cekIndicator(req.body.indicators);
 
       if (indicatorOk.valid) {
         // Cek grade
@@ -297,7 +297,7 @@ class AssesmentTemplateController implements IController {
           return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
         }
 
-        const gradeOk: { valid: boolean, data?: string[] } = await this.cekGrade(req.body.grades);
+        const gradeOk: { valid: boolean, data?: string[] } = await this.cekGrade(req.body.grades, indicatorOk.indicatorWeight!);
         // End
 
         if (gradeOk.valid) {
@@ -330,32 +330,39 @@ class AssesmentTemplateController implements IController {
     }
   };
 
-  cekGrade = async (grades: any[]): Promise<{ valid: boolean; data?: string[]; }> => {
+  cekGrade = async (grades: any[], indicatorWeight: number): Promise<{ valid: boolean; data?: string[]; }> => {
     let errors: string[] = [];
     const keysToCheck = ['name', 'bottom', 'top', "grade", "desc"];
-    for (const grade of grades) {
-      const index = grades.indexOf(grade) + 1;
-      const missingKeys = keysToCheck.filter(key => !Object.keys(grade).includes(key));
-      if (missingKeys.length > 0) {
-        errors.push(`Data ${missingKeys} di grade no ${index} wajib diisi!`)
-      } else {
-        // Cek apakah diisi semua
-        Object.keys(grade).map((item) => {
-          if (grade[item] === "" || grade[item] === null) {
-            errors.push(`Data ${item} di grade no ${index} wajib diisi!`)
-          }
-        })
-        // End
-      }
 
-      if (errors.length === 0) {
-        // Cek apakah botom harus dibawah top
-        if (grade.bottom > grade.top) {
-          errors.push(`Nilai bottom di grade ${index} tidak boleh melebihi nilai topnya!`)
+    if (this.nilaiTopTertinggi(grades) !== indicatorWeight) {
+      errors.push(`Nilai maksimal top(${this.nilaiTopTertinggi(grades)}) grade tidak boleh kurang atau lebih dari ${indicatorWeight}`)
+    }
+
+    if (errors.length === 0) {
+      for (const grade of grades) {
+        const index = grades.indexOf(grade) + 1;
+        const missingKeys = keysToCheck.filter(key => !Object.keys(grade).includes(key));
+        if (missingKeys.length > 0) {
+          errors.push(`Data ${missingKeys} di grade no ${index} wajib diisi!`)
+        } else {
+          // Cek apakah diisi semua
+          Object.keys(grade).map((item) => {
+            if (grade[item] === "" || grade[item] === null) {
+              errors.push(`Data ${item} di grade no ${index} wajib diisi!`)
+            }
+          })
+          // End
         }
-        // End
-      }
 
+        if (errors.length === 0) {
+          // Cek apakah botom harus dibawah top
+          if (grade.bottom > grade.top) {
+            errors.push(`Nilai bottom di grade ${index} tidak boleh melebihi nilai topnya!`)
+          }
+          // End
+        }
+
+      }
     }
 
     if (errors.length === 0) {
@@ -402,6 +409,16 @@ class AssesmentTemplateController implements IController {
     } else {
       return { valid: true };
     }
+  }
+
+  nilaiTopTertinggi(data: any[]): number {
+    // Mengurutkan data berdasarkan nilai top secara descending
+    const sortedData = data.sort((a, b) => b.top - a.top);
+
+    // Mengambil nilai top tertinggi
+    const topTertinggi = sortedData[0].top;
+
+    return topTertinggi;
   }
 
   checkOverlap(data: any[]): { valid: boolean, errors?: string[] } {
@@ -457,8 +474,6 @@ class AssesmentTemplateController implements IController {
     } else {
       return { valid: false }
     }
-
-    console.log(angkaKekosongan);
   }
 
 
@@ -466,10 +481,10 @@ class AssesmentTemplateController implements IController {
 
 
 
-  cekIndicator = async (indicators: any[]): Promise<{ valid: boolean; data?: string[]; }> => {
+  cekIndicator = async (indicators: any[]): Promise<{ valid: boolean; data?: string[], indicatorWeight?: number; }> => {
     let errors: string[] = [];
     const keysToCheck = ['questionId', 'weight', 'options'];
-    // let totalWeight: number = 0;
+    let indicatorWeight: number = 0;
     for (const indicator of indicators) {
       let totalOptionWeight = 0;
       const index = indicators.indexOf(indicator) + 1;
@@ -487,7 +502,7 @@ class AssesmentTemplateController implements IController {
 
         if (errors.length === 0) {
           // hitung weight total
-          // totalWeight += indicator.weight;
+          indicatorWeight += indicator.weight;
           // End
 
           // cek question
@@ -543,12 +558,6 @@ class AssesmentTemplateController implements IController {
 
 
     if (errors.length === 0) {
-      // if (totalWeight < 100 || totalWeight > 100) {
-      //   errors.push(`Total weight (${totalWeight}%) pada indicator tidak boleh lebih atau kurang dari 100%!`)
-      // }
-
-
-
       // Cek indikator
       const dupIndicator: any[] = this.findDuplicateQuestionIds(indicators);
       if (dupIndicator.length > 0) {
@@ -558,13 +567,10 @@ class AssesmentTemplateController implements IController {
       }
       // End
     }
-
-
-
     if (errors.length > 0) {
       return { valid: false, data: errors };
     } else {
-      return { valid: true };
+      return { valid: true, indicatorWeight: indicatorWeight };
     }
 
   }

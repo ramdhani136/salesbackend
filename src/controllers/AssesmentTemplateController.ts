@@ -366,6 +366,11 @@ class AssesmentTemplateController implements IController {
           errors.push(`Duplikasi name pada grade nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
         }
       }
+      // End
+    }
+
+    if (errors.length === 0) {
+
 
       // Cek apakah range saling menumpuk
       const overlap: { valid: boolean, errors?: string[] } = this.checkOverlap(grades);
@@ -381,7 +386,7 @@ class AssesmentTemplateController implements IController {
 
 
           for (const range of cekRangeKosong.data!) {
-            errors.push(`Terdapat kekosongan range pada grade ${range.bottom} - ${range.top} !`)
+            errors.push(`Terdapat kekosongan range ${range.bottom} - ${range.top} pada grades!`)
           }
         }
       }

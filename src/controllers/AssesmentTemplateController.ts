@@ -258,6 +258,16 @@ class AssesmentTemplateController implements IController {
       if (!req.body.name) {
         return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
       }
+
+      // Cek duplicate nama
+      const dupName = await AssesmentTemplate.findOne({ name: req.body.name })
+
+      if(dupName){
+        return res.status(400).json({ status: 400, msg: `Nama ${req.body.name} sudah digunakan sebelumnya!` });
+      }
+
+      // End
+
       if (!req.body.indicators) {
         return res.status(400).json({ status: 400, msg: "Indicators wajib diisi!" });
       }
@@ -285,24 +295,32 @@ class AssesmentTemplateController implements IController {
         if (req.body.grades.length === 0) {
           return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
         }
+
+        const gradeOk: { valid: boolean, data?: string[] } = await this.cekGrade(req.body.grades);
         // End
 
+        if (gradeOk.valid) {
+          // const result = new Db(req.body);
+          // const response = await result.save();
 
-        // const result = new Db(req.body);
-        // const response = await result.save();
+          // // push history
+          // await HistoryController.pushHistory({
+          //   document: {
+          //     _id: response._id,
+          //     name: response.name,
+          //     type: redisName,
+          //   },
+          //   message: `Membuat ${redisName} baru`,
+          //   user: req.userId,
+          // });
+          // End
+          return res.status(200).json({ status: 200, data: 'response' });
+        } else {
+          return res.status(400).json({ status: 400, msg: gradeOk.data });
+        }
 
-        // // push history
-        // await HistoryController.pushHistory({
-        //   document: {
-        //     _id: response._id,
-        //     name: response.name,
-        //     type: redisName,
-        //   },
-        //   message: `Membuat ${redisName} baru`,
-        //   user: req.userId,
-        // });
-        // End
-        return res.status(200).json({ status: 200, data: 'response' });
+
+
       } else {
         return res.status(400).json({ status: 400, msg: indicatorOk.data });
       }
@@ -311,15 +329,57 @@ class AssesmentTemplateController implements IController {
     }
   };
 
+  cekGrade = async (grades: any[]): Promise<{ valid: boolean; data?: string[]; }> => {
+    let errors: string[] = [];
+    const keysToCheck = ['name', 'bottom', 'top', "grade", "desc"];
+    for (const grade of grades) {
+      const index = grades.indexOf(grade) + 1;
+      const missingKeys = keysToCheck.filter(key => !Object.keys(grade).includes(key));
+      if (missingKeys.length > 0) {
+        errors.push(`Data ${missingKeys} di grade no ${index} wajib diisi!`)
+      } else {
+        // Cek apakah diisi semua
+        Object.keys(grade).map((item) => {
+          if (grade[item] === "" || grade[item] === null) {
+            errors.push(`Data ${item} di grade no ${index} wajib diisi!`)
+          }
+        })
+        // End
+      }
+    }
+
+    // Cek duplicate name
+    const dupGrade: any[] = this.findDuplicateGrade(grades);
+    if (dupGrade.length > 0) {
+      for (const dup of dupGrade) {
+        errors.push(`Duplikasi name pada grade nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
+      }
+    }
+    // End
+
+    if (errors.length > 0) {
+      return { valid: false, data: errors };
+    } else {
+      return { valid: true };
+    }
+  }
+
   cekIndicator = async (indicators: any[]): Promise<{ valid: boolean; data?: string[]; }> => {
     let errors: string[] = [];
+    const keysToCheck = ['questionId', 'weight', 'options'];
     for (const indicator of indicators) {
-      const keysToCheck = ['questionId', 'weight', 'options'];
       const index = indicators.indexOf(indicator) + 1;
       const missingKeys = keysToCheck.filter(key => !Object.keys(indicator).includes(key));
       if (missingKeys.length > 0) {
         errors.push(`Data ${missingKeys} di indicator no ${index} wajib diisi!`)
       } else {
+        // cek apakah diisi datanya
+        Object.keys(indicator).map((item) => {
+          if (indicator[item] === "" || indicator[item] === null) {
+            errors.push(`Data ${item} di indicator no ${index} wajib diisi!`)
+          }
+        })
+        // End
         // cek question
         try {
           const cekQuestion = await AssesmentQuestion.findById(indicator.questionId);
@@ -338,10 +398,17 @@ class AssesmentTemplateController implements IController {
                   const idOption = indicator.options.indexOf(option) + 1;
                   const missingOption = optionToCheck.filter(key => !Object.keys(option).includes(key));
                   if (missingOption.length > 0) {
-                    errors.push(`Data ${missingOption} di option indicator no ${idOption} wajib diisi!`)
+                    errors.push(`Data ${missingOption} di option ${idOption} indicator no ${index} wajib diisi!`)
+                  } else {
+                    // Cek apakah data diisi semua
+                    optionToCheck.map((op) => {
+                      if (option[op] === "" || option[op] === null) {
+                        errors.push(`Data ${op} di option no ${idOption} pada indicator no ${index} wajib diisi!`)
+                      }
+                    })
+                    // End
                   }
                 }
-
               }
             }
 
@@ -377,8 +444,8 @@ class AssesmentTemplateController implements IController {
 
     indicators.forEach((indicator, index) => {
       if (seenIds.has(indicator.questionId)) {
-        const existingIndex = seenIds.get(indicator.questionId);
-        duplicates.push({ existingIndex, currentIndex: index, questionId: indicator.questionId });
+        const existingIndex = seenIds.get(indicator.questionId) + 1;
+        duplicates.push({ existingIndex, currentIndex: index + 1, questionId: indicator.questionId });
       } else {
         seenIds.set(indicator.questionId, index);
       }
@@ -387,6 +454,23 @@ class AssesmentTemplateController implements IController {
     return duplicates;
   }
 
+
+
+  findDuplicateGrade(grades: any[]) {
+    const seenIds = new Map(); // Menggunakan Map untuk menyimpan data dengan questionId yang sama
+    const duplicates: any = [];
+
+    grades.forEach((grade, index) => {
+      if (seenIds.has(grade.name)) {
+        const existingIndex = seenIds.get(grade.name) + 1;
+        duplicates.push({ existingIndex, currentIndex: index + 1, name: grade.name });
+      } else {
+        seenIds.set(grade.name, index);
+      }
+    });
+
+    return duplicates;
+  }
 
 
 

@@ -13,6 +13,7 @@ import {
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
 import { ObjectId } from 'bson';
+import { Double } from "mongodb";
 
 const Db = AssesmentTemplate;
 const redisName = "assesmenttemplate";
@@ -262,7 +263,7 @@ class AssesmentTemplateController implements IController {
       // Cek duplicate nama
       const dupName = await AssesmentTemplate.findOne({ name: req.body.name })
 
-      if(dupName){
+      if (dupName) {
         return res.status(400).json({ status: 400, msg: `Nama ${req.body.name} sudah digunakan sebelumnya!` });
       }
 
@@ -346,15 +347,35 @@ class AssesmentTemplateController implements IController {
         })
         // End
       }
+
+      if (errors.length === 0) {
+        // Cek apakah botom harus dibawah top
+        if (grade.bottom > grade.top) {
+          errors.push(`Nilai bottom di grade ${index} tidak boleh melebihi nilai topnya!`)
+        }
+        // End
+      }
+
     }
 
-    // Cek duplicate name
-    const dupGrade: any[] = this.findDuplicateGrade(grades);
-    if (dupGrade.length > 0) {
-      for (const dup of dupGrade) {
-        errors.push(`Duplikasi name pada grade nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
+    if (errors.length === 0) {
+      // Cek duplicate name
+      const dupGrade: any[] = this.findDuplicateGrade(grades);
+      if (dupGrade.length > 0) {
+        for (const dup of dupGrade) {
+          errors.push(`Duplikasi name pada grade nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
+        }
       }
+
+      // Cek apakah range saling menumpuk
+      const overlap: { valid: boolean, errors?: string[] } = this.checkOverlap(grades);
+      if (overlap.valid) {
+        errors = [...errors, ...overlap.errors!];
+      }
+      // End
     }
+
+
     // End
 
     if (errors.length > 0) {
@@ -364,9 +385,32 @@ class AssesmentTemplateController implements IController {
     }
   }
 
+  checkOverlap(data: any[]): { valid: boolean, errors?: string[] } {
+    let errors: string[] = []
+    for (let i = 0; i < data.length - 1; i++) {
+      for (let j = i + 1; j < data.length; j++) {
+        if (
+          (data[i].bottom >= data[j].bottom && data[i].bottom <= data[j].top) ||
+          (data[i].top >= data[j].bottom && data[i].top <= data[j].top)
+        ) {
+          errors.push(`Overlap range antara grade ${data[i].name} and ${data[j].name}`)
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      return { valid: true, errors: errors }; // Jika terdapat tumpang tindih, hentikan pengecekan
+    }
+    return { valid: false }; // Jika tidak ada tumpang tindih
+  }
+
+
+
+
   cekIndicator = async (indicators: any[]): Promise<{ valid: boolean; data?: string[]; }> => {
     let errors: string[] = [];
     const keysToCheck = ['questionId', 'weight', 'options'];
+    let totalWeight: number = 0;
     for (const indicator of indicators) {
       const index = indicators.indexOf(indicator) + 1;
       const missingKeys = keysToCheck.filter(key => !Object.keys(indicator).includes(key));
@@ -374,61 +418,77 @@ class AssesmentTemplateController implements IController {
         errors.push(`Data ${missingKeys} di indicator no ${index} wajib diisi!`)
       } else {
         // cek apakah diisi datanya
-        Object.keys(indicator).map((item) => {
+        Object.keys(indicator).map((item, index) => {
           if (indicator[item] === "" || indicator[item] === null) {
             errors.push(`Data ${item} di indicator no ${index} wajib diisi!`)
           }
         })
-        // End
-        // cek question
-        try {
-          const cekQuestion = await AssesmentQuestion.findById(indicator.questionId);
-          if (!cekQuestion) {
-            errors.push(`Question di indicator no ${index} tidak ditemukan!`)
-          } else {
-            // Cek options
-            if (typeof indicator.options !== "object") {
-              errors.push(`Question options di indicator no ${index} bukan object data!`)
+
+
+        if (errors.length === 0) {
+          // hitung weight total
+          totalWeight += indicator.weight;
+          // End
+
+          // cek question
+          try {
+            const cekQuestion = await AssesmentQuestion.findById(indicator.questionId);
+            if (!cekQuestion) {
+              errors.push(`Question di indicator no ${index} tidak ditemukan!`)
             } else {
-              if (indicator.options.length === 0) {
-                errors.push(`Cek kembali question di indikator no ${index}!`)
+              // Cek options
+              if (typeof indicator.options !== "object") {
+                errors.push(`Question options di indicator no ${index} bukan object data!`)
               } else {
-                const optionToCheck = ['name', 'weight'];
-                for (const option of indicator.options) {
-                  const idOption = indicator.options.indexOf(option) + 1;
-                  const missingOption = optionToCheck.filter(key => !Object.keys(option).includes(key));
-                  if (missingOption.length > 0) {
-                    errors.push(`Data ${missingOption} di option ${idOption} indicator no ${index} wajib diisi!`)
-                  } else {
-                    // Cek apakah data diisi semua
-                    optionToCheck.map((op) => {
-                      if (option[op] === "" || option[op] === null) {
-                        errors.push(`Data ${op} di option no ${idOption} pada indicator no ${index} wajib diisi!`)
-                      }
-                    })
-                    // End
+                if (indicator.options.length === 0) {
+                  errors.push(`Cek kembali question di indikator no ${index}!`)
+                } else {
+                  const optionToCheck = ['name', 'weight'];
+                  for (const option of indicator.options) {
+                    const idOption = indicator.options.indexOf(option) + 1;
+                    const missingOption = optionToCheck.filter(key => !Object.keys(option).includes(key));
+                    if (missingOption.length > 0) {
+                      errors.push(`Data ${missingOption} di option ${idOption} indicator no ${index} wajib diisi!`)
+                    } else {
+                      // Cek apakah data diisi semua
+                      optionToCheck.map((op) => {
+                        if (option[op] === "" || option[op] === null) {
+                          errors.push(`Data ${op} di option no ${idOption} pada indicator no ${index} wajib diisi!`)
+                        }
+                      })
+                      // End
+                    }
                   }
                 }
               }
+
+              // End
             }
-
-            // End
+          } catch (error) {
+            errors.push(`question ${index} tidak valid!`)
           }
-        } catch (error) {
-          errors.push(`question ${index} tidak valid!`)
+
         }
-        // End
       }
     }
 
-    // Cek indikator
-    const dupIndicator: any[] = this.findDuplicateQuestionIds(indicators);
-    if (dupIndicator.length > 0) {
-      for (const dup of dupIndicator) {
-        errors.push(`Duplikasi question di nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
+
+    if (errors.length === 0) {
+      if (totalWeight < 100 || totalWeight > 100) {
+        errors.push(`Total weight (${totalWeight}%) pada indicator tidak boleh lebih dan kurang dari 100%!`)
       }
+
+      // Cek indikator
+      const dupIndicator: any[] = this.findDuplicateQuestionIds(indicators);
+      if (dupIndicator.length > 0) {
+        for (const dup of dupIndicator) {
+          errors.push(`Duplikasi question di nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
+        }
+      }
+      // End
     }
-    // End
+
+
 
     if (errors.length > 0) {
       return { valid: false, data: errors };

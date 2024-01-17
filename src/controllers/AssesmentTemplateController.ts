@@ -744,7 +744,6 @@ class AssesmentTemplateController implements IController {
         }
 
         const indicatorOk: { valid: boolean, data?: string[], indicatorWeight?: number } = await this.cekIndicator(req.body.indicators ?? result.indicators);
-        console.log(indicatorOk)
         if (indicatorOk.valid) {
           // Cek grade
 
@@ -761,9 +760,6 @@ class AssesmentTemplateController implements IController {
               return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
             }
           }
-
-
-
           const gradeOk: { valid: boolean, data?: string[] } = await this.cekGrade(req.body.grades ?? result.grades, indicatorOk.indicatorWeight!);
           if (gradeOk.valid) {
             if (req.body.nextState) {

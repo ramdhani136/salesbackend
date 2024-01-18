@@ -264,10 +264,10 @@ class AssesmentScheduleController implements IController {
           .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
       }
 
-      if (!req.body.deactiveDare) {
+      if (!req.body.deactiveDate) {
         return res
           .status(400)
-          .json({ status: 400, msg: "Error, deactiveDare wajib diisi!" });
+          .json({ status: 400, msg: "Error, deactiveDate wajib diisi!" });
       }
 
       if (!req.body.assesmentTemplate) {
@@ -277,9 +277,19 @@ class AssesmentScheduleController implements IController {
       }
 
       const cekTemplate = await AssesmentTemplate.findById(req.body.assesmentTemplate, ["status"])
-      console.log(
-        cekTemplate
-      )
+
+      if(!cekTemplate){
+        return res
+        .status(400)
+        .json({ status: 400, msg: "Error, Assesment Template  tidak ditemukan!" });
+      }
+
+
+      if(cekTemplate.status!=="1"){
+        return res
+        .status(400)
+        .json({ status: 400, msg: "Error, Assesment Template tidak active!" });
+      }
 
       // Set Naming
       if (!req.body.namingSeries) {
@@ -363,22 +373,22 @@ class AssesmentScheduleController implements IController {
 
       req.body.createdBy = req.userId;
 
-      // const result = new Db(req.body);
-      // const response = await result.save();
+      const result = new Db(req.body);
+      const response = await result.save();
 
-      // // push history
-      // await HistoryController.pushHistory({
-      //   document: {
-      //     _id: response._id,
-      //     name: response.name,
-      //     type: redisName,
-      //   },
-      //   message: `Membuat ${redisName} baru`,
-      //   user: req.userId,
-      // });
-      // // End
+      // push history
+      await HistoryController.pushHistory({
+        document: {
+          _id: response._id,
+          name: response.name,
+          type: redisName,
+        },
+        message: `Membuat ${redisName} baru`,
+        user: req.userId,
+      });
+      // End
 
-      return res.status(200).json({ status: 200, data: 'response' });
+      return res.status(200).json({ status: 200, data: result });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
     }
@@ -402,60 +412,7 @@ class AssesmentScheduleController implements IController {
       );
       // End
 
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-
-      //   if (userPermission.length > 0) {
-      //     const validPermission = userPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   if (branchPermission.length > 0) {
-      //     const validBranchPermission = branchPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validBranchPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
-
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
-
+  
       let pipeline: any = [{ _id: req.params.id }];
 
       if (userPermission.length > 0) {
@@ -468,7 +425,7 @@ class AssesmentScheduleController implements IController {
 
       const result: any = await Db.findOne({
         $and: pipeline,
-      }).populate("createdBy", "name");
+      }).populate("createdBy", "name").populate("assesmentTemplate", "name");
 
       if (!result) {
         return res
@@ -494,14 +451,6 @@ class AssesmentScheduleController implements IController {
       )
         .populate("user", "name")
         .sort({ createdAt: -1 });
-
-      // await Redis.client.set(
-      //   `${redisName}-${req.params.id}`,
-      //   JSON.stringify(result),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
 
       return res.status(200).json({
         status: 200,

@@ -40,7 +40,8 @@ const RoleListModel = new mongoose.Schema(
         "notes",
         "assesmentquestion",
         "assesmentindicator",
-        "assesmenttemplate"
+        "assesmenttemplate",
+        "assesmentschedule"
       ],
       require: true,
       index: 1,

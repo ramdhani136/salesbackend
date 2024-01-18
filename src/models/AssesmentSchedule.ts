@@ -30,7 +30,6 @@ const AssesmentSchedule = new mongoose.Schema(
     },
     desc: {
       type: String,
-      required: true,
     },
     includeNewCustomer: {
       type: Boolean,

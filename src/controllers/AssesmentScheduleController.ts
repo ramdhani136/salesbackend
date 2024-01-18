@@ -465,6 +465,14 @@ class AssesmentScheduleController implements IController {
 
   update = async (req: Request | any, res: Response): Promise<any> => {
     try {
+
+      
+      if (req.body.name) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, Nama tidak dapat di ganti!" });
+      }
+
       // Mengecek permission user
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
@@ -498,11 +506,6 @@ class AssesmentScheduleController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
-        // if (!req.body.name && !result.name) {
-        //   return res
-        //     .status(400)
-        //     .json({ status: 400, msg: "Nama wajib diisi!" });
-        // }
 
         if (req.body.nextState) {
           const checkedWorkflow =
@@ -533,14 +536,6 @@ class AssesmentScheduleController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         }).populate("createdBy", "name");
-        // await Redis.client.set(
-        //   `${redisName}-${req.params.id}`,
-        //   JSON.stringify(getData),
-        //   {
-        //     EX: 30,
-        //   }
-        // );
-
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
           result,

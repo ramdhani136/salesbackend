@@ -48,6 +48,7 @@ import {
   AssesmentTemplateRoutes,
   AssesmentQuestionRoutes,
   AssesmentScheduleRoutes,
+  AssesmentScheduleListRoutes,
 } from "./routes";
 // import Redis from "./config/Redis";
 import { SocketIO } from "./utils";
@@ -503,6 +504,7 @@ class App {
     this.app.use("/assesmentquestion", AuthMiddleware, RoleMiddleware, AssesmentQuestionRoutes);
     this.app.use("/assesmenttemplate", AuthMiddleware, RoleMiddleware, AssesmentTemplateRoutes);
     this.app.use("/assesmentschedule", AuthMiddleware, RoleMiddleware, AssesmentScheduleRoutes);
+    this.app.use("/assesmentschedulelist", AuthMiddleware, RoleMiddleware, AssesmentScheduleListRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);
   }

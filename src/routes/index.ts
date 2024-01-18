@@ -36,6 +36,7 @@ import WhatsAppClientRoutes from "./WhatsappClientRoutes";
 import AssesmentQuestionRoutes from "./AssesmentQuestionRoutes";
 import AssesmentTemplateRoutes from "./AssesmentTemplateRoutes";
 import AssesmentScheduleRoutes from "./AssesmentScheduleRoutes";
+import AssesmentScheduleListRoutes from "./AssesmentScheduleListRoutes";
 
 export {
   ConfigRoutes,
@@ -75,5 +76,6 @@ export {
   WhatsAppClientRoutes,
   AssesmentTemplateRoutes,
   AssesmentQuestionRoutes,
-  AssesmentScheduleRoutes
+  AssesmentScheduleRoutes,
+  AssesmentScheduleListRoutes
 };

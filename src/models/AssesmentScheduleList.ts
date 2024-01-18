@@ -32,7 +32,6 @@ const AssesmentScheduleList = new mongoose.Schema(
                 },
             },
             result: {
-                required: true,
                 type: Schema.Types.ObjectId
             },
         },

@@ -21,21 +21,38 @@ const AssesmentResult = new mongoose.Schema(
       }
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "Users",
-      required: true,
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        index: 1,
+      },
+      name: {
+        type: String,
+        required: true,
+        index: 1,
+      }
     },
-    status: {
-      type: String,
-      enum: ["0", "1", "2", "3"],
-      default: "0",
-      index: 1,
+    schedule: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        index: 1,
+      },
+      name: {
+        type: String,
+        required: true,
+        index: 1,
+      }
     },
-    workflowState: {
-      type: String,
+    activeDate: {
+      type: Date,
       required: true,
-      default: "Draft",
-      index: 1,
+      index: true,
+    },
+    deactiveDate: {
+      type: Date,
+      require: true,
+      index: true,
     },
     score: {
       type: Number,
@@ -45,13 +62,13 @@ const AssesmentResult = new mongoose.Schema(
       type: String,
       required: true,
     },
-    detail: [
-      { question: { type: String, required: true }, answer: { type: String, required: true } }
-    ],
-    desc: {
+    notes: {
       type: String,
       required: true,
     },
+    details: [
+      { question: { type: String, required: true }, answer: { type: String, required: true }, score: { type: Number, required: true, } }
+    ],
   },
   {
     timestamps: true,
@@ -63,6 +80,14 @@ AssesmentResult.index({
 });
 AssesmentResult.index({
   updatedAt: -1,
+});
+AssesmentResult.index({
+  activeDate: -1,
+  deactiveDate: 1,
+});
+AssesmentResult.index({
+  activeDate: 1,
+  deactiveDate: -1,
 });
 AssesmentResult.index({
   name: -1,

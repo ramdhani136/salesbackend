@@ -332,7 +332,7 @@ class AssesmentTemplateController implements IController {
 
   cekGrade = async (grades: any[], indicatorWeight: number): Promise<{ valid: boolean; data?: string[]; }> => {
     let errors: string[] = [];
-    const keysToCheck = ['name', 'bottom', 'top', "grade", "desc"];
+    const keysToCheck = ['name', 'bottom', 'top', "grade", "notes"];
 
     if (this.nilaiTopTertinggi(grades) !== indicatorWeight) {
       errors.push(`Nilai maksimal top(${this.nilaiTopTertinggi(grades)}) grade tidak boleh kurang atau lebih dari ${indicatorWeight}`)

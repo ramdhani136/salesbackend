@@ -28,7 +28,7 @@ const AssesmentTemplate = new mongoose.Schema(
       default: "Draft",
       index: 1,
     },
-    desc: {
+    notes: {
       type: String,
     },
     indicators: {

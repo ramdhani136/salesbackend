@@ -19,7 +19,7 @@ const AssesmentGradeModel =
     type: String,
     required: true,
   },
-  desc: {
+  notes: {
     type: String,
     required: true,
   },

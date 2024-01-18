@@ -75,7 +75,7 @@ class HistoryController implements IController {
         : [];
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
-        : ["document", "user.name","user.img", "message", "status", "createdAt"];
+        : ["document", "user.name", "user.img", "message", "status", "createdAt"];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { createdAt: -1 };
@@ -130,7 +130,7 @@ class HistoryController implements IController {
         {
           $project: setField,
         },
-      
+
       ]);
 
       if (result.length > 0) {
@@ -195,7 +195,8 @@ class HistoryController implements IController {
       "memo",
       "workflow",
       "assesmenttemplate",
-      "assesmentquestion"
+      "assesmentquestion",
+      "assesmentschedule"
     ];
 
     const cekDocType = doctype.find((item) => item == req.body.document.type);
@@ -315,7 +316,8 @@ class HistoryController implements IController {
       "topic",
       "files",
       "assesmenttemplate",
-      "assesmentquestion"
+      "assesmentquestion",
+      "assesmentschedule"
     ];
 
     const cekDocType = doctype.find((item) => item == data.document.type);

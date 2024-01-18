@@ -33,8 +33,9 @@ import NotesModel from "./NotesModel";
 import WhatsappClientModel from "./WhatsappClientModel";
 import AssesmentQuestion from "./AssesmentQuestion";
 import AssesmentResult from "./AssesmentResult";
-import AssesmentSettings from "./AssesmentSettings";
 import AssesmentTemplate from "./AssesmentTemplate";
+import AssesmentSchedule from "./AssesmentSchedule";
+import AssesmentScheduleList from "./AssesmentScheduleList";
 
 export {
   ConfigModel,
@@ -72,6 +73,7 @@ export {
   WhatsappClientModel,
   AssesmentQuestion,
   AssesmentResult,
-  AssesmentSettings,
-  AssesmentTemplate
+  AssesmentTemplate, 
+  AssesmentSchedule,
+  AssesmentScheduleList
 };

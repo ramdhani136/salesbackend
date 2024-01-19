@@ -53,7 +53,7 @@ class AssesmentResultController implements IController {
       {
         alias: "Grade",
         name: "grade",
-        operator: ["like", "notlike"],
+        operator: ["like", "notlike","=","!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -104,18 +104,19 @@ class AssesmentResultController implements IController {
         ? JSON.parse(`${req.query.fields}`)
         : [
           "name",
-          "customer._id",
+          // "customer._id",
           "customer.name",
           "createdBy.name",
-          "schedule.name",
+          // "schedule._id",
           "schedule.name",
           "activeDate",
           "deactiveDate",
           "score",
           "grade",
           "notes",
-          "details",
+          // "details",
           "updatedAt",
+          "createdAt",
         ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -166,17 +167,6 @@ class AssesmentResultController implements IController {
 
       let pipelineTotal: any = [
         {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-          },
-        },
-        {
-          $unwind: "$createdBy",
-        },
-        {
           $project: setField,
         },
         {
@@ -213,17 +203,6 @@ class AssesmentResultController implements IController {
       let pipelineResult: any = [
         {
           $sort: order_by,
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "createdBy",
-            foreignField: "_id",
-            as: "createdBy",
-          },
-        },
-        {
-          $unwind: "$createdBy",
         },
         {
           $match: isFilter.data,
@@ -468,60 +447,7 @@ class AssesmentResultController implements IController {
       );
       // End
 
-      // const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
-
-      // if (cache) {
-      //   const isCache = JSON.parse(cache);
-
-      //   if (userPermission.length > 0) {
-      //     const validPermission = userPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   if (branchPermission.length > 0) {
-      //     const validBranchPermission = branchPermission.find((item) => {
-      //       return item.toString() === isCache.createdBy._id.toString();
-      //     });
-
-      //     if (!validBranchPermission) {
-      //       return res
-      //         .status(404)
-      //         .json({ status: 404, msg: "Data tidak ditemukan!" });
-      //     }
-      //   }
-
-      //   const getHistory = await History.find(
-      //     {
-      //       $and: [
-      //         { "document._id": `${isCache._id}` },
-      //         { "document.type": redisName },
-      //       ],
-      //     },
-
-      //     ["_id", "message", "createdAt", "updatedAt"]
-      //   )
-      //     .populate("user", "name")
-      //     .sort({ createdAt: -1 });
-      //   const buttonActions = await WorkflowController.getButtonAction(
-      //     redisName,
-      //     req.userId,
-      //     isCache.workflowState
-      //   );
-      //   return res.status(200).json({
-      //     status: 200,
-      //     data: JSON.parse(cache),
-      //     history: getHistory,
-      //     workflow: buttonActions,
-      //   });
-      // }
-
+   
       let pipeline: any = [{ _id: req.params.id }];
 
       if (userPermission.length > 0) {
@@ -534,7 +460,7 @@ class AssesmentResultController implements IController {
 
       const result: any = await Db.findOne({
         $and: pipeline,
-      }).populate("createdBy", "name");
+      })
 
       if (!result) {
         return res
@@ -542,38 +468,9 @@ class AssesmentResultController implements IController {
           .json({ status: 404, msg: "Data tidak ditemukan!" });
       }
 
-      const buttonActions = await WorkflowController.getButtonAction(
-        redisName,
-        req.userId,
-        result.workflowState
-      );
-
-      // return res.send(buttonActions)
-      const getHistory = await History.find(
-        {
-          $and: [
-            { "document._id": result._id },
-            { "document.type": redisName },
-          ],
-        },
-        ["_id", "message", "createdAt", "updatedAt"]
-      )
-        .populate("user", "name")
-        .sort({ createdAt: -1 });
-
-      // await Redis.client.set(
-      //   `${redisName}-${req.params.id}`,
-      //   JSON.stringify(result),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
-
       return res.status(200).json({
         status: 200,
         data: result,
-        history: getHistory,
-        workflow: buttonActions,
       });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });

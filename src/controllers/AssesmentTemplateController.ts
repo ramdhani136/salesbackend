@@ -484,7 +484,7 @@ class AssesmentTemplateController implements IController {
     const keysToCheck = ['questionId', 'weight', 'options'];
     let indicatorWeight: number = 0;
     for (const indicator of indicators) {
-      let totalOptionWeight = 0;
+      // let totalOptionWeight = 0;
       const index = indicators.indexOf(indicator) + 1;
       const missingKeys = keysToCheck.filter(key => !Object.keys(indicator).includes(key));
       if (missingKeys.length > 0) {
@@ -533,7 +533,7 @@ class AssesmentTemplateController implements IController {
                     }
 
                     if (errors.length === 0) {
-                      totalOptionWeight += option.weight;
+                      // totalOptionWeight += option.weight;
                     }
                   }
                 }
@@ -547,11 +547,11 @@ class AssesmentTemplateController implements IController {
 
         }
       }
-      if (errors.length === 0) {
-        if (totalOptionWeight < 100 || totalOptionWeight > 100) {
-          errors.push(`Total weigh (${totalOptionWeight}%) pada option indicator nomor ${index} tidak boleh lebih atau kurang dari 100%!`)
-        }
-      }
+      // if (errors.length === 0) {
+      //   if (totalOptionWeight < 100 || totalOptionWeight > 100) {
+      //     errors.push(`Total weight (${totalOptionWeight}%) pada option indicator nomor ${index} tidak boleh lebih atau kurang dari 100%!`)
+      //   }
+      // }
     }
 
 

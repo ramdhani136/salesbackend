@@ -5,7 +5,7 @@ import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
 import { AssesmentResult as Db, History, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { HistoryController, WorkflowController } from ".";
+import { AssesmentTemplateController, HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -328,8 +328,51 @@ class AssesmentResultController implements IController {
       if (req.body.assesmentTemplate.length === 0) {
         return res.status(400).json({ status: 400, msg: "assesmentTemplate wajib diisi!" });
       }
-      // End
+      if (!req.body.assesmentTemplate.indicators) {
+        return res.status(400).json({ status: 400, msg: "assesmentTemplate indicators wajib diisi!" });
+      }
 
+      if (typeof req.body.assesmentTemplate.indicators !== 'object') {
+        return res.status(400).json({ status: 400, msg: "Indicators array object!" });
+      }
+
+      if (req.body.assesmentTemplate.indicators.length === 0) {
+        return res.status(400).json({ status: 400, msg: "Indicators wajib diisi!" });
+      }
+
+
+      // Cek indicators
+      const indicatorOk: { valid: boolean, data?: string[], indicatorWeight?: number } = await AssesmentTemplateController.cekIndicator(req.body.assesmentTemplate.indicators);
+
+
+      if (!indicatorOk.valid) {
+        return res.status(400).json({ status: 400, msg: indicatorOk.data });
+      }
+
+      if (!req.body.assesmentTemplate.grades) {
+        return res.status(400).json({ status: 400, msg: "assesmentTemplate grades wajib diisi!" });
+      }
+
+      if (typeof req.body.assesmentTemplate.grades !== 'object') {
+        return res.status(400).json({ status: 400, msg: "Grades array object!" });
+      }
+
+      if (req.body.assesmentTemplate.grades.length === 0) {
+        return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
+      }
+
+      const gradeOk: { valid: boolean, data?: string[] } = await AssesmentTemplateController.cekGrade(req.body.assesmentTemplate.grades, indicatorOk.indicatorWeight!);
+
+      if(!gradeOk.valid){
+        return res.status(400).json({ status: 400, msg: gradeOk.data });
+      }
+      
+
+      if (req.body.details.length !== req.body.assesmentTemplate.indicators.length) {
+        return res.status(400).json({ status: 400, msg: "Semua pertanyaan wajib diisi!" });
+      }
+
+      // End
       // Proses result
       if (!req.body.details) {
         return res.status(400).json({ status: 400, msg: "Jawaban wajib diisi!" });
@@ -344,9 +387,7 @@ class AssesmentResultController implements IController {
       }
       // End   
 
-      if (req.body.details.length !== req.body.assesmentTemplate.indicators.length) {
-        return res.status(400).json({ status: 400, msg: "Semua pertanyaan wajib diisi!" });
-      }
+
 
 
       // Menghitung nilai
@@ -354,8 +395,8 @@ class AssesmentResultController implements IController {
       if (result.valid) {
         req.body.score = result.data?.totalScore
         req.body.details = result.data?.details
-        req.body.grade =  result.data?.nilai?.name
-        req.body.notes =  result.data?.nilai?.notes
+        req.body.grade = result.data?.nilai?.name
+        req.body.notes = result.data?.nilai?.notes
       } else {
         return res.status(400).json({ status: 400, msg: result.error });
       }

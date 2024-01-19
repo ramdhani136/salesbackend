@@ -37,6 +37,7 @@ import AssesmentQuestionController from "./AssesmentQuestionController";
 import AssesmentTemplateController from "./AssesmentTemplateController";
 import AssesmentScheduleController from "./AssesmentScheduleController";
 import AssesmentScheduleListController from "./AssesmentScheduleListController";
+import AssesmentResultController from "./AssesmentResultController";
 
 
 export {
@@ -78,5 +79,6 @@ export {
   AssesmentQuestionController,
   AssesmentTemplateController,
   AssesmentScheduleController,
-  AssesmentScheduleListController
+  AssesmentScheduleListController,
+  AssesmentResultController
 };

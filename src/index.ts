@@ -64,6 +64,7 @@ import {
   User,
   WorkflowState,
 } from "./models";
+import AssesmentResultRoutes from "./routes/AssesmentResultRoutes";
 
 
 const cookieParser = require("cookie-parser");
@@ -505,6 +506,7 @@ class App {
     this.app.use("/assesmenttemplate", AuthMiddleware, RoleMiddleware, AssesmentTemplateRoutes);
     this.app.use("/assesmentschedule", AuthMiddleware, RoleMiddleware, AssesmentScheduleRoutes);
     this.app.use("/assesmentschedulelist", AuthMiddleware, RoleMiddleware, AssesmentScheduleListRoutes);
+    this.app.use("/assesmentresult", AuthMiddleware, RoleMiddleware, AssesmentResultRoutes);
     // this.app.use("/chat", AuthMiddleware, ChatRoutes);
     // this.app.use("/message", AuthMiddleware, MessageRoutes);
   }

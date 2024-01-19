@@ -20,14 +20,6 @@ const redisName = "assesmentresult";
 class AssesmentResultController implements IController {
   index = async (req: Request | any, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-
-      {
-        alias: "Name",
-        name: "name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-        isSort: true,
-      },
       {
         alias: "CreatedBy",
         name: "createdBy._id",
@@ -296,40 +288,126 @@ class AssesmentResultController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-    if (!req.body.name) {
-      return res.status(400).json({ status: 400, msg: "Nama wajib diisi!" });
-    }
-    req.body.createdBy = req.userId;
 
     try {
-      const result = new Db(req.body);
-      const response = await result.save();
+      if (!req.body.customer) {
+        return res.status(400).json({ status: 400, msg: "Customer wajib diisi!" });
+      }
+      if (!req.body.customer._id) {
+        return res.status(400).json({ status: 400, msg: "Id customer wajib diisi!" });
+      }
+      if (!req.body.customer.name) {
+        return res.status(400).json({ status: 400, msg: "Nama schedule wajib diisi!" });
+      }
+      if (!req.body.schedule) {
+        return res.status(400).json({ status: 400, msg: "Schedule wajib diisi!" });
+      }
+      if (!req.body.schedule._id) {
+        return res.status(400).json({ status: 400, msg: "Id schedule wajib diisi!" });
+      }
+      if (!req.body.schedule.name) {
+        return res.status(400).json({ status: 400, msg: "Nama schedule wajib diisi!" });
+      }
+      if (!req.body.activeDate) {
+        return res.status(400).json({ status: 400, msg: "activeDate wajib diisi!" });
+      }
+      if (!req.body.deactiveDate) {
+        return res.status(400).json({ status: 400, msg: "deactiveDate wajib diisi!" });
+      }
 
-      // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: response._id,
-          name: response.name,
-          type: redisName,
-        },
-        message: `Membuat ${redisName} baru`,
-        user: req.userId,
-      });
+
+      // Template
+      if (!req.body.assesmentTemplate) {
+        return res.status(400).json({ status: 400, msg: "assesmentTemplate wajib diisi!" });
+      }
+
+      if (typeof req.body.assesmentTemplate !== 'object') {
+        return res.status(400).json({ status: 400, msg: "assesmentTemplate object!" });
+      }
+
+      if (req.body.assesmentTemplate.length === 0) {
+        return res.status(400).json({ status: 400, msg: "assesmentTemplate wajib diisi!" });
+      }
       // End
 
-      // await Redis.client.set(
-      //   `${redisName}-${response._id}`,
-      //   JSON.stringify(response),
-      //   {
-      //     EX: 30,
-      //   }
-      // );
+      // Proses result
+      if (!req.body.details) {
+        return res.status(400).json({ status: 400, msg: "Jawaban wajib diisi!" });
+      }
 
-      return res.status(200).json({ status: 200, data: response });
+      if (typeof req.body.details !== 'object') {
+        return res.status(400).json({ status: 400, msg: "Jawaban array object!" });
+      }
+
+      if (req.body.details.length === 0) {
+        return res.status(400).json({ status: 400, msg: "Jawaban wajib diisi!" });
+      }
+      // End   
+
+      if (req.body.details.length !== req.body.assesmentTemplate.indicators.length) {
+        return res.status(400).json({ status: 400, msg: "Semua pertanyaan wajib diisi!" });
+      }
+
+
+      // Menghitung nilai
+      const result = this.ProsesHitungNilai(req.body.details, req.body.assesmentTemplate.indicators, req.body.assesmentTemplate.grades);
+      if (result.valid) {
+        req.body.score = result.data?.totalScore
+        req.body.details = result.data?.details
+        req.body.grade =  result.data?.nilai?.name
+        req.body.notes =  result.data?.nilai?.notes
+      } else {
+        return res.status(400).json({ status: 400, msg: result.error });
+      }
+      // End
+
+      req.body.createdBy = {
+        _id: req.userId,
+        name: req.user
+      }
+
+      // const result = new Db(req.body);
+      // const response = await result.save();
+
+      return res.status(200).json({ status: 200, data: req.body });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
     }
   };
+
+
+  ProsesHitungNilai = (answers: any[], indicators: any[], grades: any[]): { valid: Boolean, data?: { details: any[], totalScore: number, nilai: any }, error?: any } => {
+    try {
+      let result: any[] = []
+      let totalScore: number = 0;
+      for (const answer of answers) {
+        const score: number = this.getAnswerWeight(indicators, answer)
+        answer.score = score
+        totalScore += score;
+        result.push(answer);
+      }
+
+      const nilai = grades.find(grade => totalScore >= grade.bottom && totalScore <= grade.top);
+
+      return { valid: true, data: { details: result, totalScore: totalScore, nilai: nilai } }
+    } catch (error) {
+      return { valid: false, error: error }
+    }
+  }
+
+  getAnswerWeight(indicators: any[], answerData: any) {
+    const questionId = answerData.question._id
+    const answer = answerData.answer
+
+    const indicator = indicators.find(indicator => indicator.questionId === questionId);
+    if (indicator) {
+      const option = indicator.options.find((option: { name: any; }) => option.name === answer);
+      const optionWeight = option ? option.weight : 0;
+      return optionWeight !== 0 ? indicator.weight * (optionWeight / 100) : 0;
+    }
+
+    return 0;
+  }
 
   show = async (req: Request | any, res: Response): Promise<any> => {
     try {
@@ -629,15 +707,7 @@ class AssesmentResultController implements IController {
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       // push history
-      await HistoryController.pushHistory({
-        document: {
-          _id: result._id,
-          name: result.name,
-          type: redisName,
-        },
-        message: `Menghapus ${redisName} nomor ${result.name}`,
-        user: req.userId,
-      });
+
       // End
       return res.status(200).json({ status: 200, data: actionDel });
     } catch (error) {

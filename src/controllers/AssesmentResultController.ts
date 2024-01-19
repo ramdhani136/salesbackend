@@ -363,10 +363,10 @@ class AssesmentResultController implements IController {
 
       const gradeOk: { valid: boolean, data?: string[] } = await AssesmentTemplateController.cekGrade(req.body.assesmentTemplate.grades, indicatorOk.indicatorWeight!);
 
-      if(!gradeOk.valid){
+      if (!gradeOk.valid) {
         return res.status(400).json({ status: 400, msg: gradeOk.data });
       }
-      
+
 
       if (req.body.details.length !== req.body.assesmentTemplate.indicators.length) {
         return res.status(400).json({ status: 400, msg: "Semua pertanyaan wajib diisi!" });
@@ -407,10 +407,10 @@ class AssesmentResultController implements IController {
         name: req.user
       }
 
-      // const result = new Db(req.body);
-      // const response = await result.save();
+      const insert = new Db(req.body);
+      const response = await insert.save();
 
-      return res.status(200).json({ status: 200, data: req.body });
+      return res.status(200).json({ status: 200, data: response });
     } catch (error) {
       return res.status(400).json({ status: 400, data: error });
     }

@@ -84,6 +84,8 @@ class AssesmentScheduleController implements IController {
           "createdBy.name",
           "status",
           "updatedAt",
+          "activeDate",
+          "deactiveDate",
         ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)

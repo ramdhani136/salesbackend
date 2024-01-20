@@ -9,7 +9,7 @@ class AssesmenResultRoutes extends RouteBase {
     this.router.post("/", Controller.create);
     this.router.get("/:id", Controller.show);
     this.router.delete("/:id",DeletedValidMiddleware, Controller.delete);
-    this.router.put("/:id", Controller.update);
+    // this.router.put("/:id", Controller.update);
   }
 }
 

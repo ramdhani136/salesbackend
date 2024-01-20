@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentResult as Db,  PermissionModel } from "../models";
+import { AssesmentResult as Db, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { AssesmentTemplateController, HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -53,7 +53,7 @@ class AssesmentResultController implements IController {
       {
         alias: "Grade",
         name: "grade",
-        operator: ["like", "notlike","=","!="],
+        operator: ["like", "notlike", "=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -267,7 +267,6 @@ class AssesmentResultController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-
     try {
       if (!req.body.customer) {
         return res.status(400).json({ status: 400, msg: "Customer wajib diisi!" });
@@ -364,9 +363,12 @@ class AssesmentResultController implements IController {
       if (req.body.details.length === 0) {
         return res.status(400).json({ status: 400, msg: "Jawaban wajib diisi!" });
       }
+
+      const cekDetails = this.cekDetails(req.body.details)
+      if (!cekDetails.valid) {
+        return res.status(400).json({ status: 400, msg: cekDetails.error });
+      }
       // End   
-
-
 
 
       // Menghitung nilai
@@ -395,6 +397,34 @@ class AssesmentResultController implements IController {
     }
   };
 
+  cekDetails = (details: any[]): { valid: Boolean, error?: string[] } => {
+    let errors: string[] = [];
+    const keysToCheck = ['question', 'answer'];
+    const questionKeys = ['_id', 'name'];
+    for (const detail of details) {
+      const index = details.indexOf(detail) + 1;
+
+      const missingKeys = keysToCheck.filter(key => !Object.keys(detail).includes(key));
+      if (missingKeys.length > 0) {
+        errors.push(`Data ${missingKeys} di details no ${index} wajib diisi!`)
+      } else {
+        // Cek question
+        const missingQuestion = questionKeys.filter(key => !Object.keys(detail.question).includes(key));
+        if (missingQuestion.length > 0) {
+          errors.push(`Question ${missingQuestion} di details no ${index} wajib diisi!`)
+        }
+        // End
+      }
+    }
+
+
+    if (errors.length > 0) {
+      return { valid: false, error: errors }
+    } else {
+      return { valid: true }
+    }
+
+  }
 
   ProsesHitungNilai = (answers: any[], indicators: any[], grades: any[]): { valid: Boolean, data?: { details: any[], totalScore: number, nilai: any }, error?: any } => {
     try {
@@ -447,7 +477,7 @@ class AssesmentResultController implements IController {
       );
       // End
 
-   
+
       let pipeline: any = [{ _id: req.params.id }];
 
       if (userPermission.length > 0) {
@@ -512,11 +542,6 @@ class AssesmentResultController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
-        // if (!req.body.name && !result.name) {
-        //   return res
-        //     .status(400)
-        //     .json({ status: 400, msg: "Nama wajib diisi!" });
-        // }
 
         if (req.body.nextState) {
           const checkedWorkflow =
@@ -547,13 +572,6 @@ class AssesmentResultController implements IController {
         const getData: any = await Db.findOne({
           _id: req.params.id,
         }).populate("createdBy", "name");
-        // await Redis.client.set(
-        //   `${redisName}-${req.params.id}`,
-        //   JSON.stringify(getData),
-        //   {
-        //     EX: 30,
-        //   }
-        // );
 
         // push history semua field yang di update
         await HistoryController.pushUpdateMany(
@@ -635,12 +653,6 @@ class AssesmentResultController implements IController {
         });
       }
       // End
-
-      // if (result.status === "1") {
-      //   return res
-      //     .status(404)
-      //     .json({ status: 404, msg: "Error, status dokumen aktif!" });
-      // }
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);

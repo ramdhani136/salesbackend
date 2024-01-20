@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentResult as Db, History, PermissionModel } from "../models";
+import { AssesmentResult as Db,  PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { AssesmentTemplateController, HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -276,7 +276,7 @@ class AssesmentResultController implements IController {
         return res.status(400).json({ status: 400, msg: "Id customer wajib diisi!" });
       }
       if (!req.body.customer.name) {
-        return res.status(400).json({ status: 400, msg: "Nama schedule wajib diisi!" });
+        return res.status(400).json({ status: 400, msg: "Nama Customer wajib diisi!" });
       }
       if (!req.body.schedule) {
         return res.status(400).json({ status: 400, msg: "Schedule wajib diisi!" });

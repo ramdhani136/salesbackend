@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-// import Redis from "../config/Redis";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";

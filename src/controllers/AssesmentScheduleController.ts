@@ -42,8 +42,9 @@ class AssesmentScheduleController implements IController {
         isSort: true,
         listData: [
           { value: "0", name: "Draft" },
-          { value: "1", name: "Submitted" },
+          { value: "1", name: "In Progress" },
           { value: "2", name: "Canceled" },
+          { value: "3", name: "Closed" },
         ],
       },
       {
@@ -81,6 +82,7 @@ class AssesmentScheduleController implements IController {
           "lng",
           "desc",
           "workflowState",
+          "createdBy._id",
           "createdBy.name",
           "status",
           "updatedAt",
@@ -119,7 +121,7 @@ class AssesmentScheduleController implements IController {
 
       // Mengambil hasil filter
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
-        "createdBy",
+        "createdBy._id",
         "_id",
       ]);
       // End

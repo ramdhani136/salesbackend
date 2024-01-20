@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { CekKarakterSama, FilterQuery, HapusKarakter, PaddyData } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentSchedule, AssesmentTemplate, History, PermissionModel, namingSeriesModel } from "../models";
+import { AssesmentSchedule, AssesmentScheduleList, AssesmentTemplate, History, PermissionModel, namingSeriesModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -233,13 +233,32 @@ class AssesmentScheduleController implements IController {
       const result = await Db.aggregate(pipelineResult);
 
       if (result.length > 0) {
+
+        const scheduleWithPercentage: any = await Promise.all(
+          result.map(async (schedule: any) => {
+            const closed = await AssesmentScheduleList.countDocuments({
+              schedule: schedule._id,
+              status: "1",
+            });
+            const open = await AssesmentScheduleList.countDocuments({
+              schedule: schedule._id,
+              status: "0",
+            });
+
+            const percentage = ((100 / (open + closed)) * closed).toFixed(1);
+            schedule.progress = percentage;
+
+            return { ...schedule };
+          })
+        );
+
         return res.status(200).json({
           status: 200,
           total: getAll,
           limit,
           nextPage: getAll > page * limit && limit > 0 ? page + 1 : page,
           hasMore: getAll > page * limit && limit > 0 ? true : false,
-          data: result,
+          data: scheduleWithPercentage,
           filters: stateFilter,
         });
       }
@@ -278,17 +297,17 @@ class AssesmentScheduleController implements IController {
 
       const cekTemplate = await AssesmentTemplate.findById(req.body.assesmentTemplate, ["status"])
 
-      if(!cekTemplate){
+      if (!cekTemplate) {
         return res
-        .status(400)
-        .json({ status: 400, msg: "Error, Assesment Template  tidak ditemukan!" });
+          .status(400)
+          .json({ status: 400, msg: "Error, Assesment Template  tidak ditemukan!" });
       }
 
 
-      if(cekTemplate.status!=="1"){
+      if (cekTemplate.status !== "1") {
         return res
-        .status(400)
-        .json({ status: 400, msg: "Error, Assesment Template tidak active!" });
+          .status(400)
+          .json({ status: 400, msg: "Error, Assesment Template tidak active!" });
       }
 
       // Set Naming
@@ -412,7 +431,7 @@ class AssesmentScheduleController implements IController {
       );
       // End
 
-  
+
       let pipeline: any = [{ _id: req.params.id }];
 
       if (userPermission.length > 0) {
@@ -452,11 +471,22 @@ class AssesmentScheduleController implements IController {
         .populate("user", "name")
         .sort({ createdAt: -1 });
 
+
+      const open = await AssesmentScheduleList.count({
+        $and: [{ schedule: new ObjectId(req.params.id) }, { status: "0" }],
+      });
+      const closed = await AssesmentScheduleList.count({
+        $and: [{ schedule: new ObjectId(req.params.id) }, { status: "1" }],
+      });
+
       return res.status(200).json({
         status: 200,
         data: result,
         history: getHistory,
         workflow: buttonActions,
+        open,
+        closed,
+        progress: parseFloat(`${(100 / (open + closed)) * closed}`).toFixed(2),
       });
     } catch (error) {
       return res.status(404).json({ status: 404, msg: error });
@@ -466,7 +496,7 @@ class AssesmentScheduleController implements IController {
   update = async (req: Request | any, res: Response): Promise<any> => {
     try {
 
-      
+
       if (req.body.name) {
         return res
           .status(400)

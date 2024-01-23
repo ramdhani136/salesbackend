@@ -675,6 +675,160 @@ class AssesmentScheduleController implements IController {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
+
+
+
+  getDuplicate = async (
+    req: Request | any,
+    res: Response
+  ): Promise<Response> => {
+    try {
+      const id = req.params.id;
+      const CekData = await Db.findById(id);
+
+      if (!CekData) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: "Schedule tidak ditemukan" });
+      }
+
+      if (!req.body.namingSeries) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, namingSeries wajib diisi!" });
+      }
+
+      if (typeof req.body.namingSeries !== "string") {
+        return res.status(404).json({
+          status: 404,
+          msg: "Error, Cek kembali data namingSeries, Data harus berupa string id namingSeries!",
+        });
+      }
+
+      const namingSeries: any = await namingSeriesModel.findOne({
+        $and: [{ _id: req.body.namingSeries }, { doc: "assesmentschedule" }],
+      });
+
+      if (!namingSeries) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, namingSeries tidak ditemukan!" });
+      }
+
+      //End
+
+      const split = namingSeries.name.split(".");
+
+      const jumlahKarakter = HapusKarakter(namingSeries.name, ["."]).length;
+
+      let ambilIndex: String = "";
+      const olahKata = split.map((item: any) => {
+        if (item === "YYYY") {
+          return new Date().getFullYear().toString();
+        } else if (item === "MM") {
+          return PaddyData(new Date().getMonth() + 1, 2).toString();
+        } else {
+          if (item.includes("#")) {
+            if (CekKarakterSama(item)) {
+              if (!ambilIndex) {
+                if (item.length > 2) {
+                  ambilIndex = item;
+                }
+              }
+              return "";
+            }
+          }
+
+          return item;
+        }
+      });
+
+      let latest = 0;
+
+      const regex = new RegExp(olahKata.join(""), "i");
+
+      const doc = await Db.findOne({
+        $and: [
+          { name: { $regex: regex } },
+          {
+            $where: `this.name.length === ${
+              ambilIndex ? jumlahKarakter : jumlahKarakter + 4
+            }`,
+          },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .exec();
+
+      if (doc) {
+        latest = parseInt(
+          `${doc.name.slice(ambilIndex ? -ambilIndex.length : -4)}`
+        );
+      }
+
+      req.body.name = ambilIndex
+        ? olahKata.join("") +
+          PaddyData(latest + 1, ambilIndex.length).toString()
+        : olahKata.join("") + PaddyData(latest + 1, 4).toString();
+      // End set name
+
+
+      if (!req.body.activeDate) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, activeDate wajib diisi!" });
+      }
+      if (!req.body.deactiveDate) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, closingDate wajib diisi!" });
+      }
+
+      req.body.createdBy = req.userId;
+      const result = new Db(req.body);
+      const response: any = await result.save();
+
+      if (response) {
+        // push history
+        await HistoryController.pushHistory({
+          document: {
+            _id: response._id,
+            name: response.name,
+            type: redisName,
+          },
+          message: `${req.user} menambahkan schedule ${response.name} `,
+          user: req.userId,
+        });
+        // End
+
+        const getList: any = await AssesmentScheduleList.find(
+          { schedule: CekData._id },
+          ["customer"]
+        );
+
+        if (getList.length > 0) {
+          const genListData = getList.map((item: any) => {
+            return {
+              customer: item.customer,
+              schedule: response._id,
+              createdBy: req.userId,
+            };
+          });
+
+          try {
+            await AssesmentScheduleList.insertMany(genListData);
+          } catch (error) {
+            console.log(error);
+          }
+        }
+      }
+
+      return res.status(200).json({ status: 200, data: response });
+    } catch (error: any) {
+      return res.status(400).json({ status: 400, msg: error });
+    }
+  };
+
 }
 
 export default new AssesmentScheduleController();

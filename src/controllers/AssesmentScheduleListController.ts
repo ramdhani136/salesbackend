@@ -36,7 +36,7 @@ class AssesmentScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        alias: "ScheduleStatus",
+        alias: "Schedule Status",
         name: "schedule.status",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
@@ -48,25 +48,25 @@ class AssesmentScheduleListController implements IController {
         ],
       },
       {
-        alias: "WorkflowState",
+        alias: "Workflow State",
         name: "schedule.workflowState",
         operator: ["=", "!=", "like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
-        alias: "activeDate",
+        alias: "Active Date",
         name: "schedule.activeDate",
         operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
-        alias: "deactiveDate",
+        alias: "Deactive Date",
         name: "schedule.deactiveDate",
         operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
       },
       {
-        alias: "ScheduleCreatedAt",
+        alias: "Schedule Created At",
         name: "schedule.createdAt",
         operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
@@ -78,7 +78,7 @@ class AssesmentScheduleListController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        alias: "CustomerGroup",
+        alias: "Group",
         name: "customer.customerGroup",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,

@@ -78,8 +78,6 @@ class AssesmentScheduleController implements IController {
         ? JSON.parse(`${req.query.fields}`)
         : [
           "name",
-          "lat",
-          "lng",
           "desc",
           "workflowState",
           "createdBy._id",

@@ -89,17 +89,17 @@ class AssesmentScheduleListController implements IController {
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-      {
-        alias: "Status",
-        name: "status",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-        isSort: true,
-        listData: [
-          { value: "0", name: "Active" },
-          { value: "1", name: "Closed" },
-        ],
-      },
+      // {
+      //   alias: "Status",
+      //   name: "status",
+      //   operator: ["=", "!="],
+      //   typeOf: TypeOfState.String,
+      //   isSort: true,
+      //   listData: [
+      //     { value: "0", name: "Active" },
+      //     { value: "1", name: "Closed" },
+      //   ],
+      // },
       {
         alias: "CreatedBy",
         name: "createdBy",

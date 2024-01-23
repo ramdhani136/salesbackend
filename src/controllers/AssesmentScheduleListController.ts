@@ -698,6 +698,7 @@ class AssesmentScheduleListController implements IController {
             _id: 1,
             "schedule._id": 1,
             "schedule.name": 1,
+            "schedule.desc": 1,
             "schedule.createdBy": 1,
             "customer._id": 1,
             "customer.name": 1,

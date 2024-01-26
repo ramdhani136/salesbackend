@@ -132,7 +132,7 @@ class AssesmentScheduleListController implements IController {
           "_id",
           "schedule._id",
           "schedule.name",
-          // "schedule.status",
+          "schedule.status",
           // "schedule.workflowState",
           "schedule.activeDate",
           "schedule.deactiveDate",

@@ -30,7 +30,6 @@ const AssesmentScheduleList = new mongoose.Schema(
                     type: Schema.Types.ObjectId,
                     ref: "Users",
                 },
-                name: String
             },
             result: {
                 type: Schema.Types.ObjectId

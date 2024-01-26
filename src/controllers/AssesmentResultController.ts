@@ -396,7 +396,7 @@ class AssesmentResultController implements IController {
 
       await AssesmentScheduleList.findByIdAndUpdate(req.body.id, {
         status: "1", closing: {
-          user: { _id: req.userId, name: req.user},
+          user:  req.userId,
           result: response._id ,
           date: Date.now()
         }

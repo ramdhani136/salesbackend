@@ -99,6 +99,7 @@ class ErpDataController {
   };
 
   show = async (req: Request | any, res: Response): Promise<Response> => {
+    
     try {
       //   const cache = await Redis.client.get(`${redisName}-${req.params.id}`);
       //   if (cache) {

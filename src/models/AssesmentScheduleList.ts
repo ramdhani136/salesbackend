@@ -26,10 +26,8 @@ const AssesmentScheduleList = new mongoose.Schema(
                 index: -1,
             },
             user: {
-                _id: {
-                    type: Schema.Types.ObjectId,
-                    ref: "Users",
-                },
+                type: Schema.Types.ObjectId,
+                ref: "Users",
             },
             result: {
                 type: Schema.Types.ObjectId

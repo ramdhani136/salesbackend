@@ -10,7 +10,6 @@ import {
   CustomerModel,
   AssesmentScheduleList as Db,
   History,
-  ScheduleModel,
   visitModel,
 } from "../models";
 
@@ -339,7 +338,7 @@ class AssesmentScheduleListController implements IController {
           ["_id"]
         );
 
-        const schedulesData = await ScheduleModel.find(
+        const schedulesData = await AssesmentSchedule.find(
           validScheduleFIlter.data,
           ["_id"]
         );
@@ -1003,7 +1002,7 @@ class AssesmentScheduleListController implements IController {
 
         //Mengecek Schedule
         if (req.body.schedule) {
-          const cekSchedule: any = await ScheduleModel.findOne({
+          const cekSchedule: any = await AssesmentSchedule.findOne({
             $and: [{ _id: req.body.schedule }],
           })
             // .populate("userGroup", "name")

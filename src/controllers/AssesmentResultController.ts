@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentResult as Db, PermissionModel } from "../models";
+import { AssesmentScheduleList, AssesmentResult as Db, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { AssesmentTemplateController, HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -267,6 +267,9 @@ class AssesmentResultController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     try {
+      if (!req.body.id) {
+        return res.status(400).json({ status: 400, msg: "id wajib diisi!" });
+      }
       if (!req.body.customer) {
         return res.status(400).json({ status: 400, msg: "Customer wajib diisi!" });
       }
@@ -387,8 +390,11 @@ class AssesmentResultController implements IController {
         name: req.user
       }
 
+  
       const insert = new Db(req.body);
       const response = await insert.save();
+
+      await AssesmentScheduleList.findByIdAndUpdate(req.body.id, { status: "1" })
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {

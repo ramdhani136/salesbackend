@@ -293,6 +293,25 @@ class AssesmentScheduleListController implements IController {
             preserveNullAndEmptyArrays: true,
           },
         },
+        {
+          $lookup: {
+            from: "assesmentresults",
+            localField: "closing.result",
+            foreignField: "_id",
+            as: "closing.result",
+            pipeline: [
+              {
+                $project: { score: 1, grade:1, notes:1 },
+              },
+            ],
+          },
+        },
+        {
+          $unwind: {
+            path: "$closing.result",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
       ];
 
       //Menambahkan limit ketika terdapat limit

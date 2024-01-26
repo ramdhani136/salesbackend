@@ -30,7 +30,8 @@ const AssesmentScheduleList = new mongoose.Schema(
                 ref: "Users",
             },
             result: {
-                type: Schema.Types.ObjectId
+                type: Schema.Types.ObjectId,
+                ref: "assesmentresult",
             },
         },
         createdBy: {

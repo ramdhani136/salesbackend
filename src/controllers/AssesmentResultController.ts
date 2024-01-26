@@ -390,11 +390,17 @@ class AssesmentResultController implements IController {
         name: req.user
       }
 
-  
+
       const insert = new Db(req.body);
       const response = await insert.save();
 
-      await AssesmentScheduleList.findByIdAndUpdate(req.body.id, { status: "1" })
+      await AssesmentScheduleList.findByIdAndUpdate(req.body.id, {
+        status: "1", closing: {
+          user: { _id: req.userId, name: req.user},
+          result: response._id ,
+          date: Date.now()
+        }
+      })
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {

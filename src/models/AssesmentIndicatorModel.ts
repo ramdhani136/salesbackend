@@ -19,7 +19,6 @@ const AssesmentIndicatorModel =
       name: {
         type: String,
         required: true,
-        unique: true,
       },
       weight: {
         type: Number,

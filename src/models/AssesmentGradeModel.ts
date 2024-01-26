@@ -5,7 +5,6 @@ const AssesmentGradeModel =
   name: {
     type: String,
     required: true,
-    unique: true,
   },
   bottom: {
     type: Number,

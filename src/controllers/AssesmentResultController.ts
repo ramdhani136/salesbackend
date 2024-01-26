@@ -448,7 +448,7 @@ class AssesmentResultController implements IController {
     const questionId = answerData.question._id
     const answer = answerData.answer
 
-    const indicator = indicators.find(indicator => indicator.questionId === questionId);
+    const indicator = indicators.find(indicator => indicator.questionId._id === questionId);
     if (indicator) {
       const option = indicator.options.find((option: { name: any; }) => option.name === answer);
       const optionWeight = option ? option.weight : 0;

@@ -333,9 +333,9 @@ class AssesmentTemplateController implements IController {
     let errors: string[] = [];
     const keysToCheck = ['name', 'bottom', 'top', "grade", "notes"];
 
-    if (this.nilaiTopTertinggi(grades) !== indicatorWeight) {
-      errors.push(`Nilai maksimal top(${this.nilaiTopTertinggi(grades)}) grade tidak boleh kurang atau lebih dari ${indicatorWeight}`)
-    }
+    // if (this.nilaiTopTertinggi(grades) !== indicatorWeight) {
+    //   errors.push(`Nilai maksimal top(${this.nilaiTopTertinggi(grades)}) grade tidak boleh kurang atau lebih dari ${indicatorWeight}`)
+    // }
 
     if (errors.length === 0) {
       for (const grade of grades) {

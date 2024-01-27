@@ -658,6 +658,10 @@ class AssesmentScheduleController implements IController {
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);
       // push history
+
+      await AssesmentScheduleList.deleteMany({ schedule: new ObjectId(req.params.id) })
+
+
       await HistoryController.pushHistory({
         document: {
           _id: result._id,
@@ -749,9 +753,8 @@ class AssesmentScheduleController implements IController {
         $and: [
           { name: { $regex: regex } },
           {
-            $where: `this.name.length === ${
-              ambilIndex ? jumlahKarakter : jumlahKarakter + 4
-            }`,
+            $where: `this.name.length === ${ambilIndex ? jumlahKarakter : jumlahKarakter + 4
+              }`,
           },
         ],
       })
@@ -766,7 +769,7 @@ class AssesmentScheduleController implements IController {
 
       req.body.name = ambilIndex
         ? olahKata.join("") +
-          PaddyData(latest + 1, ambilIndex.length).toString()
+        PaddyData(latest + 1, ambilIndex.length).toString()
         : olahKata.join("") + PaddyData(latest + 1, 4).toString();
       // End set name
 

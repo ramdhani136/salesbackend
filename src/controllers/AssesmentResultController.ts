@@ -26,33 +26,33 @@ class AssesmentResultController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        alias: "Customer Id",
+        alias: "Customer",
         name: "customer._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
+      // {
+      //   alias: "Customer Name",
+      //   name: "customer.name",
+      //   operator: ["like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
-        alias: "Customer Name",
-        name: "customer.name",
-        operator: ["like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
-      {
-        alias: "Schedule Id",
+        alias: "Schedule",
         name: "schedule._id",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
-      {
-        alias: "Schedule Name",
-        name: "schedule.name",
-        operator: ["like", "notlike"],
-        typeOf: TypeOfState.String,
-      },
+      // {
+      //   alias: "Schedule Name",
+      //   name: "schedule.name",
+      //   operator: ["like", "notlike"],
+      //   typeOf: TypeOfState.String,
+      // },
       {
         alias: "Grade",
         name: "grade",
-        operator: ["like", "notlike", "=", "!="],
+        operator: ["like", "notlike"],
         typeOf: TypeOfState.String,
       },
       {
@@ -77,7 +77,7 @@ class AssesmentResultController implements IController {
         alias: "Score",
         name: "score",
         operator: ["=", "!=", ">", "<", ">=", "<="],
-        typeOf: TypeOfState.String,
+        typeOf: TypeOfState.Number,
       },
       {
         alias: "UpdatedAt",
@@ -150,6 +150,8 @@ class AssesmentResultController implements IController {
       // Mengambil hasil filter
       let isFilter = FilterQuery.getFilter(filters, stateFilter, search, [
         "createdBy",
+        "customer._id",
+        "schedule._id",
         "_id",
       ]);
       // End
@@ -396,8 +398,8 @@ class AssesmentResultController implements IController {
 
       await AssesmentScheduleList.findByIdAndUpdate(req.body.id, {
         status: "1", closing: {
-          user:  req.userId,
-          result: response._id ,
+          user: req.userId,
+          result: response._id,
           date: Date.now()
         }
       })

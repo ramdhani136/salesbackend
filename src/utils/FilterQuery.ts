@@ -61,12 +61,12 @@ class FilterQuery {
 
         let valueFilter =
           typeOf == "number"
-            ? filter[2]
+            ? parseInt(filter[2])
             : typeOf == "date"
-            ? new Date(filter[2])
-            : exist
-            ? new ObjectId(`${filter[2]}`)
-            : `${filter[2]}`;
+              ? new Date(filter[2])
+              : exist
+                ? new ObjectId(`${filter[2]}`)
+                : `${filter[2]}`;
 
         exist = false;
         // End
@@ -154,7 +154,7 @@ class FilterQuery {
       }
 
       if (notlike.length > 0) {
-        finalFilter = [...notlike,...finalFilter, ];
+        finalFilter = [...notlike, ...finalFilter,];
       }
     }
 
@@ -162,14 +162,14 @@ class FilterQuery {
       Object.keys(finalFilter).length > 0
         ? genSearch.length > 0
           ? {
-              $and: [{ $and: finalFilter }, { $or: genSearch }],
-            }
+            $and: [{ $and: finalFilter }, { $or: genSearch }],
+          }
           : {
-              $and: finalFilter,
-            }
+            $and: finalFilter,
+          }
         : genSearch.length > 0
-        ? { $or: genSearch }
-        : {};
+          ? { $or: genSearch }
+          : {};
 
     if (valid) {
       return {

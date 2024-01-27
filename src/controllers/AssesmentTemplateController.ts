@@ -24,7 +24,7 @@ class AssesmentTemplateController implements IController {
       {
         alias: "Name",
         name: "name",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },

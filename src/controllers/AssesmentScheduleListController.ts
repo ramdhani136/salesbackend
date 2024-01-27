@@ -301,7 +301,7 @@ class AssesmentScheduleListController implements IController {
             as: "closing.result",
             pipeline: [
               {
-                $project: { score: 1, grade:1, notes:1 },
+                $project: { score: 1, grade: 1, notes: 1 },
               },
             ],
           },
@@ -564,7 +564,7 @@ class AssesmentScheduleListController implements IController {
         });
       }
 
-      if (cekSchedule.status != 0) {
+      if (cekSchedule.status != 0 && cekSchedule.status != 1) {
         return res.status(404).json({
           status: 404,
           msg: "Error, hanya bisa menambah list schedule saat dokumen status draft!",
@@ -1187,7 +1187,7 @@ class AssesmentScheduleListController implements IController {
     }
   };
 
- 
+
 }
 
 export default new AssesmentScheduleListController();

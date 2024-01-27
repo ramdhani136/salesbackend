@@ -505,6 +505,12 @@ class AssesmentScheduleController implements IController {
           .json({ status: 400, msg: "Error, Nama tidak dapat di ganti!" });
       }
 
+      if (req.body.status) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Error, Status tidak dapat di ganti!" });
+      }
+
       // Mengecek permission user
       const userPermission = await PermissionMiddleware.getPermission(
         req.userId,
@@ -540,7 +546,7 @@ class AssesmentScheduleController implements IController {
       if (result) {
 
         if (req.body.nextState) {
-          const checkedWorkflow =
+          const checkedWorkflow: any =
             await WorkflowController.permissionUpdateAction(
               redisName,
               req.userId,
@@ -549,6 +555,14 @@ class AssesmentScheduleController implements IController {
             );
 
           if (checkedWorkflow.status) {
+            if (checkedWorkflow.data.status === 1) {
+              const cekAktif = await Db.findOne({ status: 1 }, ["_id", "name"])
+              if (cekAktif) {
+                return res
+                  .status(400)
+                  .json({ status: 400, msg: `Terdapat schedule lain (${cekAktif.name}) yang aktif!` });
+              }
+            }
             await Db.updateOne(
               { _id: req.params.id },
               checkedWorkflow.data

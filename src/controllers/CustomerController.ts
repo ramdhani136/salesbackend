@@ -5,6 +5,7 @@ import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  AssesmentScheduleList,
   BranchModel,
   ConfigModel,
   ContactModel,
@@ -13,6 +14,7 @@ import {
   CustomerModel as Db,
   History,
   PermissionModel,
+  ScheduleListModel,
 } from "../models";
 import { PermissionMiddleware } from "../middleware";
 import {
@@ -35,6 +37,21 @@ interface IGeoLOc {
   maxDistance: number;
   customerId?: ObjectId;
   withNoLocation?: Boolean;
+}
+
+const parseStringToObject = (dataString: String) => {
+  // Ekspresi reguler untuk mencocokkan pasangan kunci-nilai
+  var regex = /(\w+):(\w+)/g;
+
+  // Objek kosong untuk menampung data
+  var dataObject: any = {};
+
+  // Memecah string dan mencocokkan pasangan kunci-nilai
+  dataString.replace(regex, (match: any, key: any, value: any) => {
+    return dataObject[key] = value;
+  });
+
+  return dataObject;
 }
 
 class CustomerController implements IController {
@@ -110,27 +127,38 @@ class CustomerController implements IController {
         ? JSON.parse(`${req.query.nearby}`)
         : [];
 
-      const filters: any = req.query.filters
+      let filters: any = req.query.filters
         ? JSON.parse(`${req.query.filters}`)
         : [];
+
+      if (req.query.current) {
+        const current: any = parseStringToObject(req.query.current);
+        const dbCustomer: any = current.doc === "assesment" ? AssesmentScheduleList : ScheduleListModel;
+        const customerOfAssesment = await dbCustomer.find({ schedule: new ObjectId(current.id) }, ["customer"]).exec()
+        const currentCustomerFilter: any[] = customerOfAssesment.map((item: any) => {
+          return ["_id", "!=", `${item.customer._id}`];
+        })
+        filters = [...filters, ...currentCustomerFilter]
+      }
+
 
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "name",
-            "createdBy._id",
-            "createdBy.name",
-            "updatedAt",
-            "customerGroup._id",
-            "customerGroup.name",
-            "branch._id",
-            "branch.name",
-            "erpId",
-            "distance",
-            "img",
-            "status",
-            "workflowState",
-          ];
+          "name",
+          "createdBy._id",
+          "createdBy.name",
+          "updatedAt",
+          "customerGroup._id",
+          "customerGroup.name",
+          "branch._id",
+          "branch.name",
+          "erpId",
+          "distance",
+          "img",
+          "status",
+          "workflowState",
+        ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -398,7 +426,6 @@ class CustomerController implements IController {
           lengthFilter.push("customerPermission");
         }
 
-        console.log(lengthFilter);
 
         pipelineResult.splice(lengthFilter.length + 2, 0, {
           $limit: limit,

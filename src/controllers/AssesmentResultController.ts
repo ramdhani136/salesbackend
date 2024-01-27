@@ -200,7 +200,6 @@ class AssesmentResultController implements IController {
       const totalData = await Db.aggregate(pipelineTotal);
 
 
-      console.log(JSON.stringify(isFilter.data))
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [

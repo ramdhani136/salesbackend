@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentQuestion, AssesmentTemplate, History, PermissionModel } from "../models";
+import { AssesmentQuestion, AssesmentSchedule, AssesmentTemplate, History, PermissionModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -857,6 +857,7 @@ class AssesmentTemplateController implements IController {
           .json({ status: 404, msg: "Error, Data tidak ditemukan!" });
       }
 
+
       // Cek apakah digunakan di permission data
       const permission = await PermissionModel.findOne(
         {
@@ -878,6 +879,12 @@ class AssesmentTemplateController implements IController {
       }
       // End
 
+      const cekScheduleRelasi = await AssesmentSchedule.findOne({ assesmentTemplate: new ObjectId(req.params.id) }, ["name"])
+      if (cekScheduleRelasi) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: `Gagal, Data terelasi dengan schedule (${cekScheduleRelasi.name})!` });
+      }
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });
       // await Redis.client.del(`${redisName}-${req.params.id}`);

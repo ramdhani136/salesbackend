@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentQuestion, History, } from "../models";
+import { AssesmentQuestion, AssesmentTemplate, History, } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, } from ".";
 import { ISearch } from "../utils/FilterQuery";
@@ -311,15 +311,11 @@ class AssesmentQuestionController implements IController {
 
   delete = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-
-
       let pipeline: any[] = [
         {
           _id: req.params.id,
         },
       ];
-
-
 
       const result = await Db.findOne({ $and: pipeline });
 
@@ -330,7 +326,14 @@ class AssesmentQuestionController implements IController {
       }
 
 
-
+      // Cek apa sudah terelasi dengan template
+      const adaRelasi = await AssesmentTemplate.findOne({ "indicators.questionId": new Object(req.params.id) }, ["name"])
+      if (adaRelasi) {
+        return res
+          .status(404)
+          .json({ status: 404, msg: `Gagal, data ini terelasi dengan data assesment template (${adaRelasi.name})` });
+      }
+      // End
 
 
       const actionDel = await Db.findOneAndDelete({ _id: req.params.id });

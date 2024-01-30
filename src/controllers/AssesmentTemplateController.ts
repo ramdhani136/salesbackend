@@ -364,16 +364,7 @@ class AssesmentTemplateController implements IController {
       }
     }
 
-    // if (errors.length === 0) {
-    //   // Cek duplicate name
-    //   const dupGrade: any[] = this.findDuplicateGrade(grades);
-    //   if (dupGrade.length > 0) {
-    //     for (const dup of dupGrade) {
-    //       errors.push(`Duplikasi name pada grade nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
-    //     }
-    //   }
-    //   // End
-    // }
+
 
     if (errors.length === 0) {
 

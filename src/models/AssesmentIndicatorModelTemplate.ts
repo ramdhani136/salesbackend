@@ -1,17 +1,13 @@
 import { Schema } from "mongoose";
 
-const AssesmentIndicatorModel =
+const AssesmentIndicatorModelTemplate =
 {
   questionId: {
-    _id: {
-      type: Schema.Types.ObjectId,
-      ref: "assesmentquestion",
-      required: true,
-    },
-    name: {
-      type: String,
-      required: true,
-    }
+
+    type: Schema.Types.ObjectId,
+    ref: "assesmentquestion",
+    required: true,
+
   },
   weight: {
     type: Number,
@@ -44,4 +40,4 @@ const AssesmentIndicatorModel =
 
 
 
-export default AssesmentIndicatorModel
+export default AssesmentIndicatorModelTemplate

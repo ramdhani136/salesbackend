@@ -18,7 +18,7 @@ class AssesmentQuestionController implements IController {
       {
         alias: "Name",
         name: "name",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },
@@ -37,7 +37,6 @@ class AssesmentQuestionController implements IController {
         listData: [
           { value: "0", name: "Disabled" },
           { value: "1", name: "Active" },
-          { value: "2", name: "Canceled" },
         ],
       },
       {

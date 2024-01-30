@@ -499,7 +499,7 @@ class AssesmentTemplateController implements IController {
 
         if (errors.length === 0) {
           // hitung weight total
-          indicatorWeight += indicator.weight;
+          indicatorWeight += parseFloat(indicator.weight);
           // End
 
           // cek question

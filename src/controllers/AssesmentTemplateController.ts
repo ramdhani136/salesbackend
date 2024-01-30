@@ -331,7 +331,7 @@ class AssesmentTemplateController implements IController {
 
   cekGrade = async (grades: any[], indicatorWeight: number): Promise<{ valid: boolean; data?: string[]; }> => {
     let errors: string[] = [];
-    const keysToCheck = ['name', 'bottom', 'top', "grade", "notes"];
+    const keysToCheck = ['bottom', 'top', "grade", "notes"];
 
     if (this.nilaiTopTertinggi(grades) < indicatorWeight) {
       errors.push(`Nilai maksimal top(${this.nilaiTopTertinggi(grades)}) grade tidak boleh kurang dari ${indicatorWeight}`)
@@ -364,16 +364,16 @@ class AssesmentTemplateController implements IController {
       }
     }
 
-    if (errors.length === 0) {
-      // Cek duplicate name
-      const dupGrade: any[] = this.findDuplicateGrade(grades);
-      if (dupGrade.length > 0) {
-        for (const dup of dupGrade) {
-          errors.push(`Duplikasi name pada grade nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
-        }
-      }
-      // End
-    }
+    // if (errors.length === 0) {
+    //   // Cek duplicate name
+    //   const dupGrade: any[] = this.findDuplicateGrade(grades);
+    //   if (dupGrade.length > 0) {
+    //     for (const dup of dupGrade) {
+    //       errors.push(`Duplikasi name pada grade nomor ${dup.existingIndex} dengan nomor ${dup.currentIndex}!`)
+    //     }
+    //   }
+    //   // End
+    // }
 
     if (errors.length === 0) {
 

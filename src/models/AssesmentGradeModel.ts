@@ -1,11 +1,6 @@
-import { Schema } from "mongoose";
 
 const AssesmentGradeModel =
 {
-  name: {
-    type: String,
-    required: true,
-  },
   bottom: {
     type: Number,
     required: true,

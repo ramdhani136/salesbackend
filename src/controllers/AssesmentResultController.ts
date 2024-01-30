@@ -381,7 +381,7 @@ class AssesmentResultController implements IController {
       if (result.valid) {
         req.body.score = result.data?.totalScore
         req.body.details = result.data?.details
-        req.body.grade = result.data?.nilai?.name
+        req.body.grade = result.data?.nilai?.grade
         req.body.notes = result.data?.nilai?.notes
       } else {
         return res.status(400).json({ status: 400, msg: result.error });

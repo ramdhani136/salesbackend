@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import {
+  AssesmentScheduleList,
   CallsheetModel,
+  ScheduleListModel,
   visitModel,
 } from "../../models";
 
@@ -22,11 +24,21 @@ export const EventDeleteCustomer = async (
       doc: "Callsheet",
       filters: ["customer"],
       model: CallsheetModel,
-    }, 
+    },
     {
       doc: "Visit",
       filters: ["customer._id"],
       model: visitModel,
+    },
+    {
+      doc: "AssesmentScheduleList",
+      filters: ["customer"],
+      model: AssesmentScheduleList,
+    },
+    {
+      doc: "Schedule List",
+      filters: ["customer"],
+      model: ScheduleListModel,
     },
   ];
 

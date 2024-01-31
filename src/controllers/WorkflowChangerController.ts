@@ -78,17 +78,18 @@ class WorkflowChangerController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "name",
-            "user._id",
-            "user.name",
-            "workflow._id",
-            "workflow.name",
-            "state._id",
-            "state.name",
-            "roleprofile._id",
-            "roleprofile.name",
-            "status",
-          ];
+          "name",
+          "user._id",
+          "user.name",
+          "workflow._id",
+          "workflow.name",
+          "state._id",
+          "state.name",
+          "roleprofile._id",
+          "roleprofile.name",
+          "status",
+          "selfApproval"
+        ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };

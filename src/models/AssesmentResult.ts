@@ -54,14 +54,14 @@ const AssesmentResult = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    assesmentTemplate:  {
-      _id: { 
-        type: Schema.Types.ObjectId, 
-        required: true 
-      }, 
-      name: { 
-        type: String, 
-        required: true 
+    assesmentTemplate: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true
+      },
+      name: {
+        type: String,
+        required: true
       },
       indicators: {
         type: [AssesmentIndicatorModel],
@@ -70,7 +70,7 @@ const AssesmentResult = new mongoose.Schema(
       grades: {
         type: [AssesmentGradeModel],
         required: true
-      } 
+      }
     },
     grade: {
       type: String,
@@ -81,27 +81,32 @@ const AssesmentResult = new mongoose.Schema(
       required: true,
     },
     details: [
-      { 
-      question: { 
-        _id: { 
-          type: Schema.Types.ObjectId, 
-          required: true 
-        }, 
-        name: { 
-          type: String, 
-          required: true 
-        } 
-      }, 
-      answer: { 
-        type: String, 
-          required: true 
-        }, 
-      score: { 
-        type: Number, 
-        required: true, 
-      } 
-    }
+      {
+        question: {
+          _id: {
+            type: Schema.Types.ObjectId,
+            required: true
+          },
+          name: {
+            type: String,
+            required: true
+          }
+        },
+        answer: {
+          type: String,
+          required: true
+        },
+        score: {
+          type: Number,
+          required: true,
+        },
+      }
     ],
+    status: {
+      type: Boolean,
+      default: 1,
+      index: 1,
+    },
   },
   {
     timestamps: true,

@@ -281,8 +281,8 @@ class AssesmentResultController implements IController {
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
     try {
-      if (!req.body.id) {
-        return res.status(400).json({ status: 400, msg: "id wajib diisi!" });
+      if (!req.body.idScheduleItem) {
+        return res.status(400).json({ status: 400, msg: "idScheduleItem wajib diisi!" });
       }
       if (!req.body.customer) {
         return res.status(400).json({ status: 400, msg: "Customer wajib diisi!" });
@@ -408,7 +408,7 @@ class AssesmentResultController implements IController {
       const insert = new Db(req.body);
       const response = await insert.save();
 
-      await AssesmentScheduleList.findByIdAndUpdate(req.body.id, {
+      await AssesmentScheduleList.findByIdAndUpdate(req.body.idScheduleItem, {
         status: "1", closing: {
           user: req.userId,
           result: response._id,
@@ -416,8 +416,23 @@ class AssesmentResultController implements IController {
         }
       })
 
+      // Nonaktifkan hasil untuk konsumen yang sama
+      await Db.updateMany({
+        $and: [
+          { "customer._id": response.customer?._id },
+          { status: "1" },
+          {
+            _id: { $ne: response._id },
+          },
+        ]
+      }, { $set: { status: "0" } })
+
+
+      // End
+
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
+      console.log(error)
       return res.status(400).json({ status: 400, data: error });
     }
   };

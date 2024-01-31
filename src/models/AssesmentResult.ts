@@ -103,8 +103,9 @@ const AssesmentResult = new mongoose.Schema(
       }
     ],
     status: {
-      type: Boolean,
-      default: 1,
+      type: String,
+      enum: ["0", "1"],
+      default: "1",
       index: 1,
     },
   },

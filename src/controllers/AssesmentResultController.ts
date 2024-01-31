@@ -87,6 +87,17 @@ class AssesmentResultController implements IController {
         isSort: true,
       },
       {
+        alias: "Status",
+        name: "status",
+        operator: ["=", "!=",],
+        typeOf: TypeOfState.String,
+        isSort: true,
+        listData: [
+          { value: "0", name: "Expired" },
+          { value: "1", name: "Active" },
+        ],
+      },
+      {
         alias: "CreatedAt",
         name: "createdAt",
         operator: ["=", "!=", ">", "<", ">=", "<="],
@@ -103,7 +114,7 @@ class AssesmentResultController implements IController {
         ? JSON.parse(`${req.query.fields}`)
         : [
           "name",
-          // "customer._id",
+          "status",
           "customer.name",
           "createdBy.name",
           // "schedule._id",

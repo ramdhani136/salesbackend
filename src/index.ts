@@ -35,9 +35,7 @@ import {
   UserGroupListRoutes,
   ScheduleListRoutes,
   TagRoutes,
-  VisitNoteRoutes,
   CallsheetRoutes,
-  CallsheetNoteRoutes,
   MemoRoutes,
   ErpDataRoutes,
   ConfigRoutes,
@@ -55,6 +53,8 @@ import { SocketIO } from "./utils";
 import cron from "node-cron";
 import { AuthMiddleware, RoleMiddleware } from "./middleware";
 import {
+  AssesmentResult,
+  AssesmentSchedule,
   ConfigModel,
   MemoModel,
   RoleListModel,
@@ -93,7 +93,7 @@ class App {
     this.plugins();
     this.database = new DataConnect();
     this.routes();
-    // this.Cron();
+    this.Cron();
   }
 
   protected SettingDefaultData = async (): Promise<any> => {
@@ -368,6 +368,32 @@ class App {
         throw error;
       }
       // End
+
+      // Check expired assesment schedule
+      try {
+        await AssesmentSchedule.updateMany(
+          {
+            $and: [{ deactiveDate: { $lt: startOfToday } }, { status: "1" }],
+          },
+          update
+        );
+      } catch (error) {
+        throw error;
+      }
+      // End
+
+      // Check expired assesment result
+      try {
+        await AssesmentResult.updateMany(
+          {
+            $and: [{ deactiveDate: { $lt: startOfToday } }, { status: 1 }],
+          },
+          { $set: { status: 0 } }
+        );
+      } catch (error) {
+        throw error;
+      }
+      // End
     });
   }
 
@@ -378,7 +404,7 @@ class App {
       socket.on("setup", (userData: String) => {
         socket.join(userData);
         socket.emit("connected");
- 
+
         // console.log(`User ${userData} Connected`);
       });
 
@@ -393,7 +419,7 @@ class App {
         console.log("User Joined Room: " + room);
       });
 
-    
+
       socket.on("typing", (room: String) => socket.in(room).emit("typing"));
 
       socket.on("stop typing", (room: String) =>

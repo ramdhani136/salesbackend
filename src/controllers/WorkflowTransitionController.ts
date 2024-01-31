@@ -20,7 +20,7 @@ const redisName = "workflowtransition";
 class WorkflowTransitionController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-  
+
 
       {
         alias: "User",
@@ -61,14 +61,14 @@ class WorkflowTransitionController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
       {
         alias: "CreatedAt",
         name: "createdAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
@@ -80,20 +80,21 @@ class WorkflowTransitionController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "name",
-            "user._id",
-            "user.name",
-            "action._id",
-            "action.name",
-            "workflow._id",
-            "workflow.name",
-            "stateActive._id",
-            "stateActive.name",
-            "nextState.name",
-            "nextState._id",
-            "roleprofile._id",
-            "roleprofile.name",
-          ];
+          "name",
+          "user._id",
+          "user.name",
+          "action._id",
+          "action.name",
+          "workflow._id",
+          "workflow.name",
+          "stateActive._id",
+          "stateActive.name",
+          "nextState.name",
+          "nextState._id",
+          "roleprofile._id",
+          "roleprofile.name",
+          "selfApproval"
+        ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };

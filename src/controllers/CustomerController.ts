@@ -5,6 +5,7 @@ import { FilterQuery, cekValidPermission } from "../utils";
 import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
+  AssesmentSchedule,
   AssesmentScheduleList,
   BranchModel,
   ConfigModel,
@@ -589,7 +590,9 @@ class CustomerController implements IController {
       });
       // End
 
-      return res.status(200).json({ status: 200, data: data });
+
+
+      return res.status(200).json({ status: 400, data: data });
     } catch (error) {
       return res
         .status(400)
@@ -861,7 +864,7 @@ class CustomerController implements IController {
         // End
 
         if (req.body.nextState) {
-          const checkedWorkflow =
+          const checkedWorkflow: any =
             await WorkflowController.permissionUpdateAction(
               redisName,
               req.userId,
@@ -874,6 +877,25 @@ class CustomerController implements IController {
               { _id: req.params.id },
               checkedWorkflow.data
             ).populate("createdBy", "name");
+
+            if (checkedWorkflow.data.status == 1) {
+              // Cek schedule aktif dan allow insert new customer
+              const cekAssesmentSchedule: any = await AssesmentSchedule.findOne({ status: "1", includeNewCustomer: 1 }, ["_id"])
+
+              if (cekAssesmentSchedule) {
+                const dupl = await AssesmentScheduleList.findOne({ schedule: cekAssesmentSchedule._id, customer: result._id })
+                if (!dupl) {
+
+                  const list = new AssesmentScheduleList({ schedule: cekAssesmentSchedule._id, customer: result._id, createdBy: req.userId });
+                  await list.save();
+
+                }
+
+              }
+
+              // End
+            }
+
           } else {
             return res
               .status(403)

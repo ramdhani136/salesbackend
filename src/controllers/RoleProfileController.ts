@@ -81,6 +81,8 @@ class RoleProfileController implements IController {
             "createdBy._id",
             "status",
             "workflowState",
+            "updatedAt",
+            "createdAt"
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)

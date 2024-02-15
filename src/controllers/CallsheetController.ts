@@ -12,7 +12,6 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   BranchModel,
-  CallSheetNoteModel,
   ConfigModel,
   ContactModel,
   CustomerGroupModel,
@@ -1501,7 +1500,7 @@ class CallsheetController implements IController {
                   if (tagMandatory.length > 0) {
                     let notValidMandatory: any[] = [];
                     for (const item of tagMandatory) {
-                      let cekData = await CallSheetNoteModel.findOne(
+                      let cekData = await NotesModel.findOne(
                         {
                           $and: [
                             { callsheet: new ObjectId(req.params.id) },
@@ -1933,15 +1932,11 @@ class CallsheetController implements IController {
     }
     // End
 
-    // Hapus relasi callsheetnotes
     try {
-      await CallSheetNoteModel.deleteMany({
-        callsheet: id,
-      });
+      await History.deleteMany({ "document._id": id });
     } catch (error) {
-      throw error;
+      console.log(error);
     }
-    // End
 
     // Update schedulelist
     try {

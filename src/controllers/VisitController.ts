@@ -27,7 +27,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-import { ObjectId } from 'bson';
+import { ObjectId } from "bson";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import sharp from "sharp";
@@ -2091,6 +2091,12 @@ class VistController implements IController {
       console.log(error);
     }
     // End
+
+    try {
+      await History.deleteMany({ "document._id": id });
+    } catch (error) {
+      console.log(error);
+    }
 
     // Update schedulelist
     try {

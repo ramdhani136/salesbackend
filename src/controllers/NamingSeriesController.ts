@@ -96,16 +96,16 @@ class NamingSeriesController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-            "name",
-            "doc",
-            "branch._id",
-            "branch.name",
-            "createdAt",
-            "updatedAt",
-            "status",
-            "workflowState",
-            "createdBy",
-          ];
+          "name",
+          "doc",
+          "branch._id",
+          "branch.name",
+          "createdAt",
+          "updatedAt",
+          "status",
+          "workflowState",
+          "createdBy",
+        ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -281,7 +281,7 @@ class NamingSeriesController implements IController {
       if (
         req.body.doc !== "visit" &&
         req.body.doc !== "callsheet" &&
-        req.body.doc !== "doc"
+        req.body.doc !== "doc" && req.body.doc !== "assesmentschedule"
       ) {
         return res.status(400).json({
           status: 400,

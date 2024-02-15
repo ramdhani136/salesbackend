@@ -22,8 +22,6 @@ import UserGroupModel from "./UserGroupModel";
 import UserGroupListModel from "./UserGroupListModel";
 import ScheduleListModel from "./ScheduleListModel";
 import TagModel from "./TagModel";
-import VisitNoteModel from "./VisitNoteModel";
-import CallSheetNoteModel from "./CallSheetNoteModel";
 import CallsheetModel from "./CallsheetModel";
 import MemoModel from "./MemoModel";
 import ConfigModel from "./ConfigModel";
@@ -63,8 +61,6 @@ export {
   UserGroupListModel,
   ScheduleListModel,
   TagModel,
-  VisitNoteModel,
-  CallSheetNoteModel,
   CallsheetModel,
   MemoModel,
   TopicModel,

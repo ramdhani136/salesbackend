@@ -88,11 +88,13 @@ class WorkflowChangerController implements IController {
           "roleprofile._id",
           "roleprofile.name",
           "status",
-          "selfApproval"
+          "selfApproval",
+          "createdAt",
+          "updatedAt"
         ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
-        : { updatedAt: -1 };
+        : { createdAt: -1 };
       const limit: number | string = parseInt(`${req.query.limit}`) || 0;
       let page: number | string = parseInt(`${req.query.page}`) || 1;
       let setField = FilterQuery.getField(fields);

@@ -14,7 +14,7 @@ import {
 
 import { ISearch } from "../utils/FilterQuery";
 import HistoryController from "./HistoryController";
-import { ObjectId } from 'bson';
+import { ObjectId } from "bson";
 
 const Db = Workflow;
 const redisName = "workflow";
@@ -22,7 +22,6 @@ const redisName = "workflow";
 class workflowStateController implements IController {
   index = async (req: Request, res: Response): Promise<Response> => {
     const stateFilter: IStateFilter[] = [
-
       {
         alias: "Name",
         name: "name",
@@ -66,7 +65,7 @@ class workflowStateController implements IController {
       {
         alias: "UpdatedAt",
         name: "updatedAt",
-        operator: ["=", "!=",  ">", "<", ">=", "<="],
+        operator: ["=", "!=", ">", "<", ">=", "<="],
         typeOf: TypeOfState.Date,
         isSort: true,
       },
@@ -162,7 +161,7 @@ class workflowStateController implements IController {
         "tag",
         "topic",
         "namingseries",
-        "assesmentschedule"
+        "assesmentschedule",
       ];
 
       const cekDocType = doctype.find((item) => item == req.body.doc);
@@ -174,6 +173,21 @@ class workflowStateController implements IController {
 
       const result = new Db(req.body);
       const response = await result.save();
+
+      if (req.body.status == 1) {
+        await Db.updateMany(
+          {
+            $and: [
+              { status: 1 },
+              { doc: req.body.doc ? req.body.doc : req.body.doc },
+              {
+                _id: { $ne: response._id },
+              },
+            ],
+          },
+          { status: 0 }
+        );
+      }
 
       //push history
       await HistoryController.pushHistory({
@@ -343,10 +357,7 @@ class workflowStateController implements IController {
       $and: [{ status: 1 }, { doc: doc }],
     });
 
-   
-
     if (workflow) {
-  
       const id_workflow = workflow._id;
       const transitions: any = await WorkflowTransition.find({
         workflow: id_workflow,
@@ -357,8 +368,6 @@ class workflowStateController implements IController {
         .populate("stateActive", "name")
         .populate("roleprofile", "name");
 
-    
-      
       let allData = [];
       for (const transition of transitions) {
         if (transition.selfApproval) {
@@ -378,10 +387,7 @@ class workflowStateController implements IController {
         }
       }
 
-
-
       data = allData.map((item: any) => {
-  
         if (item.stateActive.name == stateActive) {
           return {
             action: item.action.name,
@@ -392,12 +398,11 @@ class workflowStateController implements IController {
           };
         }
       });
-   
+
       const genData = data.filter((item) => item !== undefined);
 
       return genData;
     }
-
 
     return data;
   };

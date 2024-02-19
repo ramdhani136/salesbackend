@@ -29,7 +29,8 @@ const Workflow = new mongoose.Schema(
         "notes",
         "tag",
         "namingseries",
-        "assesmentschedule"
+        "assesmentschedule",
+        "assesmenttemplate"
       ],
       index: true,
     },

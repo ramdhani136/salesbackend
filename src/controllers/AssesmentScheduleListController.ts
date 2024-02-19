@@ -13,7 +13,7 @@ import {
   visitModel,
 } from "../models";
 
-import { ObjectId } from 'bson';
+import { ObjectId } from "bson";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
@@ -128,27 +128,28 @@ class AssesmentScheduleListController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-          "_id",
-          "schedule._id",
-          "schedule.name",
-          "schedule.status",
-          // "schedule.workflowState",
-          "schedule.activeDate",
-          "schedule.deactiveDate",
-          // "schedule.notes",
-          "customer._id",
-          "customer.name",
-          "createdBy._id",
-          "createdBy.name",
-          "customerGroup._id",
-          "customerGroup.name",
-          "branch._id",
-          "branch.name",
-          "createdAt",
-          "updatedAt",
-          "closing",
-          "status",
-        ];
+            "_id",
+            "schedule._id",
+            "schedule.name",
+            "schedule.status",
+            // "schedule.workflowState",
+            "schedule.activeDate",
+            "schedule.deactiveDate",
+            // "schedule.notes",
+            "customer._id",
+            "customer.name",
+            "createdBy._id",
+            "createdBy.name",
+            "customerGroup._id",
+            "customerGroup.name",
+            "branch._id",
+            "branch.name",
+            "createdAt",
+            "updatedAt",
+            "closing",
+            "status",
+            "workflowState",
+          ];
 
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -519,7 +520,6 @@ class AssesmentScheduleListController implements IController {
   };
 
   create = async (req: Request | any, res: Response): Promise<Response> => {
-
     try {
       if (req.body.closing) {
         return res
@@ -554,8 +554,7 @@ class AssesmentScheduleListController implements IController {
       //Mengecek Schedule
       const cekSchedule: any = await AssesmentSchedule.findOne({
         $and: [{ _id: req.body.schedule }],
-      })
-        .populate("createdBy", "name");
+      }).populate("createdBy", "name");
 
       if (!cekSchedule) {
         return res.status(404).json({
@@ -947,10 +946,11 @@ class AssesmentScheduleListController implements IController {
         if (result.status !== "0") {
           return res.status(404).json({
             status: 404,
-            msg: `Error, list item ini sudah di close ${result.closing.doc.name
-              ? `oleh dok ${result.closing.doc.name}`
-              : ``
-              } !`,
+            msg: `Error, list item ini sudah di close ${
+              result.closing.doc.name
+                ? `oleh dok ${result.closing.doc.name}`
+                : ``
+            } !`,
           });
         }
         // End
@@ -1186,8 +1186,6 @@ class AssesmentScheduleListController implements IController {
       return res.status(404).json({ status: 404, msg: error });
     }
   };
-
-
 }
 
 export default new AssesmentScheduleListController();

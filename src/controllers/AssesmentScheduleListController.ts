@@ -738,6 +738,7 @@ class AssesmentScheduleListController implements IController {
             "schedule.activeDate": 1,
             "schedule.deactiveDate": 1,
             "schedule.assesmentTemplate": 1,
+            workflowState: 1,
           },
         },
       ]);
@@ -767,6 +768,7 @@ class AssesmentScheduleListController implements IController {
           msg: "Anda tidak mempunyai akses untuk dok ini!",
         });
       }
+
       const buttonActions = await WorkflowController.getButtonAction(
         redisName,
         req.userId,

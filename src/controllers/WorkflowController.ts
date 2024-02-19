@@ -162,6 +162,7 @@ class workflowStateController implements IController {
         "topic",
         "namingseries",
         "assesmentschedule",
+        "assesmenttemplate",
       ];
 
       const cekDocType = doctype.find((item) => item == req.body.doc);

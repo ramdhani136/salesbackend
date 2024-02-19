@@ -46,6 +46,17 @@ const AssesmentScheduleList = new mongoose.Schema(
       required: true,
       index: 1,
     },
+    details: [
+      {
+        answer: {
+          type: String,
+        },
+        question: {
+          id: Schema.Types.ObjectId,
+          name: String,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

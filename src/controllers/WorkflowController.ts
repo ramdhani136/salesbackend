@@ -162,6 +162,7 @@ class workflowStateController implements IController {
         "topic",
         "namingseries",
         "assesmentschedule",
+        "assesmentschedulelist",
         "assesmenttemplate",
       ];
 

@@ -30,6 +30,7 @@ const Workflow = new mongoose.Schema(
         "tag",
         "namingseries",
         "assesmentschedule",
+        "assesmentschedulelist",
         "assesmenttemplate"
       ],
       index: true,

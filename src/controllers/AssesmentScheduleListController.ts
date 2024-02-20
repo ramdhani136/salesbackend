@@ -1110,7 +1110,28 @@ class AssesmentScheduleListController implements IController {
           }
         }
 
-        await Db.updateOne({ _id: req.params.id }, req.body);
+        if (req.body.nextState) {
+          const checkedWorkflow =
+            await WorkflowController.permissionUpdateAction(
+              redisName,
+              req.userId,
+              req.body.nextState,
+              result.createdBy._id
+            );
+
+          if (checkedWorkflow.status) {
+            await Db.updateOne(
+              { _id: req.params.id },
+              checkedWorkflow.data
+            ).populate("createdBy", "name");
+          } else {
+            return res
+              .status(403)
+              .json({ status: 403, msg: checkedWorkflow.msg });
+          }
+        } else {
+          await Db.updateOne({ _id: req.params.id }, req.body);
+        }
 
         const realData: any = await Db.aggregate(pipeline);
 

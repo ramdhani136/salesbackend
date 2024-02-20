@@ -739,6 +739,7 @@ class AssesmentScheduleListController implements IController {
             "schedule.deactiveDate": 1,
             "schedule.assesmentTemplate": 1,
             workflowState: 1,
+            details: 1,
           },
         },
       ]);

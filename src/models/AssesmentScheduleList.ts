@@ -52,7 +52,7 @@ const AssesmentScheduleList = new mongoose.Schema(
           type: String,
         },
         question: {
-          id: Schema.Types.ObjectId,
+          _id: Schema.Types.ObjectId,
           name: String,
         },
       },

@@ -654,6 +654,7 @@ class AssesmentResultController implements IController {
 
       await AssesmentScheduleList.findByIdAndUpdate(req.body.idScheduleItem, {
         status: "1",
+        workflowState: "Submitted",
         closing: {
           user: req.userId,
           result: response._id,

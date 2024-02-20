@@ -22,6 +22,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
+import AssesmentResultController from "./AssesmentResultController";
 
 const redisName = "assesmentschedulelist";
 
@@ -958,63 +959,6 @@ class AssesmentScheduleListController implements IController {
         }
         // End
 
-        // Cek jika status tidak ada atau bukan 0 tidak boleh update closing
-        if (req.body.status === "1") {
-          // Cek bisa di close ketika schedule aktif
-          if (result.schedule.status !== "1") {
-            return res.status(404).json({
-              status: 404,
-              msg: `Error, Tidak dapat menutup list ini karena schedule ${result.schedule.name} tidak aktif!`,
-            });
-          }
-          // End
-
-          if (!req.body.closing?.date) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, closing date wajib diisi!",
-            });
-          }
-
-          if (!req.body.closing?.docId) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, closing docId wajib diisi!",
-            });
-          }
-
-          // Mengecek doc apakah tersedia
-          let DBCek: any = visitModel;
-          if (result.schedule.type === "callsheet") {
-            DBCek = CallsheetModel;
-          }
-
-          const cekValidDoc = await DBCek.findOne({
-            _id: new ObjectId(req.body.closing.docId),
-          });
-
-          if (!cekValidDoc) {
-            return res.status(404).json({
-              status: 404,
-              msg: "Error, Closing doc tidak ditemukan!",
-            });
-          }
-
-          req.body.closing.doc = {
-            _id: new ObjectId(cekValidDoc._id),
-            name: cekValidDoc.name,
-          };
-
-          // End
-
-          req.body.closing.user = {
-            _id: new ObjectId(req.userId),
-          };
-          // End
-        }
-
-        // End
-
         if (req.body.closing) {
           return res.status(404).json({
             status: 404,
@@ -1111,7 +1055,7 @@ class AssesmentScheduleListController implements IController {
         }
 
         if (req.body.nextState) {
-          const checkedWorkflow =
+          const checkedWorkflow: any =
             await WorkflowController.permissionUpdateAction(
               redisName,
               req.userId,
@@ -1120,10 +1064,42 @@ class AssesmentScheduleListController implements IController {
             );
 
           if (checkedWorkflow.status) {
-            await Db.updateOne(
-              { _id: req.params.id },
-              checkedWorkflow.data
-            ).populate("createdBy", "name");
+            if (result.status == "0" && checkedWorkflow.data.status == 1) {
+              // Cek bisa di close ketika schedule aktif
+              if (result.schedule.status !== "1") {
+                return res.status(404).json({
+                  status: 404,
+                  msg: `Error, Tidak dapat menutup list ini karena schedule ${result.schedule.name} tidak aktif!`,
+                });
+              }
+              // End
+
+              if (!req.body.result) {
+                return res.status(404).json({
+                  status: 404,
+                  msg: `Data result wajib diisi !`,
+                });
+              }
+
+              try {
+                // Insert Result
+                req.body.result.user = req.user;
+                req.body.result.userId = req.userId;
+                const setResult: { status: boolean; errors?: string[] } =
+                  await AssesmentResultController.createResult(req.body.result);
+
+                if (!setResult.status) {
+                  return res.status(404).json({
+                    status: 404,
+                    msg: setResult.errors,
+                  });
+                }
+              } catch (error) {
+                throw error;
+              }
+            }
+            await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
+            // End
           } else {
             return res
               .status(403)

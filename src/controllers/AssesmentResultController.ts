@@ -2,17 +2,24 @@ import { Request, Response } from "express";
 import { IStateFilter } from "../Interfaces";
 import { FilterQuery } from "../utils";
 import IController from "./ControllerInterface";
-import { AssesmentScheduleList, AssesmentResult as Db, PermissionModel } from "../models";
+import {
+  AssesmentScheduleList,
+  AssesmentResult as Db,
+  PermissionModel,
+} from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
-import { AssesmentTemplateController, HistoryController, WorkflowController } from ".";
+import {
+  AssesmentTemplateController,
+  HistoryController,
+  WorkflowController,
+} from ".";
 import { ISearch } from "../utils/FilterQuery";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-import { ObjectId } from 'bson';
-
+import { ObjectId } from "bson";
 
 const redisName = "assesmentresult";
 
@@ -89,7 +96,7 @@ class AssesmentResultController implements IController {
       {
         alias: "Status",
         name: "status",
-        operator: ["=", "!=",],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
@@ -113,21 +120,21 @@ class AssesmentResultController implements IController {
       const fields: any = req.query.fields
         ? JSON.parse(`${req.query.fields}`)
         : [
-          "name",
-          "status",
-          "customer.name",
-          "createdBy.name",
-          // "schedule._id",
-          "schedule.name",
-          "activeDate",
-          "deactiveDate",
-          "score",
-          "grade",
-          "notes",
-          // "details",
-          "updatedAt",
-          "createdAt",
-        ];
+            "name",
+            "status",
+            "customer.name",
+            "createdBy.name",
+            // "schedule._id",
+            "schedule.name",
+            "activeDate",
+            "deactiveDate",
+            "score",
+            "grade",
+            "notes",
+            // "details",
+            "updatedAt",
+            "createdAt",
+          ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
         : { updatedAt: -1 };
@@ -210,7 +217,6 @@ class AssesmentResultController implements IController {
 
       const totalData = await Db.aggregate(pipelineTotal);
 
-
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
 
       let pipelineResult: any = [
@@ -279,121 +285,360 @@ class AssesmentResultController implements IController {
     }
   };
 
+  createResult = async (
+    req: any
+  ): Promise<{ status: boolean; errors?: string[] }> => {
+    let errors: string[] = [];
+    try {
+      // try {
+      if (!req?.idScheduleItem) {
+        errors.push("idScheduleItem wajib diisi!");
+      }
+
+      if (!req?.customer) {
+        errors.push("Customer wajib diisi!");
+      }
+
+      if (!req?.customer?._id) {
+        errors.push("Id customer wajib diisi!");
+      }
+
+      if (!req?.customer?.name) {
+        errors.push("Nama Customer wajib diisi!");
+      }
+      if (!req?.schedule) {
+        errors.push("Schedule wajib diisi!");
+      }
+
+      if (!req?.schedule?._id) {
+        errors.push("Id schedule wajib diisi!");
+      }
+
+      if (!req?.schedule?.name) {
+        errors.push("Nama schedule wajib diisi!");
+      }
+
+      if (!req?.activeDate) {
+        errors.push("activeDate wajib diisi!");
+      }
+
+      if (!req?.deactiveDate) {
+        errors.push("deactiveDate wajib diisi!");
+      }
+
+      // Template
+      if (!req?.assesmentTemplate) {
+        errors.push("assesmentTemplate wajib diisi!");
+      }
+
+      if (typeof req?.assesmentTemplate !== "object") {
+        errors.push("assesmentTemplate object!");
+      }
+
+      if (req?.assesmentTemplate?.length === 0) {
+        errors.push("assesmentTemplate wajib diisi!");
+      }
+      if (!req?.assesmentTemplate?.indicators) {
+        errors.push("assesmentTemplate indicators wajib diisi!");
+      }
+
+      if (typeof req?.assesmentTemplate?.indicators !== "object") {
+        errors.push("Indicators array object!");
+      }
+
+      if (req?.assesmentTemplate?.indicators?.length === 0) {
+        errors.push("Indicators wajib diisi!");
+      }
+
+      // Cek indicators
+      const indicatorOk: {
+        valid: boolean;
+        data?: string[];
+        indicatorWeight?: number;
+      } = await AssesmentTemplateController.cekIndicator(
+        req!.assesmentTemplate!.indicators
+      );
+
+      if (!indicatorOk.valid) {
+        errors = [...errors, ...indicatorOk.data!];
+      }
+
+      if (!req.assesmentTemplate.grades) {
+        errors.push("assesmentTemplate grades wajib diisi!");
+      }
+
+      if (typeof req!.assesmentTemplate!.grades !== "object") {
+        errors.push("Grades array object!");
+      }
+
+      if (req!.assesmentTemplate!.grades!.length === 0) {
+        errors.push("Grades wajib diisi!");
+      }
+
+      const gradeOk: { valid: boolean; data?: string[] } =
+        await AssesmentTemplateController.cekGrade(
+          req!.assesmentTemplate!.grades,
+          indicatorOk.indicatorWeight!
+        );
+
+      if (!gradeOk.valid) {
+        errors = [...errors, ...gradeOk.data!];
+      }
+
+      if (req!.details!.length !== req!.assesmentTemplate!.indicators!.length) {
+        errors.push("Semua pertanyaan wajib diisi!");
+      }
+
+      // Proses result
+      if (!req?.details) {
+        errors.push("Jawaban wajib diisi!");
+      }
+
+      if (typeof req!.details !== "object") {
+        errors.push("Jawaban array object!");
+      }
+
+      if (req!.details!.length === 0) {
+        errors.push("Jawaban wajib diisi!");
+      }
+
+      const cekDetails = this.cekDetails(req.details!);
+      if (!cekDetails.valid) {
+        errors = [...errors, ...cekDetails.error!];
+      }
+      // End
+
+      if (errors.length > 0) {
+        return { status: false, errors: errors };
+      }
+
+      // Menghitung nilai
+      const result = this.ProsesHitungNilai(
+        req.details,
+        req.assesmentTemplate.indicators,
+        req.assesmentTemplate.grades
+      );
+      if (result.valid) {
+        req.score = result.data?.totalScore;
+        req.details = result.data?.details;
+        req.grade = result.data?.nilai?.grade;
+        req.notes = result.data?.nilai?.notes;
+      } else {
+        errors = [...errors, ...result.error!];
+      }
+      // End
+
+      if (errors.length > 0) {
+        return { status: false, errors: errors };
+      }
+
+      req.createdBy = {
+        _id: req.userId,
+        name: req.user,
+      };
+
+      const insert = new Db(req);
+      const response = await insert.save();
+
+      await AssesmentScheduleList.findByIdAndUpdate(req.idScheduleItem, {
+        status: "1",
+        closing: {
+          user: req.userId,
+          result: response._id,
+          date: Date.now(),
+        },
+      });
+
+      // Nonaktifkan hasil untuk konsumen yang sama
+      await Db.updateMany(
+        {
+          $and: [
+            { "customer._id": response.customer?._id },
+            { status: "1" },
+            {
+              _id: { $ne: response._id },
+            },
+          ],
+        },
+        { $set: { status: "0" } }
+      );
+    } catch (error) {
+      return { status: false, errors: ["Gagal membuat result!"] };
+    }
+    return { status: true };
+  };
+
   create = async (req: Request | any, res: Response): Promise<Response> => {
     try {
       if (!req.body.idScheduleItem) {
-        return res.status(400).json({ status: 400, msg: "idScheduleItem wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "idScheduleItem wajib diisi!" });
       }
       if (!req.body.customer) {
-        return res.status(400).json({ status: 400, msg: "Customer wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Customer wajib diisi!" });
       }
       if (!req.body.customer._id) {
-        return res.status(400).json({ status: 400, msg: "Id customer wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Id customer wajib diisi!" });
       }
       if (!req.body.customer.name) {
-        return res.status(400).json({ status: 400, msg: "Nama Customer wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Nama Customer wajib diisi!" });
       }
       if (!req.body.schedule) {
-        return res.status(400).json({ status: 400, msg: "Schedule wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Schedule wajib diisi!" });
       }
       if (!req.body.schedule._id) {
-        return res.status(400).json({ status: 400, msg: "Id schedule wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Id schedule wajib diisi!" });
       }
       if (!req.body.schedule.name) {
-        return res.status(400).json({ status: 400, msg: "Nama schedule wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Nama schedule wajib diisi!" });
       }
       if (!req.body.activeDate) {
-        return res.status(400).json({ status: 400, msg: "activeDate wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "activeDate wajib diisi!" });
       }
       if (!req.body.deactiveDate) {
-        return res.status(400).json({ status: 400, msg: "deactiveDate wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "deactiveDate wajib diisi!" });
       }
-
 
       // Template
       if (!req.body.assesmentTemplate) {
-        return res.status(400).json({ status: 400, msg: "assesmentTemplate wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "assesmentTemplate wajib diisi!" });
       }
 
-      if (typeof req.body.assesmentTemplate !== 'object') {
-        return res.status(400).json({ status: 400, msg: "assesmentTemplate object!" });
+      if (typeof req.body.assesmentTemplate !== "object") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "assesmentTemplate object!" });
       }
 
       if (req.body.assesmentTemplate.length === 0) {
-        return res.status(400).json({ status: 400, msg: "assesmentTemplate wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "assesmentTemplate wajib diisi!" });
       }
       if (!req.body.assesmentTemplate.indicators) {
-        return res.status(400).json({ status: 400, msg: "assesmentTemplate indicators wajib diisi!" });
+        return res.status(400).json({
+          status: 400,
+          msg: "assesmentTemplate indicators wajib diisi!",
+        });
       }
 
-      if (typeof req.body.assesmentTemplate.indicators !== 'object') {
-        return res.status(400).json({ status: 400, msg: "Indicators array object!" });
+      if (typeof req.body.assesmentTemplate.indicators !== "object") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Indicators array object!" });
       }
 
       if (req.body.assesmentTemplate.indicators.length === 0) {
-        return res.status(400).json({ status: 400, msg: "Indicators wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Indicators wajib diisi!" });
       }
 
-
       // Cek indicators
-      const indicatorOk: { valid: boolean, data?: string[], indicatorWeight?: number } = await AssesmentTemplateController.cekIndicator(req.body.assesmentTemplate.indicators);
-
+      const indicatorOk: {
+        valid: boolean;
+        data?: string[];
+        indicatorWeight?: number;
+      } = await AssesmentTemplateController.cekIndicator(
+        req.body.assesmentTemplate.indicators
+      );
 
       if (!indicatorOk.valid) {
         return res.status(400).json({ status: 400, msg: indicatorOk.data });
       }
 
       if (!req.body.assesmentTemplate.grades) {
-        return res.status(400).json({ status: 400, msg: "assesmentTemplate grades wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "assesmentTemplate grades wajib diisi!" });
       }
 
-      if (typeof req.body.assesmentTemplate.grades !== 'object') {
-        return res.status(400).json({ status: 400, msg: "Grades array object!" });
+      if (typeof req.body.assesmentTemplate.grades !== "object") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Grades array object!" });
       }
 
       if (req.body.assesmentTemplate.grades.length === 0) {
-        return res.status(400).json({ status: 400, msg: "Grades wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Grades wajib diisi!" });
       }
 
-      const gradeOk: { valid: boolean, data?: string[] } = await AssesmentTemplateController.cekGrade(req.body.assesmentTemplate.grades, indicatorOk.indicatorWeight!);
+      const gradeOk: { valid: boolean; data?: string[] } =
+        await AssesmentTemplateController.cekGrade(
+          req.body.assesmentTemplate.grades,
+          indicatorOk.indicatorWeight!
+        );
 
       if (!gradeOk.valid) {
         return res.status(400).json({ status: 400, msg: gradeOk.data });
       }
 
-
-      if (req.body.details.length !== req.body.assesmentTemplate.indicators.length) {
-        return res.status(400).json({ status: 400, msg: "Semua pertanyaan wajib diisi!" });
+      if (
+        req.body.details.length !== req.body.assesmentTemplate.indicators.length
+      ) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Semua pertanyaan wajib diisi!" });
       }
 
       // End
       // Proses result
       if (!req.body.details) {
-        return res.status(400).json({ status: 400, msg: "Jawaban wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Jawaban wajib diisi!" });
       }
 
-      if (typeof req.body.details !== 'object') {
-        return res.status(400).json({ status: 400, msg: "Jawaban array object!" });
+      if (typeof req.body.details !== "object") {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Jawaban array object!" });
       }
 
       if (req.body.details.length === 0) {
-        return res.status(400).json({ status: 400, msg: "Jawaban wajib diisi!" });
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Jawaban wajib diisi!" });
       }
 
-      const cekDetails = this.cekDetails(req.body.details)
+      const cekDetails = this.cekDetails(req.body.details);
       if (!cekDetails.valid) {
         return res.status(400).json({ status: 400, msg: cekDetails.error });
       }
-      // End   
-
+      // End
 
       // Menghitung nilai
-      const result = this.ProsesHitungNilai(req.body.details, req.body.assesmentTemplate.indicators, req.body.assesmentTemplate.grades);
+      const result = this.ProsesHitungNilai(
+        req.body.details,
+        req.body.assesmentTemplate.indicators,
+        req.body.assesmentTemplate.grades
+      );
       if (result.valid) {
-        req.body.score = result.data?.totalScore
-        req.body.details = result.data?.details
-        req.body.grade = result.data?.nilai?.grade
-        req.body.notes = result.data?.nilai?.notes
+        req.body.score = result.data?.totalScore;
+        req.body.details = result.data?.details;
+        req.body.grade = result.data?.nilai?.grade;
+        req.body.notes = result.data?.nilai?.notes;
       } else {
         return res.status(400).json({ status: 400, msg: result.error });
       }
@@ -401,97 +646,119 @@ class AssesmentResultController implements IController {
 
       req.body.createdBy = {
         _id: req.userId,
-        name: req.user
-      }
-
+        name: req.user,
+      };
 
       const insert = new Db(req.body);
       const response = await insert.save();
 
       await AssesmentScheduleList.findByIdAndUpdate(req.body.idScheduleItem, {
-        status: "1", closing: {
+        status: "1",
+        closing: {
           user: req.userId,
           result: response._id,
-          date: Date.now()
-        }
-      })
+          date: Date.now(),
+        },
+      });
 
       // Nonaktifkan hasil untuk konsumen yang sama
-      await Db.updateMany({
-        $and: [
-          { "customer._id": response.customer?._id },
-          { status: "1" },
-          {
-            _id: { $ne: response._id },
-          },
-        ]
-      }, { $set: { status: "0" } })
-
+      await Db.updateMany(
+        {
+          $and: [
+            { "customer._id": response.customer?._id },
+            { status: "1" },
+            {
+              _id: { $ne: response._id },
+            },
+          ],
+        },
+        { $set: { status: "0" } }
+      );
 
       // End
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error) {
-      console.log(error)
       return res.status(400).json({ status: 400, data: error });
     }
   };
 
-  cekDetails = (details: any[]): { valid: Boolean, error?: string[] } => {
+  cekDetails = (details: any[]): { valid: Boolean; error?: string[] } => {
     let errors: string[] = [];
-    const keysToCheck = ['question', 'answer'];
-    const questionKeys = ['_id', 'name'];
+    const keysToCheck = ["question", "answer"];
+    const questionKeys = ["_id", "name"];
     for (const detail of details) {
       const index = details.indexOf(detail) + 1;
 
-      const missingKeys = keysToCheck.filter(key => !Object.keys(detail).includes(key));
+      const missingKeys = keysToCheck.filter(
+        (key) => !Object.keys(detail).includes(key)
+      );
       if (missingKeys.length > 0) {
-        errors.push(`Data ${missingKeys} di details no ${index} wajib diisi!`)
+        errors.push(`Data ${missingKeys} di details no ${index} wajib diisi!`);
       } else {
         // Cek question
-        const missingQuestion = questionKeys.filter(key => !Object.keys(detail.question).includes(key));
+        const missingQuestion = questionKeys.filter(
+          (key) => !Object.keys(detail.question).includes(key)
+        );
         if (missingQuestion.length > 0) {
-          errors.push(`Question ${missingQuestion} di details no ${index} wajib diisi!`)
+          errors.push(
+            `Question ${missingQuestion} di details no ${index} wajib diisi!`
+          );
         }
         // End
       }
     }
 
-
     if (errors.length > 0) {
-      return { valid: false, error: errors }
+      return { valid: false, error: errors };
     } else {
-      return { valid: true }
+      return { valid: true };
     }
+  };
 
-  }
-
-  ProsesHitungNilai = (answers: any[], indicators: any[], grades: any[]): { valid: Boolean, data?: { details: any[], totalScore: number, nilai: any }, error?: any } => {
+  ProsesHitungNilai = (
+    answers: any[],
+    indicators: any[],
+    grades: any[]
+  ): {
+    valid: Boolean;
+    data?: { details: any[]; totalScore: number; nilai: any };
+    error?: any;
+  } => {
     try {
-      let result: any[] = []
+      let result: any[] = [];
       let totalScore: number = 0;
       for (const answer of answers) {
-        const score: number = this.getAnswerWeight(indicators, answer)
-        answer.score = score
+        const score: number = this.getAnswerWeight(indicators, answer);
+        answer.score = score;
         totalScore += score;
         result.push(answer);
       }
 
-      const nilai = grades.find(grade => totalScore >= grade.bottom && totalScore <= grade.top);
+      const nilai = grades.find(
+        (grade) => totalScore >= grade.bottom && totalScore <= grade.top
+      );
 
-      return { valid: true, data: { details: result, totalScore: totalScore, nilai: nilai } }
+      return {
+        valid: true,
+        data: { details: result, totalScore: totalScore, nilai: nilai },
+      };
     } catch (error) {
-      return { valid: false, error: error }
+      return { valid: false, error: error };
     }
-  }
+  };
 
   getAnswerWeight(indicators: any[], answerData: any) {
-    const questionId = answerData.question._id
-    const answer = answerData.answer
+    const questionId = answerData.question._id;
+    const answer = answerData.answer;
 
-    const indicator = indicators.find(indicator => indicator.questionId._id === questionId);
+    const indicator = indicators.find(
+      (indicator) => indicator.questionId._id === questionId
+    );
     if (indicator) {
-      const option = indicator.options.find((option: { name: any; }) => option.name === answer);
+      const option = indicator.options.find(
+        (option: { name: any }) => option.name === answer
+      );
       const optionWeight = option ? option.weight : 0;
       return optionWeight !== 0 ? indicator.weight * (optionWeight / 100) : 0;
     }
@@ -517,7 +784,6 @@ class AssesmentResultController implements IController {
       );
       // End
 
-
       let pipeline: any = [{ _id: req.params.id }];
 
       if (userPermission.length > 0) {
@@ -530,7 +796,7 @@ class AssesmentResultController implements IController {
 
       const result: any = await Db.findOne({
         $and: pipeline,
-      })
+      });
 
       if (!result) {
         return res
@@ -582,7 +848,6 @@ class AssesmentResultController implements IController {
       }).populate("createdBy", "name");
 
       if (result) {
-
         if (req.body.nextState) {
           const checkedWorkflow =
             await WorkflowController.permissionUpdateAction(

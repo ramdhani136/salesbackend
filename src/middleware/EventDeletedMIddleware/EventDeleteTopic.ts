@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import {
-  CallSheetNoteModel,
   CallsheetModel,
   ConfigModel,
   ContactModel,
@@ -8,7 +7,6 @@ import {
   CustomerModel,
   MemoModel,
   ScheduleListModel,
-  VisitNoteModel,
   namingSeriesModel,
   visitModel,
 } from "../../models";

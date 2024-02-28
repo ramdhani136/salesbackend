@@ -22,9 +22,7 @@ import NamingSeriesRoutes from "./NamingSeriesRoutes";
 import UserGroupListRoutes from "./UserGroupListRoutes";
 import ScheduleListRoutes from "./ScheduleListRoutes";
 import TagRoutes from "./TagRoutes";
-import VisitNoteRoutes from "./VisitNoteRoutes";
 import CallsheetRoutes from "./CallsheetRoutes";
-import CallsheetNoteRoutes from "./CallsheetNoteRoutes";
 import MemoRoutes from "./MemoRoutes";
 import ErpDataRoutes from "./ErpDataRoutes";
 import ConfigRoutes from "./ConfigRoutes";
@@ -65,9 +63,7 @@ export {
   ScheduleListRoutes,
   UserGroupListRoutes,
   TagRoutes,
-  VisitNoteRoutes,
   CallsheetRoutes,
-  CallsheetNoteRoutes,
   MemoRoutes,
   ErpDataRoutes,
   FileRoutes,

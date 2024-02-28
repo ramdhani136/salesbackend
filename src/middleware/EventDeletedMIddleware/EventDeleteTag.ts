@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import {
-  CallSheetNoteModel,
   ConfigModel,
   TopicModel,
-  VisitNoteModel,
 } from "../../models";
 
 import { CheckData } from "../DeleteValidMiddleware";
@@ -25,16 +23,6 @@ export const EventDeleteTag = async (
       doc: "Config",
       filters: ["visit.tagsMandatory", "callsheet.tagsMandatory"],
       model: ConfigModel,
-    },
-    {
-      doc: "VisitNote",
-      filters: ["tags"],
-      model: VisitNoteModel,
-    },
-    {
-      doc: "CallsheetNote",
-      filters: ["tags"],
-      model: CallSheetNoteModel,
     },
     {
       doc: "Topic",

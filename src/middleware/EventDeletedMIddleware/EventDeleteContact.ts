@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import {
-  CallSheetNoteModel,
   CallsheetModel,
-  VisitNoteModel,
   visitModel,
 } from "../../models";
 

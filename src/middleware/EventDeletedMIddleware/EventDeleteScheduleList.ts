@@ -1,11 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import {
-  CallSheetNoteModel,
   CallsheetModel,
   ContactModel,
   CustomerModel,
   ScheduleListModel,
-  VisitNoteModel,
   visitModel,
 } from "../../models";
 

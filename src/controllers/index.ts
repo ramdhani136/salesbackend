@@ -23,9 +23,7 @@ import UserGroupController from "./UserGroupController";
 import UserGroupListController from "./UserGroupListController";
 import ScheduleListController from "./ScheduleListController";
 import TagController from "./TagController";
-import VisitNoteController from "./VisitNoteController";
 import CallsheetController from "./CallsheetController";
-import CallsheetNoteController from "./CallsheetNoteController";
 import MemoController from "./MemoController";
 import ConfigController from "./ConfigController";
 import TopicController from "./TopicController";
@@ -65,9 +63,7 @@ export {
   UserGroupListController,
   ScheduleListController,
   TagController,
-  VisitNoteController,
   CallsheetController,
-  CallsheetNoteController,
   MemoController,
   ErpDataController,
   ConfigController,

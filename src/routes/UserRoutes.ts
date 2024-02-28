@@ -36,7 +36,7 @@ class UserRoutes extends RouteBase {
     // );
     this.router.post("/login", UserController.login);
     this.router.get("/token", UserController.refreshToken);
-    this.router.get(
+    this.router.post(
       "/getpermission",
       AuthMiddleware,
       UserController.GetAccessUser

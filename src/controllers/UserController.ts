@@ -19,13 +19,14 @@ import { ISearch } from "../utils/FilterQuery";
 import sharp from "sharp";
 import path from "path";
 import fs from "fs";
-import { ObjectId } from 'bson';
+import { ObjectId } from "bson";
 import WorkflowController from "./WorkflowController";
 import { PermissionMiddleware } from "../middleware";
 import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
+import { GetStatusPermission } from "../middleware/RoleMiddleware";
 
 class UserController implements IController {
   protected prosesUpload = (req: Request | any, name: string) => {
@@ -51,7 +52,6 @@ class UserController implements IController {
   };
 
   index = async (req: Request | any, res: Response): Promise<Response> => {
-
     const stateFilter: IStateFilter[] = [
       {
         alias: "Name",
@@ -704,6 +704,56 @@ class UserController implements IController {
   //       .json({ status: 400, msg: error ?? "Error, Connection" });
   //   }
   // };
+
+  GetAccessUser = async (req: Request | any, res: Response): Promise<any> => {
+    const action = [
+      "create",
+      "submit",
+      "amend",
+      "read",
+      "export",
+      "report",
+      "update",
+      "delete",
+    ];
+
+    try {
+      if (!req?.body?.doc) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Parameter doc wajib diisi" });
+      }
+      if (!req?.body?.action) {
+        return res
+          .status(400)
+          .json({ status: 400, msg: "Parameter action wajib diisi" });
+      }
+
+      const validaction = action.find((item) => item === req.body.action);
+
+      if (!validaction) {
+        return res.status(400).json({
+          status: 400,
+          msg: `Action ${req.body.action} tidak ada silahkan pilih ${action}`,
+        });
+      }
+
+      const access: any[] = await GetStatusPermission(req.userId, req.body.doc);
+
+      if (access.length > 0) {
+        const valid = access.filter(
+          (item: any) => item[`${req.body.action}`] == "1"
+        );
+        if (valid.length == 0) {
+          return res.status(200).json({ status: false });
+        }
+      }
+
+      return res.status(200).json({ status: true });
+    } catch (error) {
+      return res.status(400).json({ status: 400, msg: error });
+    }
+  };
 }
 
 export default new UserController();

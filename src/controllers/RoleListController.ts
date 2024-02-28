@@ -270,6 +270,7 @@ class RoleListController implements IController {
             "amend",
             "export",
             "import",
+            "report"
           ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)

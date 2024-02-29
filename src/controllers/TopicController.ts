@@ -674,6 +674,29 @@ class TopicController implements IController {
               .json({ status: 403, msg: checkedWorkflow.msg });
           }
         } else {
+          if (req.body?.response?.data) {
+            if (typeof req.body!.response!.data !== "object") {
+              return res.status(400).json({
+                status: 400,
+                msg: "Error, response.data harus berupa object!",
+              });
+            }
+            const responseData: String[] = req.body?.response?.data;
+
+            if (responseData.length > 0) {
+              let dataSet = new Set(
+                responseData.map((item: any) => item.name.toLowerCase())
+              );
+
+              // Mengonversi set ke array dan kemudian mengubah huruf pertama menjadi besar
+              let dataTanpaDuplikat = Array.from(dataSet).map((name: any) => ({
+                name: name.charAt(0).toUpperCase() + name.slice(1),
+              }));
+
+              req.body.response.data = dataTanpaDuplikat;
+            }
+          }
+
           await Db.updateOne({ _id: req.params.id }, req.body);
         }
 

@@ -373,6 +373,9 @@ class TopicController implements IController {
         }
       }
 
+      if (!req.body?.response?.isMandatory) {
+        req.body.response.isMandatory = 0;
+      }
       const result = new Db(req.body);
       const response = await result.save();
 
@@ -695,6 +698,13 @@ class TopicController implements IController {
 
               req.body.response.data = dataTanpaDuplikat;
             }
+          }
+
+          if (
+            !req.body?.response?.isMandatory &&
+            !result?.response?.isMandatory
+          ) {
+            req.body.response.isMandatory = 0;
           }
 
           await Db.updateOne({ _id: req.params.id }, req.body);

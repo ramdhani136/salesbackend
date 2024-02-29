@@ -18,18 +18,19 @@ const connection = async () => {
   db.on("open", () => console.log("Database Connected"));
 };
 
-const run = async () => {
-  await connection();
+const generateCallTypeNotes = async () => {
   const data = await CallsheetModel.find({}, ["_id", "type"]);
   for (const item of data) {
-    let notes = await NotesModel.find({ "doc._id": item._id }, ["_id"]);
-    for (const note of notes) {
-      await NotesModel.findByIdAndUpdate(note._id, {
-        "doc.callType": item.type,
-      });
-      console.log("Sukses");
-    }
+    await NotesModel.updateMany(
+      { "doc._id": item._id },
+      { "doc.callType": item.type }d
+    );
   }
+};
+
+const run = async () => {
+  await connection();
+  await generateCallTypeNotes();
 };
 
 run();

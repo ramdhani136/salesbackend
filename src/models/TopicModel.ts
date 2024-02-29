@@ -40,7 +40,7 @@ const TopicModel = new mongoose.Schema(
       default: 0,
       enum: [0, 1],
     },
-    responses: {
+    response: {
       isMandatory: {
         type: Number,
         default: 0,

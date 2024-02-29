@@ -7,7 +7,7 @@ import { History, TagModel, TopicModel } from "../models";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import { HistoryController, WorkflowController } from ".";
 import { ISearch } from "../utils/FilterQuery";
-import { ObjectId } from 'bson';
+import { ObjectId } from "bson";
 
 const Db = TopicModel;
 const redisName = "topic";
@@ -25,13 +25,13 @@ class TopicController implements IController {
       {
         alias: "TagsRestrict",
         name: "tags.restrict",
-        operator: ["=", "!=",],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
         alias: "TagsMandatory",
         name: "tags.mandatory",
-        operator: ["=", "!=", ],
+        operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },
       {
@@ -109,6 +109,7 @@ class TopicController implements IController {
             "workflowState",
             "createdBy._id",
             "createdBy.name",
+            "response",
             "status",
             "updatedAt",
           ];
@@ -348,6 +349,29 @@ class TopicController implements IController {
         }
       }
       // End
+
+      if (req.body?.response?.data) {
+        if (typeof req.body!.response!.data !== "object") {
+          return res.status(400).json({
+            status: 400,
+            msg: "Error, response.data harus berupa object!",
+          });
+        }
+        const responseData: String[] = req.body?.response?.data;
+
+        if (responseData.length > 0) {
+          let dataSet = new Set(
+            responseData.map((item: any) => item.name.toLowerCase())
+          );
+
+          // Mengonversi set ke array dan kemudian mengubah huruf pertama menjadi besar
+          let dataTanpaDuplikat = Array.from(dataSet).map((name: any) => ({
+            name: name.charAt(0).toUpperCase() + name.slice(1),
+          }));
+
+          req.body.response.data = dataTanpaDuplikat;
+        }
+      }
 
       const result = new Db(req.body);
       const response = await result.save();

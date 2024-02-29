@@ -33,7 +33,7 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-import { ObjectId } from 'bson';
+import { ObjectId } from "bson";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
@@ -1624,6 +1624,15 @@ class CallsheetController implements IController {
           }
         } else {
           await Db.updateOne({ _id: req.params.id }, req.body);
+        }
+
+        if (req.body.type) {
+          if (result.type != req.body.type) {
+            await NotesModel.updateMany(
+              { "doc._id": new ObjectId(req.params.id) },
+              { "doc.callType": req.body.type }
+            );
+          }
         }
 
         // Update note jika customer diganti

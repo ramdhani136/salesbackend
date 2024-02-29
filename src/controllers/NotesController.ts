@@ -554,14 +554,20 @@ class NotesController implements IController {
       }
 
       // Cek doc terdapat di database
-      const validDoc = await DBDoc.findById(req.body.doc._id, [
-        "name",
-        "customer",
-      ]);
+      const validDoc = await DBDoc.findById(
+        req.body.doc._id,
+        req.body.doc.type == "callsheet"
+          ? ["name", "customer", "type"]
+          : ["name", "customer"]
+      );
       if (!validDoc) {
         throw `Doc tidak ditemukan! `;
       }
       // End
+
+      if (req.body.doc.type == "callsheet") {
+        req.body.doc.callType = validDoc.type;
+      }
 
       req.body.doc.name = validDoc.name;
       req.body.customer = validDoc.customer;

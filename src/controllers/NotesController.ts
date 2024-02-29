@@ -124,7 +124,7 @@ class NotesController implements IController {
       },
       {
         alias: "Created By",
-        name: "createdBy._id",
+        name: "createdBy",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
       },

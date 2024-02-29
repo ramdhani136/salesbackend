@@ -62,7 +62,7 @@ const NotesModel = new mongoose.Schema(
       ref: "users",
       required: true,
     },
-    status: {
+    response: {
       type: String,
     },
   },

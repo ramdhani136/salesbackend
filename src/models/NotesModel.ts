@@ -62,6 +62,9 @@ const NotesModel = new mongoose.Schema(
       ref: "users",
       required: true,
     },
+    status: {
+      type: String,
+    },
   },
   {
     timestamps: true,

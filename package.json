@@ -6,7 +6,8 @@
   "scripts": {
     "tsc": "rd /s /q build && tsc.cmd",
     "ts": "rd /s /q build && tsc -w",
-    "dev": "nodemon ./build/index.js"
+    "dev": "nodemon ./build/index.js",
+    "script": "node ./build/update.js"
   },
   "author": "ILham Ramdhani",
   "license": "ISC",

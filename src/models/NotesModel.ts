@@ -20,6 +20,11 @@ const NotesModel = new mongoose.Schema(
         type: String,
         required: true,
       },
+      callType: {
+        type: String,
+        enum: ["in", "out"],
+        index: true,
+      },
     },
     customer: {
       type: Schema.Types.ObjectId,

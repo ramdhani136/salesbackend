@@ -23,7 +23,7 @@ const generateCallTypeNotes = async () => {
   for (const item of data) {
     await NotesModel.updateMany(
       { "doc._id": item._id },
-      { "doc.callType": item.type }d
+      { "doc.callType": item.type }
     );
   }
 };

@@ -6,7 +6,7 @@ const TopicModel = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
-      unique:true,
+      unique: true,
     },
     tags: {
       restrict: {
@@ -39,6 +39,21 @@ const TopicModel = new mongoose.Schema(
       type: Number,
       default: 0,
       enum: [0, 1],
+    },
+    responses: {
+      isMandatory: {
+        type: Number,
+        default: 0,
+        enum: [0, 1],
+      },
+      data: [
+        {
+          name: {
+            type: String,
+            unique: true,
+          },
+        },
+      ],
     },
     createdBy: {
       type: Schema.Types.ObjectId,

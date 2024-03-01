@@ -53,6 +53,10 @@ const NotesModel = new mongoose.Schema(
       //   message: "Array harus diisi setidaknya dengan satu tag.",
       // },
     },
+    schedule: {
+      name: String,
+      desc: String,
+    },
     result: {
       type: String,
       required: true,

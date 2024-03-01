@@ -149,7 +149,7 @@ class NotesController implements IController {
       {
         alias: "Response",
         name: "response",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: ["like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },

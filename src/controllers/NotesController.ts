@@ -147,6 +147,13 @@ class NotesController implements IController {
         isSort: true,
       },
       {
+        alias: "Response",
+        name: "response",
+        operator: ["=", "!=", "like", "notlike"],
+        typeOf: TypeOfState.String,
+        isSort: true,
+      },
+      {
         alias: "UpdatedAt",
         name: "updatedAt",
         operator: ["=", "!=", ">", "<", ">=", "<="],

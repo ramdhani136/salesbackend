@@ -103,6 +103,12 @@ class CustomerController implements IController {
         typeOf: TypeOfState.String,
       },
       {
+        alias: "Workflow State",
+        name: "workflowState",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         alias: "CreatedBy",
         name: "createdBy",
         operator: ["=", "!="],
@@ -159,6 +165,8 @@ class CustomerController implements IController {
           "img",
           "status",
           "workflowState",
+          "createdAt",
+          "location.coordinates"
         ];
       const order_by: any = req.query.order_by
         ? JSON.parse(`${req.query.order_by}`)
@@ -221,6 +229,9 @@ class CustomerController implements IController {
 
       let pipelineTotal: any = [
         {
+          $sort: order_by,
+        },
+        {
           $match: isFilter.data,
         },
         {
@@ -232,6 +243,9 @@ class CustomerController implements IController {
       ];
 
       let pipelineResult: any = [
+        {
+          $sort: order_by,
+        },
         {
           $match: isFilter.data,
         },
@@ -275,9 +289,7 @@ class CustomerController implements IController {
         {
           $project: setField,
         },
-        {
-          $sort: order_by,
-        },
+        
       ];
 
       // Menambahkan filter berdasarkan permission branch

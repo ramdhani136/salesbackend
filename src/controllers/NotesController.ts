@@ -151,6 +151,24 @@ class NotesController implements IController {
         ],
       },
       {
+        alias: "Doc Status",
+        name: "doc.status",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+        listData: [
+          { value: "0", name: "Draft" },
+          { value: "1", name: "Submitted" },
+          { value: "2", name: "Canceled" },
+        ],
+      },
+      {
+        alias: "Doc WorkflowState",
+        name: "doc.workflowState",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+      },
+      {
         alias: "WorkflowState",
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],

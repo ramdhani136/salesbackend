@@ -1101,6 +1101,8 @@ class VistController implements IController {
       });
     }
 
+    
+
     // End
 
     try {
@@ -1710,6 +1712,19 @@ class VistController implements IController {
           }
         } else {
           await Db.updateOne({ _id: new ObjectId(req.params.id) }, req.body);
+
+          try {
+            if (req?.body?.checkOut) {
+              await NotesModel.updateMany(
+                { "doc._id": new ObjectId(req.params.id) },
+                {
+                  "doc.checkOut": req.body.checkOut,
+                }
+              );
+            }
+          } catch (error) {
+            console.log(error);
+          }
         }
 
         const updateData = await Db.aggregate([

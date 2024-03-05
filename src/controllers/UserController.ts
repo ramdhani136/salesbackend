@@ -746,7 +746,7 @@ class UserController implements IController {
         );
         if (valid.length == 0) {
           return res.status(200).json({ status: false });
-        }else{
+        } else {
           return res.status(200).json({ status: true });
         }
       }

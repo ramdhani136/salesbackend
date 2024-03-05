@@ -84,7 +84,7 @@ class NotesController implements IController {
         isSort: true,
       },
       {
-        alias: "Doc Type",
+        alias: "Doc",
         name: "doc.type",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
@@ -129,24 +129,15 @@ class NotesController implements IController {
         typeOf: TypeOfState.String,
       },
       {
-        alias: "Callsheet Type",
-        name: "doc.callType",
+        alias: "DocType",
+        name: "doc.docType",
         operator: ["=", "!="],
         typeOf: TypeOfState.String,
         isSort: true,
         listData: [
           { value: "in", name: "In" },
-          { value: "out", name: "Out" },
-        ],
-      },
-      {
-        alias: "Visit Type",
-        name: "doc.visitType",
-        operator: ["=", "!="],
-        typeOf: TypeOfState.String,
-        isSort: true,
-        listData: [
           { value: "insite", name: "Insite" },
+          { value: "out", name: "Out" },
           { value: "outsite", name: "OutSite" },
         ],
       },
@@ -616,10 +607,6 @@ class NotesController implements IController {
       }
       // End
 
-      if (req.body.doc.type == "callsheet") {
-        req.body.doc.callType = validDoc.type;
-      }
-
       if (req.body.doc.type == "visit") {
         if (validDoc?.checkIn) {
           req.body.doc.checkIn = validDoc.checkIn;
@@ -627,10 +614,8 @@ class NotesController implements IController {
         if (validDoc?.checkOut) {
           req.body.doc.checkOut = validDoc.checkOut;
         }
-
-        req.body.doc.visitType = validDoc.type;
       }
-
+      req.body.doc.docType = validDoc.type;
       req.body.doc.name = validDoc.name;
       req.body.doc.status = validDoc.status;
       req.body.doc.workflowState = validDoc.workflowState;

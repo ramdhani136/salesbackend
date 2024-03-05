@@ -28,14 +28,9 @@ const NotesModel = new mongoose.Schema(
         type: String,
         required: true,
       },
-      callType: {
+      docType: {
         type: String,
-        enum: ["in", "out"],
-        index: true,
-      },
-      visitType: {
-        type: String,
-        enum: ["insite", "outsite"],
+        enum: ["insite", "outsite", "in", "out"],
         index: true,
       },
       checkOut: {

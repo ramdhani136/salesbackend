@@ -590,6 +590,15 @@ class NotesController implements IController {
         req.body.doc.callType = validDoc.type;
       }
 
+      if (req.body.doc.type == "visit") {
+        if (validDoc?.checkIn) {
+          req.body.doc.checkIn = validDoc.checkIn;
+        }
+        if (validDoc?.checkOut) {
+          req.body.doc.checkOut = validDoc.checkOut;
+        }
+      }
+
       req.body.doc.name = validDoc.name;
       req.body.doc.status = validDoc.status;
       req.body.doc.workflowState = validDoc.workflowState;

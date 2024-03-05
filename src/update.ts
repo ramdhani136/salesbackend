@@ -50,8 +50,6 @@ const generateVisitType = async () => {
     "name",
   ]);
   for (const item of data) {
-    console.log(item);
-
     let data: any = {
       "doc.docType": item.type,
       "doc.status": item.status,
@@ -59,11 +57,11 @@ const generateVisitType = async () => {
     };
 
     if (item?.checkIn) {
-      data.doc.checkIn = item.checkIn;
+      data["doc.checkIn"] = item.checkIn;
     }
 
     if (item?.checkOut) {
-      data.doc.checkOut = item.checkOut;
+      data["doc.checkOut"] = item.checkOut;
     }
 
     await NotesModel.updateMany({ "doc._id": item._id }, data);
@@ -77,6 +75,7 @@ const run = async () => {
   await generateCallTypeNotes();
   console.log("Visit");
   await generateVisitType();
+  console.log("selesai");
 };
 
 run();

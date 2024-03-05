@@ -33,6 +33,11 @@ const NotesModel = new mongoose.Schema(
         enum: ["in", "out"],
         index: true,
       },
+      visitType: {
+        type: String,
+        enum: ["insite", "outsite"],
+        index: true,
+      },
       checkOut: {
         createdAt: { type: Date, index: -1 },
         lat: {

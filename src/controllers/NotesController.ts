@@ -579,6 +579,7 @@ class NotesController implements IController {
               "workflowState",
               "checkIn",
               "checkOut",
+              "type",
             ]
       );
       if (!validDoc) {
@@ -597,6 +598,8 @@ class NotesController implements IController {
         if (validDoc?.checkOut) {
           req.body.doc.checkOut = validDoc.checkOut;
         }
+
+        req.body.doc.visitType = validDoc.type;
       }
 
       req.body.doc.name = validDoc.name;

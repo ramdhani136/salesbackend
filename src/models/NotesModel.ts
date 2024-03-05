@@ -58,6 +58,36 @@ const NotesModel = new mongoose.Schema(
         },
       },
     },
+    taskNotes: {
+      type: [
+        {
+          type: {
+            _id: {
+              type: Schema.Types.ObjectId,
+              required: true,
+            },
+            from: {
+              type: String,
+              enum: ["Memo", "Schedule"],
+              required: true,
+            },
+            name: {
+              type: String,
+              required: true,
+            },
+            title: {
+              type: String,
+              required: true,
+            },
+            notes: {
+              type: String,
+              required: true,
+            },
+          },
+          required: false,
+        },
+      ],
+    },
     customer: {
       type: Schema.Types.ObjectId,
       ref: "customer",

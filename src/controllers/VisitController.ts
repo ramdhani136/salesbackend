@@ -1691,6 +1691,16 @@ class VistController implements IController {
                 }
               }
 
+              await NotesModel.updateMany(
+                {
+                  "doc._id": new ObjectId(req.params.id),
+                },
+                {
+                  "doc.status": checkedWorkflow.data.status,
+                  "doc.workflowState": checkedWorkflow.data.workflowState,
+                }
+              );
+
               await Db.updateOne({ _id: req.params.id }, checkedWorkflow.data);
             }
           } else {

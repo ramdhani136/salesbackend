@@ -1,4 +1,4 @@
-import { CallsheetModel, NotesModel } from "./models";
+import { CallsheetModel, NotesModel, visitModel } from "./models";
 import mongoose, { ConnectOptions } from "mongoose";
 
 const connection = async () => {
@@ -19,18 +19,64 @@ const connection = async () => {
 };
 
 const generateCallTypeNotes = async () => {
-  const data = await CallsheetModel.find({}, ["_id", "type"]);
+  const data = await CallsheetModel.find({}, [
+    "_id",
+    "type",
+    "status",
+    "workflowState",
+    "name",
+  ]);
   for (const item of data) {
     await NotesModel.updateMany(
       { "doc._id": item._id },
-      { "doc.callType": item.type }
+      {
+        "doc.docType": item.type,
+        "doc.status": item.status,
+        "doc.workflowState": item.workflowState,
+      }
     );
+    console.log("Sukses " + item.name);
+  }
+};
+
+const generateVisitType = async () => {
+  const data = await visitModel.find({}, [
+    "_id",
+    "type",
+    "status",
+    "workflowState",
+    "checkIn",
+    "checkOut",
+    "name",
+  ]);
+  for (const item of data) {
+    console.log(item);
+
+    let data: any = {
+      "doc.docType": item.type,
+      "doc.status": item.status,
+      "doc.workflowState": item.workflowState,
+    };
+
+    if (item?.checkIn) {
+      data.doc.checkIn = item.checkIn;
+    }
+
+    if (item?.checkOut) {
+      data.doc.checkOut = item.checkOut;
+    }
+
+    await NotesModel.updateMany({ "doc._id": item._id }, data);
+    console.log("Sukses " + item.name);
   }
 };
 
 const run = async () => {
   await connection();
+  console.log("Callsheet");
   await generateCallTypeNotes();
+  console.log("Visit");
+  await generateVisitType();
 };
 
 run();

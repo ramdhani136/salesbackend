@@ -140,6 +140,17 @@ class NotesController implements IController {
         ],
       },
       {
+        alias: "Visit Type",
+        name: "doc.visitType",
+        operator: ["=", "!="],
+        typeOf: TypeOfState.String,
+        isSort: true,
+        listData: [
+          { value: "insite", name: "Insite" },
+          { value: "outsite", name: "OutSite" },
+        ],
+      },
+      {
         alias: "WorkflowState",
         name: "workflowState",
         operator: ["=", "!=", "like", "notlike"],

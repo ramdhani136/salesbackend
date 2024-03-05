@@ -20,10 +20,42 @@ const NotesModel = new mongoose.Schema(
         type: String,
         required: true,
       },
+      status: {
+        type: String,
+        required: true,
+      },
+      workflowState: {
+        type: String,
+        required: true,
+      },
       callType: {
         type: String,
         enum: ["in", "out"],
         index: true,
+      },
+      checkOut: {
+        createdAt: { type: Date, index: -1 },
+        lat: {
+          type: Number,
+        },
+        lng: {
+          type: Number,
+        },
+        address: {
+          type: String,
+        },
+      },
+      checkIn: {
+        createdAt: { type: Date, index: -1 },
+        lat: {
+          type: Number,
+        },
+        lng: {
+          type: Number,
+        },
+        address: {
+          type: String,
+        },
       },
     },
     customer: {

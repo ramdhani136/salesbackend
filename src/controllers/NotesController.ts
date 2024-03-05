@@ -571,8 +571,15 @@ class NotesController implements IController {
       const validDoc = await DBDoc.findById(
         req.body.doc._id,
         req.body.doc.type == "callsheet"
-          ? ["name", "customer", "type"]
-          : ["name", "customer"]
+          ? ["name", "customer", "type", "status", "workflowState"]
+          : [
+              "name",
+              "customer",
+              "status",
+              "workflowState",
+              "checkIn",
+              "checkOut",
+            ]
       );
       if (!validDoc) {
         throw `Doc tidak ditemukan! `;
@@ -584,6 +591,8 @@ class NotesController implements IController {
       }
 
       req.body.doc.name = validDoc.name;
+      req.body.doc.status = validDoc.status;
+      req.body.doc.workflowState = validDoc.workflowState;
       req.body.customer = validDoc.customer;
       req.body.createdBy = req.userId;
 
@@ -592,6 +601,7 @@ class NotesController implements IController {
 
       return res.status(200).json({ status: 200, data: response });
     } catch (error: any) {
+      console.log(error);
       return res.status(400).json({ status: 400, msg: error.errors ?? error });
     }
   };

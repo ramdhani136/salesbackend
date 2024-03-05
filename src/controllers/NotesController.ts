@@ -104,7 +104,7 @@ class NotesController implements IController {
       {
         alias: "Doc Name",
         name: "doc.name",
-        operator: ["=", "!=", "like", "notlike"],
+        operator: [ "like", "notlike"],
         typeOf: TypeOfState.String,
         isSort: true,
       },

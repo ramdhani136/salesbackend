@@ -5,6 +5,9 @@ const NotesModel = new mongoose.Schema(
     task: {
       type: String,
     },
+    taskList: {
+      type: String,
+    },
     doc: {
       type: {
         type: String,

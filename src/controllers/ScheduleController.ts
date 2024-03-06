@@ -12,6 +12,7 @@ import IController from "./ControllerInterface";
 import { TypeOfState } from "../Interfaces/FilterInterface";
 import {
   CallsheetModel,
+  ConfigModel,
   ScheduleModel as Db,
   History,
   ScheduleListModel,
@@ -23,10 +24,11 @@ import {
   selPermissionAllow,
   selPermissionType,
 } from "../middleware/PermissionMiddleware";
-import { ObjectId } from 'bson';
+import { ObjectId } from "bson";
 import HistoryController from "./HistoryController";
 import WorkflowController from "./WorkflowController";
 import { ISearch } from "../utils/FilterQuery";
+import { tokenToString } from "typescript";
 
 const redisName = "schedule";
 
@@ -679,6 +681,42 @@ class ScheduleController implements IController {
                   status: 400,
                   msg: "Customer list wajib diisi minimal 1",
                 });
+              }
+              // End
+
+              // Cek apakah notes wajib diisi
+              const type = result.type;
+              let isMandatoryNote = false;
+
+              const getConfig = await ConfigModel.findOne(
+                {},
+                {
+                  "visit.mandatoryCustScheduleNote": 1,
+                  "callsheet.mandatoryCustScheduleNote": 1,
+                }
+              );
+
+              if (type == "callsheet") {
+                isMandatoryNote =
+                  getConfig?.callsheet?.mandatoryCustScheduleNote ?? false;
+              } else {
+                isMandatoryNote =
+                  getConfig?.visit?.mandatoryCustScheduleNote ?? false;
+              }
+
+              if (isMandatoryNote) {
+                const notValidNotes = await ScheduleListModel.find({
+                  $and: [
+                    { schedule: new ObjectId(req.params.id) },
+                    { $or: [{ notes: { $exists: false } }, { notes: "" }] },
+                  ],
+                });
+                if (notValidNotes.length > 0) {
+                  return res.status(400).json({
+                    status: 403,
+                    msg: "Periksa kembali notes/task konsumen wajib diisi!",
+                  });
+                }
               }
               // End
             }

@@ -167,13 +167,6 @@ class NotesController implements IController {
         isSort: true,
       },
       {
-        alias: "Schedule",
-        name: "schedule.name",
-        operator: ["=", "!=", "like", "notlike"],
-        typeOf: TypeOfState.String,
-        isSort: true,
-      },
-      {
         alias: "Response",
         name: "response",
         operator: ["like", "notlike"],

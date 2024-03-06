@@ -71,11 +71,11 @@ const generateVisitType = async () => {
 
 const run = async () => {
   await connection();
-  // console.log("Callsheet");
-  // await generateCallTypeNotes();
-  // console.log("Visit");
-  // await generateVisitType();
-  // console.log("selesai");
+  console.log("Callsheet");
+  await generateCallTypeNotes();
+  console.log("Visit");
+  await generateVisitType();
+  console.log("selesai");
 
   // await ConfigModel.updateMany(
   //   {},

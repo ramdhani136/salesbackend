@@ -35,6 +35,10 @@ const ConfigModel = new mongoose.Schema(
           },
         ],
       },
+      mandatoryCustScheduleNote: {
+        type: Boolean,
+        default: false,
+      },
     },
     callsheet: {
       notesLength: {
@@ -60,6 +64,10 @@ const ConfigModel = new mongoose.Schema(
             index: true,
           },
         ],
+      },
+      mandatoryCustScheduleNote: {
+        type: Boolean,
+        default: false,
       },
     },
     customer: {

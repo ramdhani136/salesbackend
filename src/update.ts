@@ -1,4 +1,4 @@
-import { CallsheetModel, NotesModel, visitModel } from "./models";
+import { CallsheetModel, ConfigModel, NotesModel, visitModel } from "./models";
 import mongoose, { ConnectOptions } from "mongoose";
 
 const connection = async () => {
@@ -71,11 +71,19 @@ const generateVisitType = async () => {
 
 const run = async () => {
   await connection();
-  console.log("Callsheet");
-  await generateCallTypeNotes();
-  console.log("Visit");
-  await generateVisitType();
-  console.log("selesai");
+  // console.log("Callsheet");
+  // await generateCallTypeNotes();
+  // console.log("Visit");
+  // await generateVisitType();
+  // console.log("selesai");
+
+  // await ConfigModel.updateMany(
+  //   {},
+  //   {
+  //     "visit.mandatoryCustScheduleNote": false,
+  //     "callsheet.mandatoryCustScheduleNote": false,
+  //   }
+  // );
 };
 
 run();

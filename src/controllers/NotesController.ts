@@ -194,6 +194,13 @@ class NotesController implements IController {
         typeOf: TypeOfState.Date,
         isSort: true,
       },
+      {
+        alias: "Doc CreatedAt",
+        name: "doc.createdAt",
+        operator: ["=", "!=", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+        isSort: true,
+      },
     ];
     try {
       // Mengambil rincian permission customer
@@ -591,7 +598,7 @@ class NotesController implements IController {
       const validDoc = await DBDoc.findById(
         req.body.doc._id,
         req.body.doc.type == "callsheet"
-          ? ["name", "customer", "type", "status", "workflowState"]
+          ? ["name", "customer", "type", "status", "workflowState", "createdAt"]
           : [
               "name",
               "customer",
@@ -600,6 +607,7 @@ class NotesController implements IController {
               "checkIn",
               "checkOut",
               "type",
+              "createdAt",
             ]
       );
       if (!validDoc) {
@@ -621,6 +629,7 @@ class NotesController implements IController {
       req.body.doc.workflowState = validDoc.workflowState;
       req.body.customer = validDoc.customer;
       req.body.createdBy = req.userId;
+      req.body.createdAt = validDoc.createdAt;
 
       const result = new Db(req.body);
       const response = await result.save();

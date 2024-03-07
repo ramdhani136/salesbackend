@@ -25,6 +25,7 @@ const generateCallTypeNotes = async () => {
     "status",
     "workflowState",
     "name",
+    "createdAt"
   ]);
   for (const item of data) {
     await NotesModel.updateMany(
@@ -33,6 +34,7 @@ const generateCallTypeNotes = async () => {
         "doc.docType": item.type,
         "doc.status": item.status,
         "doc.workflowState": item.workflowState,
+        "doc.createdAt": item.createdAt,
       }
     );
     console.log("Sukses " + item.name);
@@ -48,12 +50,14 @@ const generateVisitType = async () => {
     "checkIn",
     "checkOut",
     "name",
+    "createdAt"
   ]);
   for (const item of data) {
     let data: any = {
       "doc.docType": item.type,
       "doc.status": item.status,
       "doc.workflowState": item.workflowState,
+      "doc.createdAt": item.createdAt,
     };
 
     if (item?.checkIn) {

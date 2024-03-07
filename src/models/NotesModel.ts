@@ -60,6 +60,7 @@ const NotesModel = new mongoose.Schema(
           type: String,
         },
       },
+      createdAt: { type: Date, index: -1 },
     },
 
     customer: {

@@ -187,6 +187,13 @@ class NotesController implements IController {
         typeOf: TypeOfState.Date,
         isSort: true,
       },
+      {
+        alias: "CheckIn At",
+        name: "doc.checkIn.createdAt",
+        operator: ["=", "!=", ">", "<", ">=", "<="],
+        typeOf: TypeOfState.Date,
+        isSort: true,
+      },
     ];
     try {
       // Mengambil rincian permission customer

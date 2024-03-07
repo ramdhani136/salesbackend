@@ -623,13 +623,14 @@ class NotesController implements IController {
           req.body.doc.checkOut = validDoc.checkOut;
         }
       }
+
       req.body.doc.docType = validDoc.type;
       req.body.doc.name = validDoc.name;
       req.body.doc.status = validDoc.status;
       req.body.doc.workflowState = validDoc.workflowState;
       req.body.customer = validDoc.customer;
       req.body.createdBy = req.userId;
-      req.body.createdAt = validDoc.createdAt;
+      req.body.doc.createdAt = validDoc.createdAt;
 
       const result = new Db(req.body);
       const response = await result.save();

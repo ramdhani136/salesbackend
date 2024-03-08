@@ -1,8 +1,10 @@
 import {
   CallsheetModel,
   ConfigModel,
+  ContactModel,
   CustomerModel,
   NotesModel,
+  ScheduleListModel,
   visitModel,
 } from "./models";
 import mongoose, { ConnectOptions } from "mongoose";
@@ -18,8 +20,8 @@ const connection = async () => {
   mongoose.set("strictQuery", false);
   mongoose.connect(
     // `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=admin`,
-    `mongodb://127.0.0.1:27017/salesapp`,
-    // `mongodb://it:!Etms000!@193.203.162.240:27017/salesapp1?authSource=admin`,
+    // `mongodb://127.0.0.1:27017/salesapp`,
+    `mongodb://it:!Etms000!@193.203.162.240:27017/salesapp1?authSource=admin`,
     options as ConnectOptions
   );
 
@@ -92,6 +94,7 @@ const GenerateItem = async () => {
     // Ambil nama dari setiap sheet
     // const sheetNames = workbook.SheetNames;
 
+    // UBAH
     const dataUbah: any[] = XLSX.utils.sheet_to_json(workbook.Sheets["ubah"]);
 
     for (const ubah of dataUbah) {
@@ -111,6 +114,64 @@ const GenerateItem = async () => {
         console.log(ubah.name + " Sukses");
       }
     }
+    //END UBAH
+
+    // HAPUS
+
+    // const dataHapus: any[] = XLSX.utils.sheet_to_json(workbook.Sheets["hapus"]);
+    // for (const hapus of dataHapus) {
+    //   const ada = await CustomerModel.findOne({ name: hapus.name }, [
+    //     { _id: 1 },
+    //   ]);
+
+    //   if (!ada) {
+    //     console.log(`${hapus.name} tidak ada!`);
+    //   } else {
+    //     // Cek Visit
+    //     const visit = await visitModel.findOne(
+    //       {
+    //         customer: ada._id,
+    //       },
+    //       [{ id: 1 }]
+    //     );
+
+    //     if (!visit) {
+    //       // Cek callsheet
+    //       const callsheet = await CallsheetModel.findOne(
+    //         {
+    //           customer: ada._id,
+    //         },
+    //         [{ id: 1 }]
+    //       );
+
+    //       if (!callsheet) {
+    //         // Cek callsheet
+    //         const schedule = await ScheduleListModel.findOne(
+    //           {
+    //             customer: ada._id,
+    //           },
+    //           [{ id: 1 }]
+    //         );
+
+    //         if (!schedule) {
+    //           const hasil = await CustomerModel.deleteOne({ _id: ada._id });
+    //           console.log(hasil);
+    //           const contact = await ContactModel.deleteMany({
+    //             customer: ada._id,
+    //           });
+    //           console.log(contact);
+    //           console.log(hapus.name + "  Sukses");
+    //         } else {
+    //           console.log(hapus.name + "  ada schedule");
+    //         }
+    //       } else {
+    //         console.log(hapus.name + "  ada callsheet");
+    //       }
+    //     }
+    //     // End
+    //   }
+    // }
+    // END HAPUS
 
     // sheetNames.forEach(sheetName => {
     //   // Ambil sheet yang diinginkan
@@ -127,9 +188,40 @@ const GenerateItem = async () => {
   }
 };
 
+const cekContact = async () => {
+  try {
+    let no = 0;
+    const callsheet: any[] = await CallsheetModel.find({});
+    let customers: any[] = [];
+    for (const item of callsheet) {
+      // if (item.contact) {
+      //   const contact = await ContactModel.findOne({ _id: item.contact }, [
+      //     { _id: 1 },
+      //   ]);
+      //   if (!contact) {
+      //     console.log(`Tidak ada kontak ${item.name}`);
+      //   }
+      // }
+      const customer = await CustomerModel.findOne({ _id: item.customer }, [
+        { _id: 1 },
+      ]);
+      if (!customer) {
+        console.log(`Tidak ada customer ${item.name}`);
+        customers.push(item.name);
+      }
+      no += 1;
+      console.log(no);
+    }
+    console.log(customers);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const run = async () => {
   await connection();
-  GenerateItem();
+  await cekContact();
+  // await GenerateItem();
   // console.log("Callsheet");
   // await generateCallTypeNotes();
   // console.log("Visit");

@@ -440,14 +440,15 @@ class CustomerController implements IController {
         }
 
 
-        pipelineResult.splice(lengthFilter.length + 2, 0, {
+        pipelineResult.splice(lengthFilter.length + 3, 0, {
           $limit: limit,
         });
       }
       // End
 
       const totalData = await Db.aggregate(pipelineTotal);
-
+     
+      console.log(JSON.stringify(pipelineResult))
       //  return res.send(pipelineResult);
       const getAll = totalData.length > 0 ? totalData[0].total_orders : 0;
       const result = await Db.aggregate(pipelineResult);
